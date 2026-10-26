@@ -1,5 +1,7 @@
 # Baseline repair validation — 26 October 2026
 
+**Review hold:** the local Codex option is temporarily disabled in the validation and owner runtimes. Exact-CLI hostile-configuration qualification found that the initial flags still included global instructions and advertised tools. Working generation and passing mocked CI do not resolve that isolation gap; a supported-control repair and retest are required before this option is ready.
+
 The repaired baseline has 40 baseline browser scenarios plus the new AI-06 subscription scenario and 77 recorded real rendered subflows. All **40 baseline browser journeys passed**, without retries, in [CI run40310163615](https://github.com/fakoli/my-ai-study-buddy/actions/runs/40310163615) on `874d00b2533e8e50928f99d109182d38fdb86022` (6.0 minutes). Backend and both Node22/24 test, lint and build jobs also passed. Task6 implementation/specification and quality review are approved after round1 fixes. Independent Task7/whole-branch review and final 41-case CI remain pending; this is baseline verification, not a full release approval. The [25 October audit](../2026-10-25/README.md) remains unchanged.
 
 ## Evidence and timing method
