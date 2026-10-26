@@ -1,3 +1,4 @@
+import { CreditPreflight } from './CreditPreflight';
 import { useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuthContext } from '../common/AuthContext';
@@ -53,6 +54,12 @@ export function RevisionPanel({
   const [instruction, setInstruction] = useState('');
   const [count, setCount] = useState(5);
   const [reuse, setReuse] = useState<string[]>([]);
+  const reviewTrigger = useRef<HTMLElement | null>(null);
+  const openReview = (id: string) => {
+    reviewTrigger.current =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    setReview(id);
+  };
   const [review, setReview] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -137,6 +144,10 @@ export function RevisionPanel({
             : '0 Anvil credits; external provider charges may apply'}{' '}
           per validated revision. Review and Apply are separate steps.
         </p>
+        <CreditPreflight
+          provider={preferences?.provider}
+          cost={scopes.find((s) => s.value === scope)!.cost}
+        />
         <fieldset disabled={workspace.archived || busy} className="space-y-3">
           <label className="block">
             Revision scope
@@ -260,7 +271,7 @@ export function RevisionPanel({
       <WorkspaceJobs
         jobs={jobs}
         onChanged={onChanged}
-        onReview={setReview}
+        onReview={openReview}
         disabled={workspace.archived}
       />
       {review && (
@@ -268,7 +279,10 @@ export function RevisionPanel({
           key={review}
           workspaceId={workspace.id}
           changeId={review}
-          onDismiss={() => setReview(null)}
+          onDismiss={() => {
+            setReview(null);
+            reviewTrigger.current?.focus();
+          }}
           onChanged={onChanged}
           disabled={workspace.archived}
         />

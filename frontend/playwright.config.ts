@@ -16,7 +16,7 @@ export default defineConfig({
     ...devices['Desktop Chrome'],
   },
   webServer: [
-    { command: 'cd ../backend && uv run python ../frontend/e2e/server.py',
+    { command: 'cd ../backend && uv run --locked --python 3.12 python ../frontend/e2e/server.py',
       url: 'http://127.0.0.1:8018/health', reuseExistingServer: false, timeout: 60_000 },
     { command: 'npm run dev -- --mode e2e --host 127.0.0.1 --port 4178 --strictPort',
       env: { VITE_API_PROXY: 'http://127.0.0.1:8018', VITE_API_URL: '/api/v1' },

@@ -18,6 +18,7 @@ afterEach(() => {
 it('loads a saved brief and retains typed text after a failed PUT with Retry', async () => {
   const state = installWorkspaceApi();
   renderJourney(<Workspace />, '/workspaces/w1', '/workspaces/:workspaceId');
+  fireEvent.click(await screen.findByText('Saved brief · edit goal and defaults'));
   expect(await screen.findByRole('textbox', { name: 'Learning goal' })).toHaveValue('Learn Python');
   state.failSave = true;
   fireEvent.change(screen.getByRole('textbox', { name: 'Learning goal' }), {
@@ -33,6 +34,7 @@ it('loads a saved brief and retains typed text after a failed PUT with Retry', a
   expect(state.writes[0].request_id).toBe(state.writes[1].request_id);
   cleanup();
   renderJourney(<Workspace />, '/workspaces/w1', '/workspaces/:workspaceId');
+  fireEvent.click(await screen.findByText('Saved brief · edit goal and defaults'));
   expect(await screen.findByRole('textbox', { name: 'Learning goal' })).toHaveValue(
     'My edited goal',
   );
@@ -40,6 +42,7 @@ it('loads a saved brief and retains typed text after a failed PUT with Retry', a
 it('archives without removing the linked course', async () => {
   const state = installWorkspaceApi();
   renderJourney(<Workspace />, '/workspaces/w1', '/workspaces/:workspaceId');
+  fireEvent.click(await screen.findByText('Saved brief · edit goal and defaults'));
   expect(await screen.findByRole('link', { name: 'Test course' })).toHaveAttribute(
     'href',
     '/courses/c1',
@@ -53,6 +56,7 @@ it('explains stale saves while keeping the unsaved goal for comparison', async (
   const state = installWorkspaceApi();
   state.stale = true;
   renderJourney(<Workspace />, '/workspaces/w1', '/workspaces/:workspaceId');
+  fireEvent.click(await screen.findByText('Saved brief · edit goal and defaults'));
   await screen.findByRole('textbox', { name: 'Learning goal' });
   fireEvent.change(screen.getByRole('textbox', { name: 'Learning goal' }), {
     target: { value: 'Keep this text' },
@@ -85,6 +89,7 @@ it('hides old list data and draft text immediately when the account changes', as
     </QueryClientProvider>
   );
   const view = render(tree('u1'));
+  fireEvent.click(await screen.findByText('Saved brief · edit goal and defaults'));
   await screen.findByRole('textbox', { name: 'Learning goal' });
   fireEvent.change(screen.getByRole('textbox', { name: 'Learning goal' }), {
     target: { value: 'Private unsaved text' },
@@ -98,6 +103,7 @@ it('hides old list data and draft text immediately when the account changes', as
 it('reloads the actual current server brief after a stale save before retrying edits', async () => {
   const state = installWorkspaceApi();
   renderJourney(<Workspace />, '/workspaces/w1', '/workspaces/:workspaceId');
+  fireEvent.click(await screen.findByText('Saved brief · edit goal and defaults'));
   await screen.findByRole('textbox', { name: 'Learning goal' });
   state.workspaces[0].brief = { ...state.workspaces[0].brief, goal: 'New server goal' };
   state.workspaces[0].version = 2;
@@ -130,6 +136,7 @@ it('keeps the workspace accessible with generic recovery when a linked course is
       : original(input, init),
   );
   renderJourney(<Workspace />, '/workspaces/w1', '/workspaces/:workspaceId');
+  fireEvent.click(await screen.findByText('Saved brief · edit goal and defaults'));
   expect(await screen.findByText(/Course unavailable/)).toBeInTheDocument();
   expect(screen.queryByText('Test course')).not.toBeInTheDocument();
   expect(screen.getByRole('textbox', { name: 'Learning goal' })).toHaveValue('Learn Python');
@@ -169,6 +176,7 @@ it('hides the old account workspace list before the next account fetch resolves'
 it('retains the draft when reloading a conflicting brief temporarily fails', async () => {
   const state = installWorkspaceApi();
   renderJourney(<Workspace />, '/workspaces/w1', '/workspaces/:workspaceId');
+  fireEvent.click(await screen.findByText('Saved brief · edit goal and defaults'));
   await screen.findByRole('textbox', { name: 'Learning goal' });
   state.stale = true;
   fireEvent.change(screen.getByRole('textbox', { name: 'Learning goal' }), {
@@ -193,6 +201,7 @@ it('retains the draft when reloading a conflicting brief temporarily fails', asy
 it('saves a newly edited brief at the confirmed version after archiving and restoring', async () => {
   const state = installWorkspaceApi();
   renderJourney(<Workspace />, '/workspaces/w1', '/workspaces/:workspaceId');
+  fireEvent.click(await screen.findByText('Saved brief · edit goal and defaults'));
   await screen.findByRole('textbox', { name: 'Learning goal' });
   fireEvent.click(screen.getByRole('button', { name: 'Archive workspace' }));
   fireEvent.click(await screen.findByRole('button', { name: 'Restore workspace' }));
@@ -209,6 +218,7 @@ it('saves a newly edited brief at the confirmed version after archiving and rest
 it('preserves a dirty brief through archive and restore and saves with the confirmed version', async () => {
   const state = installWorkspaceApi();
   renderJourney(<Workspace />, '/workspaces/w1', '/workspaces/:workspaceId');
+  fireEvent.click(await screen.findByText('Saved brief · edit goal and defaults'));
   await screen.findByRole('textbox', { name: 'Learning goal' });
   fireEvent.change(screen.getByRole('textbox', { name: 'Learning goal' }), {
     target: { value: 'Dirty draft before archive' },
@@ -232,6 +242,7 @@ it('preserves a dirty brief through archive and restore and saves with the confi
 it('does not accept an archive response version when another save changed the server brief', async () => {
   const state = installWorkspaceApi();
   const client = renderJourney(<Workspace />, '/workspaces/w1', '/workspaces/:workspaceId');
+  fireEvent.click(await screen.findByText('Saved brief · edit goal and defaults'));
   await screen.findByRole('textbox', { name: 'Learning goal' });
   fireEvent.change(screen.getByRole('textbox', { name: 'Learning goal' }), {
     target: { value: 'My unsaved draft' },

@@ -115,3 +115,14 @@ it('expires the current identity on 401 but never clears a replacement token for
   await expect(pending).rejects.toThrow('Session changed');
   expect(localStorage.getItem('token')).toBe('b');
 });
+
+it.each(['sign-out', 'account-switch'])('rejects late workspace mutation after %s', async (event) => {
+  localStorage.setItem('token', 'synthetic-a');
+  let resolve!: (value: Response) => void;
+  fetchMock.mockReturnValue(new Promise<Response>(done => { resolve = done; }));
+  const pending = api.post('/workspaces', { request_id: 'synthetic', brief: { goal: 'Private goal' } });
+  if (event === 'sign-out') localStorage.removeItem('token');
+  else localStorage.setItem('token', 'synthetic-b');
+  resolve(new Response(JSON.stringify({ id: 'private-workspace', owner_id: 'a' })));
+  await expect(pending).rejects.toThrow('Session changed');
+});

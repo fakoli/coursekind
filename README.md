@@ -1,6 +1,8 @@
-# Study Buddy
+# Coursekind
 
-A learning platform for visual learners who learn by doing. Combines flashcards, quizzes, tests, and visual references with AI-powered coaching.
+Turn a learning goal into a reviewable course or learning path, build one lesson at a time, and revise it without losing study history. Existing manual authoring, flashcards, quizzes and configured practices remain available.
+
+See the [local v1 operating guide](docs/product/coursekind-local-v1.md) for onboarding, recovery, quotas, backup and rollback boundaries.
 
 ## Features
 
@@ -20,7 +22,7 @@ expected course, module, study, learning-path, sharing, statistics, and AI-model
 workflows, adopted policies, and acceptance boundaries. The [26 October baseline
 audit](docs/audits/2026-10-26/README.md) separates real rendered evidence, mocked
 external integrations, durable tests, timings and remaining limits. The
-[40-journey Playwright suite](frontend/e2e/README.md) runs in GitHub Actions against
+[browser acceptance suite](frontend/e2e/README.md) runs in GitHub Actions against
 isolated synthetic storage and reports each journey independently.
 
 The historical [25 October walkthrough](docs/audits/2026-10-25/README.md) records outcomes,
@@ -37,17 +39,17 @@ rendered output; standard Markdown, tables, code and protected images remain usa
 | Layer | Technology |
 |-------|------------|
 | Frontend | React + TypeScript (Vite) |
-| Backend | Python 3.11+ / FastAPI |
+| Backend | Python 3.12 / FastAPI (qualified runtime) |
 | Data Models | Pydantic v2 |
 | Content | Markdown files |
-| Persistence | JSON (local), SQLite/Supabase (production) |
+| Persistence | JSON or SQLite, one application process |
 | AI | Anvil Serving router (self-hosted, OpenAI-compatible) |
 
 ## Quick Start
 
 ### Prerequisites
 
-- Python 3.11+
+- Python 3.12 (qualified runtime)
 - Node.js 22.12+ or 24 LTS (CI tests 22 and 24)
 - [uv](https://github.com/astral-sh/uv) (Python package manager)
 
@@ -55,21 +57,21 @@ rendered output; standard Markdown, tables, code and protected images remain usa
 
 ```bash
 cd backend
-uv sync
+uv sync --locked --dev --python 3.12
 
 # Copy and configure environment
 cp .env.example .env
 # Edit .env with your settings (ANVIL_ROUTER_BASE_URL, ANVIL_ROUTER_TOKEN, etc.)
 
 # Run development server (port 8010 to match frontend proxy)
-uv run uvicorn main:app --reload --port 8010
+uv run --locked --python 3.12 uvicorn main:app --reload --port 8010
 ```
 
 ### Frontend Setup
 
 ```bash
 cd frontend
-npm install
+npm ci
 npm run dev
 ```
 
@@ -112,23 +114,22 @@ ANVIL_MODEL=llm.primary            # text generation route
 ANVIL_VISION_MODEL=vision.general  # image/vision route
 
 # Storage
-STORAGE_BACKEND=json    # or sqlite, supabase
+STORAGE_BACKEND=json    # or sqlite for workspace support
 STORAGE_PATH=./data
 
-# Optional: Supabase
-SUPABASE_URL=...
-SUPABASE_KEY=...
+# Workspace gates
+WORKSPACE_ENABLED=true
+WORKSPACE_REVIEW_ENABLED=false
+# Optional backend-only advisory review: TYPESAFE_API_KEY
 
 # Optional: Notifications
 MAILGUN_API_KEY=...
 MAILGUN_DOMAIN=...
 ```
 
-The router credential is server-side only. Currently, users do not provide
-provider API keys; the Settings page reports whether the shared Anvil connection
-is healthy. Per-user model choice and external-provider keys are planned in the
-[AI journeys](docs/user-journeys.md#ai-provider-and-model-choice), with Anvil as
-the default.
+The router credential is server-side only. Anvil `llm.primary` is the default; Settings supports available Anvil models and explicitly selected OpenAI, Gemini or Anthropic using the user's saved API key. External provider success has zero Anvil debit, but external billing may apply. There is no silent fallback. Never place credentials, including optional `TYPESAFE_API_KEY`, in Vite variables or browser code.
+
+Workspace transactions are qualified for JSON and SQLite in a single process. The legacy Supabase adapter is not a qualified workspace backend. New additive workspace records require no destructive migration of existing learning data.
 
 ## Project Structure
 
@@ -182,7 +183,7 @@ See [docs/architecture.md](docs/architecture.md) for full API specs.
 ```bash
 # Backend
 cd backend
-uv run pytest tests/ -v
+env -u DEBUG uv run --locked --python 3.12 pytest tests/ -q
 
 # Frontend
 cd frontend

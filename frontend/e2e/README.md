@@ -1,6 +1,6 @@
 # Browser acceptance
 
-`npm run test:e2e` runs 40 named Chromium journeys (original stable IDs) against real API routes and a
+`npm run test:e2e` runs all 40 original Chromium cases plus additive workspace cases (stable journey groups WORKSPACE-01 through WORKSPACE-06) against real API routes and a
 fresh temporary JSON database. `npm run test:e2e:list` and `npm run test:e2e:types`
 do not launch a browser. Install Python/uv dependencies in `backend`, npm
 packages in `frontend`, and Chromium with `npx playwright install chromium`.
@@ -14,7 +14,7 @@ control routes set the study clock and external failure modes. Provider requests
 use the real adapter code with `httpx.MockTransport`; notification `send` methods
 are captured and delivery remains unconfigured in the browser scenario. No real
 key, provider request, email or SMS is used. AI-06 is deferred after failed CLI isolation qualification; historical results remain in the audit, and the executable provider/fake-process fixture have been removed. The non-browser fixture smoke is
-`cd backend && uv run python ../frontend/e2e/smoke.py`.
+`cd backend && uv run --locked --python 3.12 python ../frontend/e2e/smoke.py`.
 
 API calls prepare fixtures and verify persistence; user flows use rendered UI
 controls. Each test has a fresh Playwright context, users and content. One worker
@@ -37,3 +37,10 @@ Markdown, tables, code and protected images remain supported. Mermaid is fixed
 to strict mode with HTML labels/callbacks disabled and protected security keys;
 diagram directives cannot downgrade it. MODULE-01 checks benign diagram output
 alongside hostile HTML/directive input after save/reload.
+
+
+Workspace cases cover goal-to-study, explicit reuse, partial failure/reload/retry, scoped revision/conflict/restore, advisory review, and mobile/keyboard/account/feature-gate recovery. Multiple test cases may share a journey group; report case totals separately from group totals. At the Task 5 handoff the suite lists 49 cases: 40 baseline and 9 workspace cases across 6 groups. Listing/typechecking does not establish a browser pass.
+
+Install backend dependencies with `uv sync --locked --dev --python 3.12`; CI and the isolated browser server use that explicit Python version and lock. On the author's Mac, prefix every frontend command with `export PATH="/opt/homebrew/opt/node@24/bin:$PATH"` and verify Node v24. Workers may run only `test:e2e:types` and `test:e2e:list`; root owns actual UI through CUA and browser execution in GitHub CI. No local browser execution is claimed for Task 5.
+
+The WORKSPACE-06 text-resizing assertion complements root's actual 200% browser zoom check. Root also checks modal focus return, visible focus and live status announcements; automated listing is not an accessibility certification. The feature-off browser fixture rejects workspace writes without modifying runtime configuration; backend gate tests and the root gate-off walkthrough establish the real switch behavior.

@@ -91,7 +91,7 @@ async def test_delivery_uses_only_captured_adapters_and_respects_saved_preferenc
     )
     assert (await service.test_sms("one"))[0]
     assert sms.calls == [
-        {"to": "+12025550123", "message": "Study Buddy: This is a test SMS notification!"}
+        {"to": "+12025550123", "message": "Coursekind: This is a test SMS notification!"}
     ]
     assert (await service.test_email("one"))[0]
     assert email.calls[0]["to"] == "one@example.com"

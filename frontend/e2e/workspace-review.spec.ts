@@ -24,6 +24,7 @@ test('WORKSPACE-05 — explicit TypeSafe disclosure, cache and identical-content
   });
   await login(page, world.author);
   await page.goto(`/workspaces/${workspace.id}`);
+  await page.getByText('Review with Jev · optional advisory').click();
   const panel = page.getByRole('region', {
     name: 'Material advisory review',
     exact: true,
@@ -138,6 +139,7 @@ test('WORKSPACE-05 — unavailable and malformed advisory retain material, expli
   await control(request, { review_fault: 'unavailable' });
   await login(page, world.author);
   await page.goto(`/workspaces/${workspace.id}`);
+  await page.getByText('Review with Jev · optional advisory').click();
   const panel = page.getByRole('region', {
     name: 'Material advisory review',
     exact: true,

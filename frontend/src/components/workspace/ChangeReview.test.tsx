@@ -102,15 +102,24 @@ it('retains the same apply key after a lost response and dismiss performs no wri
 it.each([
   { name: 'changed visual', visual: 'visuals/revised-card.png' },
   { name: 'removed visual', visual: undefined },
-  { name: 'untrusted visual', visual: 'javascript:alert(1)<svg onload="alert(2)">' },
+  {
+    name: 'untrusted visual',
+    visual: 'javascript:alert(1)<svg onload="alert(2)">',
+  },
 ])('shows a flashcard $name as inert text in both proposal sides', async ({ visual }) => {
   const state = installWorkspaceBuildApi();
-  const card = { id: 'retained', front: 'Unchanged front', back: 'Unchanged back' };
+  const card = {
+    id: 'retained',
+    front: 'Unchanged front',
+    back: 'Unchanged back',
+  };
   state.change.before = [
     {
       target: state.change.patches[0].target,
       fingerprint: 'old',
-      fields: { flashcards: [{ ...card, visual: 'visuals/original-card.png' }] },
+      fields: {
+        flashcards: [{ ...card, visual: 'visuals/original-card.png' }],
+      },
     },
   ];
   state.change.patches[0].fields = { flashcards: [{ ...card, visual }] };
@@ -126,9 +135,49 @@ it.each([
   );
   const comparison = await screen.findByLabelText('flashcards comparison');
   fireEvent.click(within(comparison).getByText('Before', { exact: true }));
-  expect(within(comparison).getByText('visuals/original-card.png', { exact: true })).toBeVisible();
+  expect(
+    within(comparison).getByText('visuals/original-card.png', {
+      exact: true,
+    }),
+  ).toBeVisible();
   expect(within(comparison).getByText(visual || 'No visual', { exact: true })).toBeVisible();
   expect(within(comparison).getAllByText('Unchanged front')).toHaveLength(2);
   expect(within(comparison).getAllByText('Unchanged back')).toHaveLength(2);
   expect(comparison.querySelector('img, a, svg, iframe')).toBeNull();
+});
+
+it('resolves path reference titles from fresh access checks and hides revoked cached titles', async () => {
+  const state = installWorkspaceBuildApi();
+  state.change.patches[0].fields = { course_ids: ['c1'] };
+  const client = renderJourney(
+    <ChangeReview
+      workspaceId="w1"
+      changeId="change-1"
+      onDismiss={vi.fn()}
+      onChanged={async () => {}}
+    />,
+    '/workspaces/w1',
+    '/workspaces/:workspaceId',
+  );
+  expect(await screen.findByRole('link', { name: 'Test course' })).toHaveAttribute(
+    'href',
+    '/courses/c1',
+  );
+  const original = fetch;
+  vi.stubGlobal('fetch', (input: string, init?: RequestInit) =>
+    input.endsWith('/courses/c1')
+      ? Promise.resolve(
+          new Response(JSON.stringify({ detail: 'Forbidden' }), {
+            status: 403,
+          }),
+        )
+      : original(input, init),
+  );
+  await client.invalidateQueries({ queryKey: ['workspace-reference-title'] });
+  expect(
+    await screen.findByRole('link', {
+      name: 'Course reference (title unavailable)',
+    }),
+  ).toHaveAttribute('href', '/courses/c1');
+  expect(screen.queryByText('Test course')).not.toBeInTheDocument();
 });

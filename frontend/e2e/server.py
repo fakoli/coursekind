@@ -54,7 +54,7 @@ def remote(request):
             answers.pop("objective_aligned")
         return httpx.Response(200, json={"model": "jev-1.14.0", "answers": answers,
                                         "usage": {"input_tokens": 50, "output_tokens": 12}})
-    if state["fault"] == "unavailable":
+    if state["fault"] == "unavailable" or (state.get("fail_after_calls") is not None and len(state["calls"]) > state["fail_after_calls"]):
         return httpx.Response(503, json={"error": "Synthetic provider unavailable"})
     if request.url.host == "generativelanguage.googleapis.com":
         system = body["systemInstruction"]["parts"][0]["text"]
@@ -165,8 +165,8 @@ from main import app
 async def control(request: Request):
     updates = await request.json()
     if updates.get("reset"):
-        state.update(review_fault=None, fault=None, calls=[], deliveries=[], now="2026-10-26T12:00:00+00:00")
-    for key in ("fault", "review_fault", "now"):
+        state.update(fail_after_calls=None, review_fault=None, fault=None, calls=[], deliveries=[], now="2026-10-26T12:00:00+00:00")
+    for key in ("fault", "review_fault", "now", "fail_after_calls"):
         if key in updates:
             state[key] = updates[key]
     return state

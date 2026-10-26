@@ -43,6 +43,13 @@ function WorkspaceDetail({ workspace }: { workspace: WorkspaceData }) {
   const archive = useUpdateWorkspace(workspace.id);
   const activity = useWorkspaceActivity(workspace.id);
   const request = useRef<WorkspaceUpdate | null>(null);
+  const briefDisclosure = useRef<HTMLDetailsElement>(null);
+  const planDisclosure = useRef<HTMLDetailsElement>(null);
+  const sectionDisclosures = useRef<Record<string, HTMLDetailsElement | null>>({});
+  const latestPlan = activity.plans.data?.[0];
+  const appliedPlan = latestPlan?.status === 'applied';
+  const planOpen = latestPlan ? !appliedPlan : workspace.course_ids.length === 0;
+  const nextSection = workspace.course_ids.length ? 'build' : 'plan';
   const [archiveError, setArchiveError] = useState('');
   const [confirmedArchive, setConfirmedArchive] = useState<WorkspaceData | null>(null);
   const handleArchive = async () => {
@@ -86,9 +93,51 @@ function WorkspaceDetail({ workspace }: { workspace: WorkspaceData }) {
           {archiveError} Your linked courses are kept. Try again or reload the workspace.
         </p>
       )}
-      <div className="grid lg:grid-cols-[minmax(180px,1fr)_minmax(0,2fr)_minmax(180px,1fr)] gap-5 items-start">
+      <nav aria-label="Workspace sections" className="flex flex-wrap gap-4">
+        {['brief', 'plan', 'build', 'revision', 'review', 'history'].map((section) => (
+          <a
+            key={section}
+            className="underline text-indigo-700"
+            href={`#workspace-${section}`}
+            onClick={() => {
+              if (section === 'brief' && briefDisclosure.current)
+                briefDisclosure.current.open = true;
+              if (sectionDisclosures.current[section])
+                sectionDisclosures.current[section]!.open = true;
+              if (section === 'plan' && planDisclosure.current) planDisclosure.current.open = true;
+            }}
+          >
+            {section[0].toUpperCase() + section.slice(1)}
+          </a>
+        ))}
+      </nav>
+      <p role="status" className="text-sm text-gray-600">
+        {
+          (activity.jobs.data || []).filter((job) => ['queued', 'running'].includes(job.state))
+            .length
+        }{' '}
+        active jobs ·{' '}
+        {
+          (activity.jobs.data || []).filter((job) =>
+            ['partial', 'failed', 'interrupted'].includes(job.state),
+          ).length
+        }{' '}
+        jobs needing attention. Saved drafts and retry controls are in their Plan, Build or Revision
+        section.
+      </p>
+      {!workspace.archived && (
+        <a
+          className="inline-block rounded bg-indigo-700 text-white px-4 py-2"
+          href={`#workspace-${nextSection}`}
+        >
+          {nextSection === 'build'
+            ? 'Next: build or recover a lesson'
+            : 'Next: generate and review a plan'}
+        </a>
+      )}
+      <div className="grid lg:grid-cols-2 gap-5 items-start">
         <WorkspaceOutline workspace={workspace} />
-        <WorkspaceBriefEditor workspace={workspace} confirmedArchive={confirmedArchive} />
+
         <aside
           className="bg-white border rounded-xl p-5 space-y-3 min-w-0"
           aria-label="Workspace assistant"
@@ -110,35 +159,92 @@ function WorkspaceDetail({ workspace }: { workspace: WorkspaceData }) {
           </p>
         </aside>
       </div>
+      <details
+        id="workspace-brief"
+        ref={briefDisclosure}
+        className="rounded-xl border bg-white p-4 scroll-mt-20"
+      >
+        <summary className="cursor-pointer font-semibold">
+          Saved brief · edit goal and defaults
+        </summary>
+        <WorkspaceBriefEditor workspace={workspace} confirmedArchive={confirmedArchive} />
+      </details>
       {activity.jobs.error || activity.plans.error ? (
         <p role="alert">Saved plans and jobs unavailable. Reload to check current source access.</p>
       ) : (
         <div className="space-y-6 max-w-4xl mx-auto">
-          <PlanPanel
-            workspace={workspace}
-            plans={activity.plans.data || []}
-            jobs={(activity.jobs.data || []).filter((j) => j.kind === 'plan')}
-            preferences={preferences.data}
-            onChanged={activity.refresh}
-          />
-          <BuildPanel
-            workspace={workspace}
-            jobs={(activity.jobs.data || []).filter((j) => j.kind === 'build')}
-            preferences={preferences.data}
-            onChanged={activity.refresh}
-          />
-          <RevisionPanel
-            workspace={workspace}
-            jobs={(activity.jobs.data || []).filter((j) => j.kind === 'revision')}
-            preferences={preferences.data}
-            onChanged={activity.refresh}
-          />
-          <MaterialReview workspaceId={workspace.id} />
-          <WorkspaceHistory
-            workspaceId={workspace.id}
-            disabled={workspace.archived}
-            onChanged={activity.refresh}
-          />
+          <details
+            id="workspace-plan"
+            ref={planDisclosure}
+            open={planOpen}
+            className="scroll-mt-20"
+          >
+            <summary className="cursor-pointer font-semibold mb-3">
+              {appliedPlan
+                ? 'Applied plan · reopen to review or refine'
+                : 'Plan · review before creating material'}
+            </summary>
+            <PlanPanel
+              workspace={workspace}
+              plans={activity.plans.data || []}
+              jobs={(activity.jobs.data || []).filter((j) => j.kind === 'plan')}
+              preferences={preferences.data}
+              onChanged={activity.refresh}
+            />
+          </details>
+          <div id="workspace-build" className="scroll-mt-20">
+            <BuildPanel
+              workspace={workspace}
+              jobs={(activity.jobs.data || []).filter((j) => j.kind === 'build')}
+              preferences={preferences.data}
+              onChanged={activity.refresh}
+            />
+          </div>
+          <details
+            id="workspace-revision"
+            ref={(node) => {
+              sectionDisclosures.current.revision = node;
+            }}
+            className="scroll-mt-20 border rounded-xl p-4"
+          >
+            <summary className="cursor-pointer font-semibold mb-3">
+              Revise saved material · drafts and retry
+            </summary>
+            <RevisionPanel
+              workspace={workspace}
+              jobs={(activity.jobs.data || []).filter((j) => j.kind === 'revision')}
+              preferences={preferences.data}
+              onChanged={activity.refresh}
+            />
+          </details>
+          <details
+            id="workspace-review"
+            ref={(node) => {
+              sectionDisclosures.current.review = node;
+            }}
+            className="scroll-mt-20 border rounded-xl p-4"
+          >
+            <summary className="cursor-pointer font-semibold mb-3">
+              Review with Jev · optional advisory
+            </summary>
+            <MaterialReview workspaceId={workspace.id} />
+          </details>
+          <details
+            id="workspace-history"
+            ref={(node) => {
+              sectionDisclosures.current.history = node;
+            }}
+            className="scroll-mt-20 border rounded-xl p-4"
+          >
+            <summary className="cursor-pointer font-semibold mb-3">
+              History · compare and restore
+            </summary>
+            <WorkspaceHistory
+              workspaceId={workspace.id}
+              disabled={workspace.archived}
+              onChanged={activity.refresh}
+            />
+          </details>
         </div>
       )}
     </div>

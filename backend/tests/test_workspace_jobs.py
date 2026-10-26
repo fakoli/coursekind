@@ -243,6 +243,12 @@ async def test_insufficient_credit_and_byok_zero_debit(setup_job):
     await service.runner.wait_idle()
     assert (await service.get("owner", w.id, job.id)).state == "failed"
     assert not state["calls"]
+    assert (await store.get("workspaces", w.id))["brief"] == w.brief.model_dump(mode="json")
+    assert (await store.get("modules", modules[0].id))["content_markdown"] == ""
+    assert (
+        "Insufficient application credits"
+        in (await service.get("owner", w.id, job.id)).steps[0].safe_error
+    )
     state.update(provider="openai", model="gpt-test")
     await service.retry("owner", w.id, job.id, "retry", [job.steps[0].id])
     await service.runner.wait_idle()

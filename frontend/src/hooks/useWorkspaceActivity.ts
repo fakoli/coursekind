@@ -26,14 +26,15 @@ export function useWorkspaceActivity(id: string) {
     .filter(Boolean)
     .join(',');
   useEffect(() => {
-    if (outputs)
-      void client.invalidateQueries({
-        queryKey: ['workspace-plans', user?.id, id],
-      });
+    if (outputs) {
+      void client.invalidateQueries({ queryKey: ['workspace-plans', user?.id, id] });
+      void client.invalidateQueries({ queryKey: ['workspace-budget', user?.id] });
+    }
   }, [outputs, client, user?.id, id]);
   const refresh = async () => {
     await Promise.all(
       [
+        'workspace-budget',
         'workspace',
         'workspaces',
         'workspace-jobs',

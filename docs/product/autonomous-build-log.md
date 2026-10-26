@@ -109,3 +109,8 @@ Independent review found a recovery issue when a same-module edit removes the se
 
 
 The selection recovery repair `06b17dc` is independently approved. Actual two-tab CUA confirmed a shortened lesson and removal of the selected question first mark the result stale, then explicit acceptance resets the excerpt and question before a successful new controlled review. Additional controlled UI cases cover provider 503, malformed probability data, explicit retry and review of unapplied staged material. Live and mocked evidence are labeled separately. Final repaired-commit CI remains pending; Task 5 proceeds against the reviewed interfaces while that gate runs.
+
+
+## Task 5 worker implementation — 26 October 2026
+
+Started at `3e368dd`; root documentation advanced to `81089c7` while production edits remained isolated in the shared checkout. Added compact persistent workspace disclosures/navigation, available Anvil quota guidance, disabled activity count normalization, fresh authorized path reference titles, safe provider status categories, Coursekind notification identity with capture-only tests, a bounded opt-in live helper and locked dependency CI setup. The helper creates its own synthetic account, checks the Anvil default and never lists user courses or changes provider preferences. No live provider inference, notifications, browser execution, runtime replacement, push, merge or deployment was performed by the worker. Final deterministic counts and review handoff are recorded in `.superpowers/sdd/2026-10-26-coursekind-product/task-5-report.md`; root retains final acceptance ownership.

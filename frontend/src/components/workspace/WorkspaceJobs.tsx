@@ -16,9 +16,24 @@ export function WorkspaceJobs({
 }) {
   return (
     <div className="space-y-3" aria-label="Saved jobs">
-      {jobs.map((job) => (
-        <Job key={job.id} job={job} onChanged={onChanged} onReview={onReview} disabled={disabled} />
-      ))}
+      {jobs.map((job, index) =>
+        index > 0 && job.state === 'ready' ? (
+          <details key={job.id} className="border rounded p-3">
+            <summary className="cursor-pointer">
+              Earlier {job.kind} · {job.steps.length} saved draft(s)
+            </summary>
+            <Job job={job} onChanged={onChanged} onReview={onReview} disabled={disabled} />
+          </details>
+        ) : (
+          <Job
+            key={job.id}
+            job={job}
+            onChanged={onChanged}
+            onReview={onReview}
+            disabled={disabled}
+          />
+        ),
+      )}
     </div>
   );
 }
@@ -61,7 +76,7 @@ function Job({
   }
   return (
     <section className="border rounded p-3 space-y-2 min-w-0">
-      <p className="font-medium break-words">
+      <p role="status" className="font-medium break-words">
         {job.kind === 'plan' ? 'Plan' : job.kind === 'revision' ? 'Revision' : 'Build'}: {job.state}{' '}
         · {job.provider} / {job.model}
       </p>

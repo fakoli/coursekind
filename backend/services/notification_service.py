@@ -151,7 +151,7 @@ class NotificationService:
 
         success = await self.email_service.send(
             to=email_address,
-            subject="Study Buddy - Test Email",
+            subject="Coursekind - Test Email",
             template="test",
             context={"user_name": "Learner"},
         )
@@ -185,7 +185,7 @@ class NotificationService:
 
         success = await self.sms_service.send(
             to=phone_number,
-            message="Study Buddy: This is a test SMS notification!",
+            message="Coursekind: This is a test SMS notification!",
         )
 
         message = "Test SMS sent successfully" if success else "Failed to send test SMS"
@@ -213,7 +213,7 @@ class NotificationService:
         if channel == NotificationChannel.EMAIL and prefs.get("email_enabled"):
             success = await self.email_service.send(
                 to=prefs["email_address"],
-                subject="Study Buddy - Time to Study!",
+                subject="Coursekind - Time to Study!",
                 template="reminder",
                 context={"content": content},
             )
@@ -224,7 +224,7 @@ class NotificationService:
         ):
             success = await self.sms_service.send(
                 to=prefs["phone_number"],
-                message=f"📚 Study Buddy: {content}",
+                message=f"📚 Coursekind: {content}",
             )
 
         await self._record_notification(

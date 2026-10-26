@@ -1,7 +1,7 @@
 [project]
 name = "study-buddy-backend"
 version = "0.1.0"
-description = "Study Buddy - A learning platform for visual learners"
+description = "Coursekind - A learning platform for visual learners"
 requires-python = ">=3.11"
 dependencies = [
     "fastapi>=0.109.0",

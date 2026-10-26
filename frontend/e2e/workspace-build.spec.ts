@@ -27,7 +27,7 @@ test('WORKSPACE-01 — goal, reviewable plan, first draft, explicit apply and st
   await page.reload();
   await expect(page.getByLabel('Assumptions (one per line)')).toHaveValue('I can count to ten');
   await page.getByRole('button', { name: 'Apply plan · free' }).click();
-  await expect(page.getByText('Plan applied. Choose a module to build below.')).toBeVisible();
+  await expect(page.getByText('Applied plan · reopen to review or refine')).toBeVisible();
   await expect(page.getByRole('checkbox', { name: 'Planned lesson 1 · incomplete' })).toBeChecked();
   await expect(
     page.getByRole('checkbox', { name: 'Planned lesson 2 · incomplete' }),
@@ -72,7 +72,7 @@ test('WORKSPACE-02 — mixed new and explicitly reused courses preserve original
   await page.getByRole('button', { name: 'Generate plan', exact: true }).click();
   await expect(page.getByText(/Reuse selected course:/)).toContainText(world.otherCourse.title);
   await page.getByRole('button', { name: 'Apply plan · free' }).click();
-  await expect(page.getByText('Plan applied. Choose a module to build below.')).toBeVisible();
+  await expect(page.getByText('Applied plan · reopen to review or refine')).toBeVisible();
   const saved = await api<Workspace>(request, world.author, `/workspaces/${workspace.id}`);
   expect(saved.course_ids).toContain(world.otherCourse.id);
   const path = await api<{ path: Path }>(request, world.author, `/paths/${saved.path_id}`);

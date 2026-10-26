@@ -52,7 +52,7 @@ class SMSService:
             return f"Thanks for your answer: {body_lower.upper()}! Check the app for results."
 
         if body_lower in ["stop", "unsubscribe"]:
-            return "You've been unsubscribed from Study Buddy SMS notifications."
+            return "You've been unsubscribed from Coursekind SMS notifications."
 
         if body_lower in ["help", "?"]:
             return "Reply with A, B, C, or D to answer quiz questions. Reply STOP to unsubscribe."

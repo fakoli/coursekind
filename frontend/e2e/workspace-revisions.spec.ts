@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { test, expect, api, login, type Lesson } from './fixtures';
 import type { Workspace, WorkspaceJob, WorkspaceRevision } from '../src/types/workspace';
 
-test('WORKSPACE-03 — quiz-only revision, study, reload and restore preserve attempts and other content', async ({
+test('WORKSPACE-04 — quiz-only revision, study, reload and restore preserve attempts and other content', async ({
   page,
   request,
   world,
@@ -20,6 +20,7 @@ test('WORKSPACE-03 — quiz-only revision, study, reload and restore preserve at
   );
   await login(page, world.author);
   await page.goto(`/workspaces/${workspace.id}`);
+  await page.getByText('Revise saved material · drafts and retry').click();
   const panel = page.getByRole('region', { name: 'Revise learning material' });
   await panel.getByLabel('Revision scope').selectOption('quiz');
   await panel.getByLabel('Revision target').selectOption(world.lessons[0].id);
@@ -40,6 +41,7 @@ test('WORKSPACE-03 — quiz-only revision, study, reload and restore preserve at
   expect(studied.quiz_attempts).toBe(1);
   await page.goto(`/workspaces/${workspace.id}`);
   await page.reload();
+  await page.getByText('History · compare and restore').click();
   const history = page.getByRole('region', { name: 'Workspace history' });
   await history.getByRole('button', { name: 'Restore prior content · free' }).click();
   await expect(history.getByText('Restored as a new history entry.')).toBeVisible();
@@ -77,6 +79,7 @@ test('WORKSPACE-04 — a baseline edit in a second tab rejects stale apply and k
   });
   await login(page, world.author);
   await page.goto(`/workspaces/${workspace.id}`);
+  await page.getByText('Revise saved material · drafts and retry').click();
   const panel = page.getByRole('region', { name: 'Revise learning material' });
   await panel.getByLabel('Revision scope').selectOption('quiz');
   await panel.getByLabel('Revision count').fill('1');

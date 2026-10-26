@@ -9,6 +9,16 @@ from config import Settings
 from exceptions import AIServiceException
 
 
+class ProviderRequestError(AIServiceException):
+    """Bounded transport metadata; never stores a response body or URL."""
+
+    def __init__(self, category: str, status: int | None = None):
+        self.category = category
+        self.provider_status = status
+        label = f" (HTTP {status})" if status is not None else ""
+        super().__init__(f"Provider {category}{label}")
+
+
 class ProviderOutputError(AIServiceException):
     """Safe diagnostics for invalid output; never includes source text or credentials."""
 
@@ -72,15 +82,24 @@ class ProviderClient:
                     params=params,
                 )
             if response.status_code >= 400:
-                raise AIServiceException(
-                    f"{snapshot.provider} request failed (HTTP {response.status_code})"
+                status = response.status_code
+                category = (
+                    "temporarily unavailable"
+                    if status >= 500
+                    else "rate limited"
+                    if status == 429
+                    else "authentication failed"
+                    if status in (401, 403)
+                    else "request rejected"
                 )
+                raise ProviderRequestError(category, status)
             return response.json()
-        except (httpx.HTTPError, ValueError):
-            # Provider bodies, URLs and transport exceptions may contain credentials.
-            raise AIServiceException(
-                f"{snapshot.provider} unavailable or returned invalid data"
-            ) from None
+        except httpx.TimeoutException:
+            raise ProviderRequestError("timed out") from None
+        except httpx.HTTPError:
+            raise ProviderRequestError("connection failed") from None
+        except ValueError:
+            raise ProviderRequestError("returned invalid data") from None
 
     async def models(self, snapshot: ProviderSnapshot) -> list[str]:
         result = []

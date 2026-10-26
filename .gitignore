@@ -75,7 +75,6 @@ temp/
 
 # UV/Python
 .python-version
-uv.lock
 pip-log.txt
 pip-delete-this-directory.txt
 

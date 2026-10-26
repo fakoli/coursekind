@@ -1,3 +1,4 @@
+import { CreditPreflight } from './CreditPreflight';
 import { useRef, useState } from 'react';
 import { Button } from '../common/Button';
 import { workspacesApi } from '../../api/workspaces';
@@ -20,6 +21,12 @@ export function BuildPanel({
 }) {
   const modules = useWorkspaceModules(workspace);
   const [selection, setSelection] = useState<string[] | null>(null);
+  const reviewTrigger = useRef<HTMLElement | null>(null);
+  const openReview = (id: string) => {
+    reviewTrigger.current =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    setReview(id);
+  };
   const [review, setReview] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -40,9 +47,9 @@ export function BuildPanel({
     const data = {
       module_ids: selected,
       generate_flashcards: cards,
-      flashcard_count: cardCount,
+      flashcard_count: cards ? cardCount : 5,
       generate_quiz: quiz,
-      quiz_question_count: quizCount,
+      quiz_question_count: quiz ? quizCount : 3,
     };
     if (
       !request.current ||
@@ -79,6 +86,7 @@ export function BuildPanel({
             : '0 Anvil credits; external provider charges may apply'}
           . Charged when each validated draft is saved.
         </p>
+        <CreditPreflight provider={preferences?.provider} cost={25 * selected.length} />
         {modules.isPending && <p role="status">Loading modules…</p>}
         {modules.error && <p role="alert">Modules unavailable. Reload to check current access.</p>}
         {!modules.error && (
@@ -174,7 +182,7 @@ export function BuildPanel({
       <WorkspaceJobs
         jobs={jobs}
         onChanged={onChanged}
-        onReview={setReview}
+        onReview={openReview}
         disabled={workspace.archived}
       />
       {review && (
@@ -182,7 +190,10 @@ export function BuildPanel({
           key={review}
           workspaceId={workspace.id}
           changeId={review}
-          onDismiss={() => setReview(null)}
+          onDismiss={() => {
+            setReview(null);
+            reviewTrigger.current?.focus();
+          }}
           onChanged={onChanged}
           disabled={workspace.archived}
         />

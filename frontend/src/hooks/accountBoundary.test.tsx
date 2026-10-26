@@ -67,3 +67,19 @@ it('keeps credentials behind a retryable privacy gate after temporary verificati
   expect(result.current.isAuthenticated).toBe(true);
   expect(result.current.verificationError).toBeNull();
 });
+
+it('drops a late workspace job response after sign-out without refilling private caches', async () => {
+  const client = new QueryClient();
+  localStorage.setItem('token', 'a');
+  vi.mocked(authApi.me).mockResolvedValue(user as never);
+  vi.mocked(authApi.logout).mockResolvedValue({ message: 'Signed out' } as never);
+  const { result } = renderHook(() => useAuth(client));
+  await waitFor(() => expect(result.current.user?.id).toBe('a'));
+  let finish!: (value: unknown) => void;
+  const pending = client.fetchQuery({ queryKey: ['workspace-jobs', 'a', 'private-workspace'], queryFn: () => new Promise(resolve => { finish = resolve; }) }).catch(() => undefined);
+  await act(async () => { await result.current.logout(); });
+  finish([{ safe_error: 'Private draft', output_ref: 'private-change' }]);
+  await pending;
+  expect(result.current.user).toBeNull();
+  expect(client.getQueryCache().getAll()).toHaveLength(0);
+});

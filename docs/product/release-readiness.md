@@ -20,8 +20,8 @@ Coursekind turns a learning goal into a course or path that its author can revie
 | Build study-ready material from the plan | Default one module, maximum three per batch, lesson plus requested cards/quiz, explicit review/apply | Actual build/reload/dismiss/apply/study and partial retry passed with mock provider |
 | Safely revise what AI creates | Typed scoped revisions, before/after review and conflict-safe apply | Accepted through cc6fd8f: local suites, independent review, actual UI and44-case CI passed |
 | Recover earlier content without erasing learning history | Immutable history and compensating restore | Accepted through cc6fd8f: local suites, independent review, actual UI and44-case CI passed |
-| Complement generation with JEV | Explicit advisory review of selected objective, lesson excerpt and quiz item | Task4 pending; initial synthetic API connectivity is not feature acceptance |
-| Credible product operation | Onboarding, recovery, accessibility, dependencies, backup and rollback instructions, truthful limits | Task5 and final adversarial review pending |
+| Complement generation with JEV | Explicit advisory review of selected objective, lesson excerpt and quiz item | Accepted Task 4 through `06b17dc`: independent repair review, actual live/UI and CI 40349425309 passed |
+| Credible product operation | Compact onboarding/recovery sections, quota guidance, locked dependencies and local operating guide; stopped-process backup round trips recorded | Task 5 implementation ready for final deterministic results, independent review and root CI/CUA |
 
 ## Evidence boundaries
 
@@ -44,4 +44,11 @@ The Codex subscription CLI prototype was removed after its isolation qualificati
 
 ## Completion gate
 
-Before calling the local v1 complete, finish Tasks3–5, obtain their independent reviews, resolve important findings, run the final backend/frontend and browser suites, walk the new UI journeys, update the normal local runtime to the accepted commit, and publish a final evidence report and comprehensive draft PR. No merge or public deployment is authorized by this completion gate.
+Before calling the local v1 complete, finish Task 5 acceptance and final aggregate independent review, resolve important findings, run the final backend/frontend and browser suites, walk the new UI journeys, update the normal local runtime to the accepted commit, and publish a final evidence report and comprehensive draft PR. Tasks 3 and 4 are accepted at their recorded checkpoints. No merge or public deployment is authorized by this completion gate.
+
+
+## Task 5 operating checkpoint
+
+The [local operating guide](coursekind-local-v1.md) documents supported JSON/SQLite operation, saved-draft billing, explicit interruption retry, backup/restore and feature rollback. Task 4 repaired CI [40349425309](https://github.com/fakoli/my-ai-study-buddy/actions/runs/40349425309) passed 509 backend tests, 191 frontend tests, Node 22/24 lint/build and 46 browser cases in 6.2 minutes at `06b17dc`. Root also verified real disabled-gate behavior: saved workspace reads and baseline learning material remained available while writes and review submission were disabled.
+
+Task 5 adds three browser cases (49 total, preserving the original 40) and all six workspace journey groups. Authoring/type/list success is distinct from root's exact-commit remote execution. New normal-runtime refresh, final screenshots and final live provider qualification remain root-owned gates. The stopped-process [backup round trips](../audits/2026-10-26-coursekind/backup-restore-checks.json) and [timed walkthrough summary](../audits/2026-10-26-coursekind/walkthrough-summary.md) preserve actual evidence and historical failures.

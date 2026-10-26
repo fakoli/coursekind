@@ -1,3 +1,4 @@
+import { CreditPreflight } from './CreditPreflight';
 import { useRef, useState } from 'react';
 import { useCourses } from '../../hooks/useCourses';
 import { Button } from '../common/Button';
@@ -69,6 +70,7 @@ export function PlanPanel({
         <p className="text-sm text-gray-600">
           Credits are charged when a validated draft is saved. Review and Apply are separate steps.
         </p>
+        <CreditPreflight provider={preferences?.provider} cost={10} />
         {workspace.course_ids.length > 0 && workspace.brief.scope === 'course' && (
           <p className="text-sm">This plan adds modules to your linked course.</p>
         )}

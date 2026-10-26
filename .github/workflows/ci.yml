@@ -22,13 +22,13 @@ jobs:
         run: uv python install 3.12
 
       - name: Install dependencies
-        run: uv sync --dev
+        run: uv sync --locked --dev --python 3.12
 
       # Run the full suite from a clean env (no ambient DEBUG) to prove the
       # suite is hermetic (ticket 006 / OX Alpha finding 6). No pipe: the
       # step's exit code must be pytest's so red tests fail the job.
       - name: Run backend test suite
-        run: env -u DEBUG uv run pytest tests/ -q --cov=. --cov-report=term-missing
+        run: env -u DEBUG uv run --locked --python 3.12 pytest tests/ -q --cov=. --cov-report=term-missing
 
   frontend:
     runs-on: ubuntu-latest
@@ -70,7 +70,7 @@ jobs:
           node-version: 24
       - name: Install isolated backend dependencies
         working-directory: backend
-        run: uv sync --dev --python 3.12
+        run: uv sync --locked --dev --python 3.12
       - name: Install browser test dependencies
         working-directory: frontend
         run: npm ci
@@ -80,7 +80,7 @@ jobs:
       - name: Typecheck browser fixtures and tests
         working-directory: frontend
         run: npm run test:e2e:types
-      - name: Run all 40 named browser journeys
+      - name: Run 40 baseline cases and all workspace cases
         working-directory: frontend
         run: npm run test:e2e
       - name: Preserve per-journey timings and failure evidence

@@ -63,7 +63,19 @@ export function BriefForm({
             <input
               type="checkbox"
               checked={brief.generate_flashcards}
-              onChange={(e) => set('generate_flashcards', e.target.checked)}
+              onChange={(e) =>
+                onChange({
+                  ...brief,
+                  generate_flashcards: e.target.checked,
+                  flashcard_count:
+                    e.target.checked ||
+                    (Number.isInteger(brief.flashcard_count) &&
+                      brief.flashcard_count >= 1 &&
+                      brief.flashcard_count <= 20)
+                      ? brief.flashcard_count
+                      : 5,
+                })
+              }
             />
             Include flashcards
           </label>
@@ -82,7 +94,19 @@ export function BriefForm({
             <input
               type="checkbox"
               checked={brief.generate_quiz}
-              onChange={(e) => set('generate_quiz', e.target.checked)}
+              onChange={(e) =>
+                onChange({
+                  ...brief,
+                  generate_quiz: e.target.checked,
+                  quiz_question_count:
+                    e.target.checked ||
+                    (Number.isInteger(brief.quiz_question_count) &&
+                      brief.quiz_question_count >= 1 &&
+                      brief.quiz_question_count <= 10)
+                      ? brief.quiz_question_count
+                      : 3,
+                })
+              }
             />
             Include quiz
           </label>

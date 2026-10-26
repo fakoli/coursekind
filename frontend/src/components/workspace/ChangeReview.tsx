@@ -1,13 +1,31 @@
 import { MaterialReview } from './MaterialReview';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { useAuthContext } from '../common/AuthContext';
 import { Button } from '../common/Button';
 import { MarkdownRenderer } from '../common/MarkdownRenderer';
 import { workspacesApi } from '../../api/workspaces';
+import { coursesApi } from '../../api/courses';
 import { ApiError } from '../../api/client';
 import { useAIPreferences } from '../../hooks/useUserSettings';
+
+function AuthorizedCourseReference({ id }: { id: string }) {
+  const { user } = useAuthContext();
+  const course = useQuery({
+    queryKey: ['workspace-reference-title', user?.id, id],
+    queryFn: () => coursesApi.get(id),
+    enabled: !!user,
+    staleTime: 0,
+    refetchOnMount: 'always',
+  });
+  const title = !course.isFetching && !course.error && user ? course.data?.course.title : null;
+  return (
+    <Link className="underline" to={`/courses/${id}`}>
+      {title || 'Course reference (title unavailable)'}
+    </Link>
+  );
+}
 
 export function EditorialValue({ name, value }: { name: string; value: unknown }) {
   if (name === 'content_markdown' && typeof value === 'string')
@@ -84,13 +102,7 @@ export function EditorialValue({ name, value }: { name: string; value: unknown }
       <ul className="list-disc pl-5">
         {value.map((item, index) => (
           <li key={index} className="break-words">
-            {name === 'course_ids' ? (
-              <Link className="underline" to={`/courses/${String(item)}`}>
-                Course {String(item)}
-              </Link>
-            ) : (
-              String(item)
-            )}
+            {name === 'course_ids' ? <AuthorizedCourseReference id={String(item)} /> : String(item)}
           </li>
         ))}
       </ul>
@@ -118,6 +130,11 @@ export function ChangeReview({
     queryKey: ['workspace-change', user?.id, workspaceId, changeId],
     queryFn: () => workspacesApi.change(workspaceId, changeId),
   });
+  const reviewRegion = useRef<HTMLElement>(null);
+  const loadedChangeId = change.data?.id;
+  useEffect(() => {
+    if (loadedChangeId) reviewRegion.current?.focus();
+  }, [loadedChangeId]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [conflict, setConflict] = useState(false);
@@ -164,7 +181,12 @@ export function ChangeReview({
   if (!change.data) return <p role="status">Loading draft…</p>;
   const proposal = change.data;
   return (
-    <section aria-label="Draft review" className="rounded-xl border p-5 bg-white space-y-3 min-w-0">
+    <section
+      ref={reviewRegion}
+      tabIndex={-1}
+      aria-label="Draft review"
+      className="rounded-xl border p-5 bg-white space-y-3 min-w-0"
+    >
       <h3 className="text-xl font-semibold">Review content changes</h3>
       <p>
         {proposal.patches.length} object

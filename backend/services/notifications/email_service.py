@@ -50,7 +50,7 @@ class EmailService:
         <body>
             <div class="container">
                 <div class="header">
-                    <h1>Study Buddy</h1>
+                    <h1>Coursekind</h1>
                 </div>
                 <div class="content">
                     <p>Hi {user_name},</p>
@@ -58,7 +58,7 @@ class EmailService:
                 </div>
                 <div class="footer">
                     <p>Happy learning!</p>
-                    <p>The Study Buddy Team</p>
+                    <p>The Coursekind Team</p>
                 </div>
             </div>
         </body>
@@ -84,7 +84,7 @@ class EmailService:
                     f"https://api.mailgun.net/v3/{self.settings.mailgun_domain}/messages",
                     auth=("api", self.settings.mailgun_api_key),
                     data={
-                        "from": f"Study Buddy <noreply@{self.settings.mailgun_domain}>",
+                        "from": f"Coursekind <noreply@{self.settings.mailgun_domain}>",
                         "to": to,
                         "subject": subject,
                         "html": html_content,

@@ -573,3 +573,19 @@ Course outlines compare the editor's initial module snapshot inside one server t
 Module editors keep all local fields when a changed server response arrives. The author explicitly chooses Reload server version or Keep my draft before saving. Every failed study encounter retains its original event ID until acknowledged; Finish retries unresolved saves and cannot silently discard them. Owners may explicitly follow/unfollow their own paths independently of author controls.
 
 All course/path discovery, details, nested lessons and media require sign-in, including trusted filesystem study content. Uploads accept validated PNG/JPEG/GIF/WebP raster bytes. Legacy SVG bytes remain on disk but are not served or rehosted in browser blobs. Remote image references are browser-rendered without app credentials; server URL downloading is disabled.
+
+
+## Additive Coursekind workspace journeys (26 October 2026)
+
+The original 40 IDs and D1–D8 above remain unchanged. These are six additional journey groups, with multiple browser cases allowed per group.
+
+| ID | Journey and acceptance |
+| --- | --- |
+| WORKSPACE-01 | Goal-only brief with visible editable defaults → plan → manual review → apply → one-module draft → apply → study/reload. |
+| WORKSPACE-02 | Path with explicitly selected accessible reused courses; original authorship and private-source access remain intact. |
+| WORKSPACE-03 | Partial failure, saved draft after reload, restart interruption and explicit selected-step retry; no automatic provider repeat/fallback. Browser partial/retry plus deterministic backend restart tests. |
+| WORKSPACE-04 | Scoped revision, readable before/after, stale conflict, history and compensating restore without lost study records. |
+| WORKSPACE-05 | Optional explicit Jev disclosure, advisory probabilities, stale/cache/error states, no effect on scores or completion. |
+| WORKSPACE-06 | Account switch/sign-out privacy, compact mobile sections, keyboard/zoom/focus recovery, write-gate-off baseline navigation. |
+
+The Task 5 scenario package lists 49 browser cases (40 original plus 9 workspace), not 49 distinct journey groups. The operating guide and audit separate authored scenarios, deterministic passing tests, root CUA evidence, live inference and exact-commit remote CI.
