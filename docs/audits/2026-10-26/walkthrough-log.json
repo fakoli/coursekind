@@ -57,13 +57,13 @@
     "journey": "PATH-02 discovery add and contribution counts",
     "status": "completed",
     "elapsed_seconds": 14,
-    "notes": "Discover→Add to Path→learner path; cards and author detail show2references:1by author,1by other owners."
+    "notes": "Discover\u2192Add to Path\u2192learner path; cards and author detail show2references:1by author,1by other owners."
   },
   {
     "journey": "PATH-03 remove and cancel",
     "status": "completed",
     "elapsed_seconds": 15,
-    "notes": "Cancel retained course. Confirm removal persisted empty path; sourcecourse remains2modules; reusecount falls2→1,otherowner1→0. Path deletion not part of this run."
+    "notes": "Cancel retained course. Confirm removal persisted empty path; sourcecourse remains2modules; reusecount falls2\u21921,otherowner1\u21920. Path deletion not part of this run."
   },
   {
     "journey": "MODULE-02 create and reorder",
@@ -136,7 +136,7 @@
     "subflow": "Distinct reviews and final card",
     "outcome": "completed",
     "wall_seconds": 117,
-    "notes": "Enter and Space flip cards. Re-reviewing first card across reload kept1/2 progress; reviewing final card then leaving without Next card yields2/2. Ratings Hard→Medium→Unhelpful and Easy persisted; filters and empty states behaved correctly."
+    "notes": "Enter and Space flip cards. Re-reviewing first card across reload kept1/2 progress; reviewing final card then leaving without Next card yields2/2. Ratings Hard\u2192Medium\u2192Unhelpful and Easy persisted; filters and empty states behaved correctly."
   },
   {
     "id": "STUDY-03",
@@ -164,14 +164,14 @@
       "syntax_error": 10,
       "runtime_error": 11
     },
-    "notes": "Original2+3→5; local Editcode2+7→9; infinitewhileloopstopped5s;syntax/runtimeerrorsshown;Resetoriginalcode→5. Sourceauthorcontentunchanged. First browserwaittoolhititsownshorterdeadlinebefore5stimeout; subsequentstateconfirmedcorrectappresult."
+    "notes": "Original2+3\u21925; local Editcode2+7\u21929; infinitewhileloopstopped5s;syntax/runtimeerrorsshown;Resetoriginalcode\u21925. Sourceauthorcontentunchanged. First browserwaittoolhititsownshorterdeadlinebefore5stimeout; subsequentstateconfirmedcorrectappresult."
   },
   {
     "id": "STUDY-04",
     "subflow": "Scoring, retry, and saved history",
     "outcome": "completed",
     "wall_seconds": 28,
-    "notes": "Submit disabled with an unanswered question. Firstattempt1correct/1wrong→50%with explanations; Retry clearedanswers; keyboardchosen2correct→100%; reloadretained2attemptsandlatestscore100. ExtraAIquestionsvalidatedinTask4cycle separately."
+    "notes": "Submit disabled with an unanswered question. Firstattempt1correct/1wrong\u219250%with explanations; Retry clearedanswers; keyboardchosen2correct\u2192100%; reloadretained2attemptsandlatestscore100. ExtraAIquestionsvalidatedinTask4cycle separately."
   },
   {
     "id": "STUDY-06",
@@ -192,7 +192,7 @@
     "subflow": "Revocation and retained personal history",
     "outcome": "completed",
     "wall_seconds": null,
-    "notes": "Afterfourmodulecompletion,path100%. OwnerchangedAcoursepublic→privatewithoutstudentgrant: Dashboardkept4weeklycompletions/1session/streak1/time2.5m,redactedprivatetitles,andselectedpathbecameactive. Pathdetail50%,1unavailable,genericplaceholderwithoutprivatecounts/title. Namedcoursegrantrestoredpath100%andpersonalprogress."
+    "notes": "Afterfourmodulecompletion,path100%. OwnerchangedAcoursepublic\u2192privatewithoutstudentgrant: Dashboardkept4weeklycompletions/1session/streak1/time2.5m,redactedprivatetitles,andselectedpathbecameactive. Pathdetail50%,1unavailable,genericplaceholderwithoutprivatecounts/title. Namedcoursegrantrestoredpath100%andpersonalprogress."
   },
   {
     "journey": "STATS-03",
@@ -204,13 +204,13 @@
     "journey": "MODULE-04",
     "status": "pass-subflow",
     "elapsed_seconds": 12.449,
-    "notes": "Remove Sandbox → Save → reload → No Code Sandbox persisted."
+    "notes": "Remove Sandbox \u2192 Save \u2192 reload \u2192 No Code Sandbox persisted."
   },
   {
     "journey": "AUTH-02",
     "status": "fail-subflow",
     "elapsed_seconds": null,
-    "notes": "Logout Baseline Student→login Baseline History without reload: greeting changes but dashboard shows Student private lesson titles, completed path, quiz and activity. Concrete Task5 cache-isolation reproduction."
+    "notes": "Logout Baseline Student\u2192login Baseline History without reload: greeting changes but dashboard shows Student private lesson titles, completed path, quiz and activity. Concrete Task5 cache-isolation reproduction."
   },
   {
     "journey": "STATS-01/STATS-02",
@@ -228,7 +228,7 @@
     "journey": "STUDY-02/STUDY-03",
     "status": "pass-subflow",
     "elapsed_seconds": 45.97,
-    "notes": "Flip first card→rate Easy→Next→Previous→Space flip: visible reviewed1/2 throughout; secondary stored check exactly2 review events for1 stable cardID. Rating+Next same encounter deduplicated; genuine revisit retained."
+    "notes": "Flip first card\u2192rate Easy\u2192Next\u2192Previous\u2192Space flip: visible reviewed1/2 throughout; secondary stored check exactly2 review events for1 stable cardID. Rating+Next same encounter deduplicated; genuine revisit retained."
   },
   {
     "journey": "MODULE-02",
@@ -252,13 +252,13 @@
     "journey": "COURSE-04",
     "status": "pass-subflow",
     "elapsed_seconds": 51.292,
-    "notes": "Discover→no-match search shows helpful empty state→Fixture+Intermediate+A-Z finds public course→open verifies author,2modules,own/other reuse→Back retains Discover tab (filters reset). Only one public result: cross-item sort order not yet exercised."
+    "notes": "Discover\u2192no-match search shows helpful empty state\u2192Fixture+Intermediate+A-Z finds public course\u2192open verifies author,2modules,own/other reuse\u2192Back retains Discover tab (filters reset). Only one public result: cross-item sort order not yet exercised."
   },
   {
     "journey": "AI-02",
     "status": "pass-subflow",
     "elapsed_seconds": 22.789,
-    "notes": "Selected llm.secondary from live hosted catalog→Save→reload: Selected anvil/llm.secondary persisted. Preference persistence only; generation on secondary not yet tested."
+    "notes": "Selected llm.secondary from live hosted catalog\u2192Save\u2192reload: Selected anvil/llm.secondary persisted. Preference persistence only; generation on secondary not yet tested."
   },
   {
     "journey": "COURSE-05/AI-01/AI-05",
@@ -276,7 +276,7 @@
     "journey": "COURSE-05/MODULE-05/AI-03",
     "status": "pass-mocked-provider-subflow",
     "elapsed_seconds": 51.336,
-    "notes": "Mocked external HTTP through actual OpenAI adapter: suggest8→select1→2cards+2quiz→create→Savecourse→editgeneratedlesson→save/refinement→reload. One module with2cards/2quiz persisted, description+2objectives preserved, ledger records openai/gpt-test, balance100 unchanged. Not live vendor validation."
+    "notes": "Mocked external HTTP through actual OpenAI adapter: suggest8\u2192select1\u21922cards+2quiz\u2192create\u2192Savecourse\u2192editgeneratedlesson\u2192save/refinement\u2192reload. One module with2cards/2quiz persisted, description+2objectives preserved, ledger records openai/gpt-test, balance100 unchanged. Not live vendor validation."
   },
   {
     "journey": "MODULE-05",
@@ -288,7 +288,7 @@
     "journey": "AI-04",
     "status": "pass-mocked-provider-subflow",
     "elapsed_seconds": 119.499,
-    "notes": "Replaced synthetic OpenAI key v1→v2; subsequent actual adapter card generation used v2 in two mocked requests. Removed key→reload shows credentialnotconfigured/unavailablemodel without fallback. Explicitly selected Anvil+llm.primary and saved. No real external calls. Time includes card-dialog defect investigation."
+    "notes": "Replaced synthetic OpenAI key v1\u2192v2; subsequent actual adapter card generation used v2 in two mocked requests. Removed key\u2192reload shows credentialnotconfigured/unavailablemodel without fallback. Explicitly selected Anvil+llm.primary and saved. No real external calls. Time includes card-dialog defect investigation."
   },
   {
     "journey": "COURSE-05/AI-01",
@@ -300,7 +300,7 @@
     "journey": "COURSE-05/MODULE-05/AI-01/AI-05",
     "status": "pass-live-anvil-subflow",
     "elapsed_seconds": 191.273,
-    "notes": "Real llm.primary staged module retry completed: content22.548s, cards1.988s, quiz5.193s HTTP durations. Allfinishstop; prior rejected attempt uncharged. CreatingYourFirstList saved with2cards,2validquizquestions,description+2objectives; manually appended authornote,Save/reload verified. Originalmockmodule retained. Balance100→90outline→65successfulmodule; ledgerexact-10/-25, nofaileddebit. Elapsed includes inspection/manualedit. ExternalvendorHTTPmock remainsenabled but Anvilrequestspassthroughlive."
+    "notes": "Real llm.primary staged module retry completed: content22.548s, cards1.988s, quiz5.193s HTTP durations. Allfinishstop; prior rejected attempt uncharged. CreatingYourFirstList saved with2cards,2validquizquestions,description+2objectives; manually appended authornote,Save/reload verified. Originalmockmodule retained. Balance100\u219290outline\u219265successfulmodule; ledgerexact-10/-25, nofaileddebit. Elapsed includes inspection/manualedit. ExternalvendorHTTPmock remainsenabled but Anvilrequestspassthroughlive."
   },
   {
     "journey": "MODULE-05",
@@ -346,7 +346,7 @@
     "scenario": "Discovery sorting with three public fixtures and distinct reuse counts",
     "status": "pass",
     "duration_ms": 19610,
-    "notes": "MostPopular SharedEngineering1reference first; Newest ZZZ first; A-Z AAA→Fixture→ZZZ; Advanced onlyZZZ; restoredAllLevels/MostPopular. Privatecoursesabsent. APIseededpublicsortingfixtures, actualUIcontrols."
+    "notes": "MostPopular SharedEngineering1reference first; Newest ZZZ first; A-Z AAA\u2192Fixture\u2192ZZZ; Advanced onlyZZZ; restoredAllLevels/MostPopular. Privatecoursesabsent. APIseededpublicsortingfixtures, actualUIcontrols."
   },
   {
     "journey": "AUTH-02",
@@ -354,7 +354,7 @@
     "status": "pass",
     "duration_ms": 8110,
     "evidence": "36-account-switch-cache-isolated.png",
-    "notes": "Student private dashboard populated first; Logout→HistorySignIn immediate dashboard shows History selected0/weekly4/longest3, no Studentprivatecourse or completion/quiz data. No reload between identities."
+    "notes": "Student private dashboard populated first; Logout\u2192HistorySignIn immediate dashboard shows History selected0/weekly4/longest3, no Studentprivatecourse or completion/quiz data. No reload between identities."
   },
   {
     "journey": "AUTH-02",
@@ -377,7 +377,7 @@
     "status": "pass",
     "duration_ms": 17915,
     "evidence": "38-incomplete-card-validation-fixed.png",
-    "notes": "FrontonlythirdcardSave shows clearfront/backerror and retains3draftcards. Fillback→Save/reload3; removeonlytestcard→Save/reload2. Existingcards/content/quiz preserved."
+    "notes": "FrontonlythirdcardSave shows clearfront/backerror and retains3draftcards. Fillback\u2192Save/reload3; removeonlytestcard\u2192Save/reload2. Existingcards/content/quiz preserved."
   },
   {
     "journey": "MODULE-03",
@@ -385,7 +385,7 @@
     "status": "pass",
     "duration_ms": 61858,
     "evidence": "39-quiz-validation-fixed.png",
-    "notes": "Onefilledoption rejectsSave andpreservesdraft. CorrectD8→removeB remapsC8; removecorrectC requiresreselection andblocksSave; minimum2removaldisabled. Add/removeoptionworks. SelectA5→Save/reload correct2-optionquestion. Removedonlytestquestion andrestoredoriginal2."
+    "notes": "Onefilledoption rejectsSave andpreservesdraft. CorrectD8\u2192removeB remapsC8; removecorrectC requiresreselection andblocksSave; minimum2removaldisabled. Add/removeoptionworks. SelectA5\u2192Save/reload correct2-optionquestion. Removedonlytestquestion andrestoredoriginal2."
   },
   {
     "journey": "STUDY-05",
@@ -424,7 +424,7 @@
     "status": "pass",
     "duration_ms": 19114,
     "evidence": "43-session-outage-retry-gate.png",
-    "notes": "StoppeddisposableAPI,reloadedSettings: onlyverificationerror/Retry/Signout visible,noprivatecontent. RestartAPI→Retry restoresAuthorSettings withoutreenteringcredentials. ExpiredJWT/401coveredfocusedtests."
+    "notes": "StoppeddisposableAPI,reloadedSettings: onlyverificationerror/Retry/Signout visible,noprivatecontent. RestartAPI\u2192Retry restoresAuthorSettings withoutreenteringcredentials. ExpiredJWT/401coveredfocusedtests."
   },
   {
     "journey": "AUTH-01",
@@ -438,7 +438,7 @@
     "journey": "COURSE-03",
     "status": "pass-subflow",
     "elapsed_seconds": 28.859,
-    "steps": "Edited disposable unreferenced course title/description/difficulty, saved and reloaded; Delete→Cancel retained it; Delete→confirm removed list card; old direct URL recovers gracefully.",
+    "steps": "Edited disposable unreferenced course title/description/difficulty, saved and reloaded; Delete\u2192Cancel retained it; Delete\u2192confirm removed list card; old direct URL recovers gracefully.",
     "notes": "Synthetic AAA discovery fixture intentionally deleted after prior sorting checks. Timing includes tool inspection."
   },
   {
@@ -447,5 +447,33 @@
     "elapsed_seconds": 23.676,
     "steps": "390 CSSpx viewport retest: course cards, pathdetailactions, moduleactivitytabs and editortabs now have documentwidth390/scrollWidth390. Practice click opens exercise; keyboardTab fromQuiz thenSpace opensSandbox. Creation,discovery,pathlist,coursedetail,settings also fit.",
     "notes": "DOM-backed actual browser geometry and real interactions. IAB screenshot compositor does not reliably reflect device override; not claiming screenshot-based phone visual audit."
+  },
+  {
+    "journey": "MODULE-01 / STUDY-01",
+    "scenario": "Manual rich Markdown and embedded example",
+    "status": "pass",
+    "duration_ms": 39998,
+    "notes": "Added heading/list/bold/documentation link/JavaScript code to existing protected-image lesson. Preview rendered; Save/reload retained Markdown. Empty title rejected with retained content. Restored title/saved; learner view renders all content and Run code prints Hello, learner!. Existing cards/quiz/practice retained."
+  },
+  {
+    "journey": "SHARE-01 / AUTH-03",
+    "scenario": "Public discovery, unlisted direct lesson, private denial",
+    "status": "pass",
+    "duration_ms": 41911,
+    "notes": "Owner UI Private\u2192Public; unrelated fresh learner found course in Discover and saw two modules without author controls. Unlisted survived reload/directlesson including protectedimage while disappearing from Discover. Restored Private with original Student grant intact; unrelated direct lesson now Module not found. No normal userdata changed."
+  },
+  {
+    "journey": "SHARE-05 / PATH-02 / PATH-03",
+    "scenario": "Distinct references and deleting a curator path",
+    "status": "pass",
+    "duration_ms": 42562,
+    "notes": "Createddisposablelearnerpath, added publicotherauthorcourse. Samecourse excludedfromsecondAddpicker; otheraccountcoursedetailreferences1\u21922,author0/otherowners2. Deletedonlydisposablepath; sourcecourseand2modulesremain, countsreturn1,total0author/1other. Syntheticpathsneverimplyfollow."
+  },
+  {
+    "journey": "STATS-04 / STATS-01 / STATS-03 / STUDY-04",
+    "scenario": "Read and quiz history survive dashboard navigation and reload",
+    "status": "pass",
+    "duration_ms": 48517,
+    "notes": "FreshRecoverylearnerexplicitread+2correctquizanswers recordsone100%attempt. Dashboardnavigation+reloadretain1session,1courseinprogress,0selectedpaths,0completedmodules,100%quiz,read+quizactivity. ContinueLearningopenssamecourse/module; contentreadstateandonequizhistoryattemptpersist. Passiveadditionalnavigationdoesnotaddattempt."
   }
 ]

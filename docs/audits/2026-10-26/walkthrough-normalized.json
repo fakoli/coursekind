@@ -1,0 +1,1364 @@
+{
+  "schema_version": 1,
+  "source": "walkthrough-log.json",
+  "record_count": 69,
+  "note": "Historical outcomes and source notes are preserved, not promoted into final journey passes. Record indices are zero-based.",
+  "records": [
+    {
+      "record": 0,
+      "journey_ids": [
+        "AUTH-01"
+      ],
+      "scenario": "AUTH-01",
+      "observed_status": "completed",
+      "elapsed_seconds": 70,
+      "timing_source": "wall_seconds",
+      "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
+      "later_retest_records": [],
+      "source": {
+        "id": "AUTH-01",
+        "outcome": "completed",
+        "wall_seconds": 70,
+        "notes": "UI registration auto-signs in and shows correct author identity. Observation includes fixture setup pause; not a human benchmark."
+      }
+    },
+    {
+      "record": 1,
+      "journey_ids": [
+        "COURSE-01"
+      ],
+      "scenario": "COURSE-01",
+      "observed_status": "completed",
+      "elapsed_seconds": 44,
+      "timing_source": "wall_seconds",
+      "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
+      "later_retest_records": [],
+      "source": {
+        "id": "COURSE-01",
+        "outcome": "completed",
+        "wall_seconds": 44,
+        "notes": "Created manual course with two ordered titled/described modules through wizard; detail shows2modules."
+      }
+    },
+    {
+      "record": 2,
+      "journey_ids": [
+        "SHARE-02"
+      ],
+      "scenario": "SHARE-02",
+      "observed_status": "completed",
+      "elapsed_seconds": null,
+      "timing_source": "wall_seconds",
+      "timing_interpretation": "Not measured or interrupted; see original notes",
+      "later_retest_records": [],
+      "source": {
+        "id": "SHARE-02",
+        "outcome": "completed",
+        "wall_seconds": null,
+        "notes": "A grants B private course access in UI; B finds Shared with me and opens module with no author controls. A revokes; B reload shows Module not found. Duration interrupted by model changes; clean timing retest pending."
+      }
+    },
+    {
+      "record": 3,
+      "journey_ids": [
+        "PATH-01"
+      ],
+      "scenario": "PATH-01",
+      "observed_status": "completed",
+      "elapsed_seconds": 50,
+      "timing_source": "wall_seconds",
+      "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
+      "later_retest_records": [],
+      "source": {
+        "id": "PATH-01",
+        "outcome": "completed",
+        "wall_seconds": 50,
+        "notes": "Created goal path with hours, edited description/hours, reloaded and confirmed persistence."
+      }
+    },
+    {
+      "record": 4,
+      "journey_ids": [
+        "PATH-02"
+      ],
+      "scenario": "PATH-02",
+      "observed_status": "completed",
+      "elapsed_seconds": 58,
+      "timing_source": "wall_seconds",
+      "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
+      "later_retest_records": [],
+      "source": {
+        "id": "PATH-02",
+        "outcome": "completed",
+        "wall_seconds": 58,
+        "notes": "Added own private and another author public course via path picker; original IDs/authors and2module counts shown. Already-added course excluded from picker."
+      }
+    },
+    {
+      "record": 5,
+      "journey_ids": [
+        "PATH-03"
+      ],
+      "scenario": "PATH-03",
+      "observed_status": "partial",
+      "elapsed_seconds": 26,
+      "timing_source": "wall_seconds",
+      "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
+      "later_retest_records": [
+        10,
+        15,
+        67
+      ],
+      "source": {
+        "id": "PATH-03",
+        "outcome": "partial",
+        "wall_seconds": 26,
+        "notes": "Reorder succeeds without navigation and persists after reload; removal/delete branches pending dedicated fixture."
+      }
+    },
+    {
+      "record": 6,
+      "journey_ids": [
+        "SHARE-03"
+      ],
+      "scenario": "SHARE-03",
+      "observed_status": "completed",
+      "elapsed_seconds": 84,
+      "timing_source": "wall_seconds",
+      "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
+      "later_retest_records": [],
+      "source": {
+        "id": "SHARE-03",
+        "outcome": "completed",
+        "wall_seconds": 84,
+        "notes": "Named private path appears in recipient discovery. Recipient can follow but has no author controls; path sharing does not reveal revoked private course title."
+      }
+    },
+    {
+      "record": 7,
+      "journey_ids": [
+        "PATH-04"
+      ],
+      "scenario": "PATH-04",
+      "observed_status": "completed",
+      "elapsed_seconds": 33,
+      "timing_source": "wall_seconds",
+      "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
+      "later_retest_records": [],
+      "source": {
+        "id": "PATH-04",
+        "outcome": "completed",
+        "wall_seconds": 33,
+        "notes": "Follow persisted across reload, appeared in Following, and unfollow removed it. Source path remained accessible and unchanged."
+      }
+    },
+    {
+      "record": 8,
+      "journey_ids": [
+        "SHARE-02"
+      ],
+      "scenario": "SHARE-02 media extension",
+      "observed_status": "completed",
+      "elapsed_seconds": 8,
+      "timing_source": "elapsed_seconds",
+      "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
+      "later_retest_records": [],
+      "source": {
+        "journey": "SHARE-02 media extension",
+        "status": "completed",
+        "elapsed_seconds": 8,
+        "notes": "Owner grant exposes protected lesson image to recipient; revocation then recipient reload denies module. Screenshot06 captures authorized image. Private direct image API checked separately."
+      }
+    },
+    {
+      "record": 9,
+      "journey_ids": [
+        "PATH-02"
+      ],
+      "scenario": "PATH-02 discovery add and contribution counts",
+      "observed_status": "completed",
+      "elapsed_seconds": 14,
+      "timing_source": "elapsed_seconds",
+      "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
+      "later_retest_records": [],
+      "source": {
+        "journey": "PATH-02 discovery add and contribution counts",
+        "status": "completed",
+        "elapsed_seconds": 14,
+        "notes": "Discover\u2192Add to Path\u2192learner path; cards and author detail show2references:1by author,1by other owners."
+      }
+    },
+    {
+      "record": 10,
+      "journey_ids": [
+        "PATH-03"
+      ],
+      "scenario": "PATH-03 remove and cancel",
+      "observed_status": "completed",
+      "elapsed_seconds": 15,
+      "timing_source": "elapsed_seconds",
+      "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
+      "later_retest_records": [],
+      "source": {
+        "journey": "PATH-03 remove and cancel",
+        "status": "completed",
+        "elapsed_seconds": 15,
+        "notes": "Cancel retained course. Confirm removal persisted empty path; sourcecourse remains2modules; reusecount falls2\u21921,otherowner1\u21920. Path deletion not part of this run."
+      }
+    },
+    {
+      "record": 11,
+      "journey_ids": [
+        "MODULE-02"
+      ],
+      "scenario": "MODULE-02 create and reorder",
+      "observed_status": "completed",
+      "elapsed_seconds": 20,
+      "timing_source": "elapsed_seconds",
+      "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
+      "later_retest_records": [],
+      "source": {
+        "journey": "MODULE-02 create and reorder",
+        "status": "completed",
+        "elapsed_seconds": 20,
+        "notes": "Created2cards, reorderedsecondtofirst,saved/reloaded;deckcountandorderpersist. Stableidentity/deletioncreditawaitTask3."
+      }
+    },
+    {
+      "record": 12,
+      "journey_ids": [
+        "MODULE-03"
+      ],
+      "scenario": "MODULE-03 manual quiz",
+      "observed_status": "partial",
+      "elapsed_seconds": 40,
+      "timing_source": "elapsed_seconds",
+      "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
+      "later_retest_records": [
+        56
+      ],
+      "source": {
+        "journey": "MODULE-03 manual quiz",
+        "status": "partial",
+        "elapsed_seconds": 40,
+        "notes": "Question/options/explanationandBcorrectkeysavedreload. Correctchoicehadonlyvisualclicktarget,noAXradio;Task3fixandkeyboardretestneeded."
+      }
+    },
+    {
+      "record": 13,
+      "journey_ids": [
+        "MODULE-04"
+      ],
+      "scenario": "MODULE-04 configure practice",
+      "observed_status": "completed",
+      "elapsed_seconds": 21,
+      "timing_source": "elapsed_seconds",
+      "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
+      "later_retest_records": [],
+      "source": {
+        "journey": "MODULE-04 configure practice",
+        "status": "completed",
+        "elapsed_seconds": 21,
+        "notes": "EnabledPythonpractice,instructions/starter/solutionsavedandpersistafterreload. Timeoutandremove/readdvalidationpending."
+      }
+    },
+    {
+      "record": 14,
+      "journey_ids": [
+        "COURSE-02"
+      ],
+      "scenario": "COURSE-02",
+      "observed_status": "completed",
+      "elapsed_seconds": 71,
+      "timing_source": "wall_seconds",
+      "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
+      "later_retest_records": [],
+      "source": {
+        "id": "COURSE-02",
+        "outcome": "completed",
+        "wall_seconds": 71,
+        "notes": "Edited existing outline description; added and saved a temporary third module; reopened editor to verify persisted values; removed temporary module and saved. Two original module IDs, order and authored activities preserved. Course description also persisted. Initial harness reload occurred before save completed, so removal was repeated and confirmed on the resulting detail screen before final reload."
+      }
+    },
+    {
+      "record": 15,
+      "journey_ids": [
+        "PATH-03"
+      ],
+      "scenario": "Delete disposable empty path",
+      "observed_status": "completed",
+      "elapsed_seconds": 17,
+      "timing_source": "wall_seconds",
+      "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
+      "later_retest_records": [],
+      "source": {
+        "id": "PATH-03",
+        "subflow": "Delete disposable empty path",
+        "outcome": "completed",
+        "wall_seconds": 17,
+        "notes": "Cancel kept the path. Confirmed deletion returned to My Paths empty state and persisted after reload. Other author path and source courses remain."
+      }
+    },
+    {
+      "record": 16,
+      "journey_ids": [
+        "STATS-03"
+      ],
+      "scenario": "STATS-03",
+      "observed_status": "failed before Task3",
+      "elapsed_seconds": null,
+      "timing_source": "wall_seconds",
+      "timing_interpretation": "Not measured or interrupted; see original notes",
+      "later_retest_records": [
+        19,
+        25,
+        28
+      ],
+      "source": {
+        "id": "STATS-03",
+        "outcome": "failed before Task3",
+        "wall_seconds": null,
+        "notes": "Fresh student follows a shared path but Dashboard still shows only start-learning empty state, no selected-path count or recommendation. Saved screenshot07. No lesson/study actions taken by this account."
+      }
+    },
+    {
+      "record": 17,
+      "journey_ids": [
+        "SHARE-04"
+      ],
+      "scenario": "Source edit and deletion",
+      "observed_status": "completed",
+      "elapsed_seconds": 34,
+      "timing_source": "wall_seconds",
+      "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
+      "later_retest_records": [],
+      "source": {
+        "id": "SHARE-04",
+        "subflow": "Source edit and deletion",
+        "outcome": "completed",
+        "wall_seconds": 34,
+        "notes": "API-created disposable public course/path fixture. UI title edit reflected in student path after reload; cancel deletion retained source; confirmed deletion removed source and left generic unavailable-course placeholder. Student has no author controls."
+      }
+    },
+    {
+      "record": 18,
+      "journey_ids": [
+        "STUDY-05"
+      ],
+      "scenario": "Real Python worker timeout and recovery",
+      "observed_status": "completed",
+      "elapsed_seconds": null,
+      "timing_source": "wall_seconds",
+      "timing_interpretation": "Not measured or interrupted; see original notes",
+      "later_retest_records": [],
+      "source": {
+        "id": "STUDY-05",
+        "subflow": "Real Python worker timeout and recovery",
+        "outcome": "completed",
+        "wall_seconds": null,
+        "execution_times_ms": {
+          "infinite_loop": 5485,
+          "recovery": 483,
+          "isolated_name_error": 487,
+          "changed_output": 484,
+          "syntax_error": 500,
+          "runtime_error": 484
+        },
+        "notes": "Actual browser Pyodide worker: infinite loop stopped at5s execution limit plus startup; fresh run printed5; next run could not see previous_value; changed output only7; syntax/runtime errors visible; reset restored starter; solution reveal/hide worked; starter printedHello afterward. Personal draft/time persistence remains pending Task3 viewer integration."
+      }
+    },
+    {
+      "record": 19,
+      "journey_ids": [
+        "STATS-01"
+      ],
+      "scenario": "Passive versus meaningful activity",
+      "observed_status": "completed",
+      "elapsed_seconds": 49,
+      "timing_source": "wall_seconds",
+      "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
+      "later_retest_records": [],
+      "source": {
+        "id": "STATS-01",
+        "subflow": "Passive versus meaningful activity",
+        "outcome": "completed",
+        "wall_seconds": 49,
+        "notes": "Fresh student following1path had0sessions/0startedcourses. Content open+reload did not change totals. Mark content read created1session,1in-progresscourse,current/longeststreak1,RecentActivity,0completedmodules. Session/time-boundaryhistoricalcases covered by controlled-clock tests."
+      }
+    },
+    {
+      "record": 20,
+      "journey_ids": [
+        "STUDY-02"
+      ],
+      "scenario": "Distinct reviews and final card",
+      "observed_status": "completed",
+      "elapsed_seconds": 117,
+      "timing_source": "wall_seconds",
+      "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
+      "later_retest_records": [],
+      "source": {
+        "id": "STUDY-02",
+        "subflow": "Distinct reviews and final card",
+        "outcome": "completed",
+        "wall_seconds": 117,
+        "notes": "Enter and Space flip cards. Re-reviewing first card across reload kept1/2 progress; reviewing final card then leaving without Next card yields2/2. Ratings Hard\u2192Medium\u2192Unhelpful and Easy persisted; filters and empty states behaved correctly."
+      }
+    },
+    {
+      "record": 21,
+      "journey_ids": [
+        "STUDY-03"
+      ],
+      "scenario": "Ratings and stable card identity",
+      "observed_status": "completed",
+      "elapsed_seconds": null,
+      "timing_source": "wall_seconds",
+      "timing_interpretation": "Not measured or interrupted; see original notes",
+      "later_retest_records": [],
+      "source": {
+        "id": "STUDY-03",
+        "subflow": "Ratings and stable card identity",
+        "outcome": "completed",
+        "wall_seconds": null,
+        "notes": "All four ratings and empty filters exercised. Author reordered the deck: ratings followed the same card. Author replaced the rated print card with a new concatenation card: learner had Unrated1/Easy1/Unhelpful0 and distinct review count1/2. Historical events remained separate from current deck completion."
+      }
+    },
+    {
+      "record": 22,
+      "journey_ids": [
+        "STUDY-05"
+      ],
+      "scenario": "Personal draft and run persistence",
+      "observed_status": "completed",
+      "elapsed_seconds": 40,
+      "timing_source": "wall_seconds",
+      "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
+      "later_retest_records": [],
+      "source": {
+        "id": "STUDY-05",
+        "subflow": "Personal draft and run persistence",
+        "outcome": "completed",
+        "wall_seconds": 40,
+        "notes": "Changed draft without running, immediately switched toContent and reloaded; personal code restored. Run printedSavedstudentdraft and showed1savedrun. Reset restoredstarter afterreload while runhistoryremained1."
+      }
+    },
+    {
+      "record": 23,
+      "journey_ids": [
+        "STUDY-01"
+      ],
+      "scenario": "Editable embedded JavaScript and recovery",
+      "observed_status": "completed",
+      "elapsed_seconds": null,
+      "timing_source": "wall_seconds",
+      "timing_interpretation": "Not measured or interrupted; see original notes",
+      "later_retest_records": [],
+      "source": {
+        "id": "STUDY-01",
+        "subflow": "Editable embedded JavaScript and recovery",
+        "outcome": "completed",
+        "wall_seconds": null,
+        "execution_times_ms": {
+          "original": 15,
+          "edited": 5,
+          "timeout": 5010,
+          "syntax_error": 10,
+          "runtime_error": 11
+        },
+        "notes": "Original2+3\u21925; local Editcode2+7\u21929; infinitewhileloopstopped5s;syntax/runtimeerrorsshown;Resetoriginalcode\u21925. Sourceauthorcontentunchanged. First browserwaittoolhititsownshorterdeadlinebefore5stimeout; subsequentstateconfirmedcorrectappresult."
+      }
+    },
+    {
+      "record": 24,
+      "journey_ids": [
+        "STUDY-04"
+      ],
+      "scenario": "Scoring, retry, and saved history",
+      "observed_status": "completed",
+      "elapsed_seconds": 28,
+      "timing_source": "wall_seconds",
+      "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
+      "later_retest_records": [],
+      "source": {
+        "id": "STUDY-04",
+        "subflow": "Scoring, retry, and saved history",
+        "outcome": "completed",
+        "wall_seconds": 28,
+        "notes": "Submit disabled with an unanswered question. Firstattempt1correct/1wrong\u219250%with explanations; Retry clearedanswers; keyboardchosen2correct\u2192100%; reloadretained2attemptsandlatestscore100. ExtraAIquestionsvalidatedinTask4cycle separately."
+      }
+    },
+    {
+      "record": 25,
+      "journey_ids": [
+        "STUDY-06"
+      ],
+      "scenario": "Completion and path summaries",
+      "observed_status": "completed",
+      "elapsed_seconds": 140,
+      "timing_source": "wall_seconds",
+      "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
+      "later_retest_records": [],
+      "source": {
+        "id": "STUDY-06",
+        "subflow": "Completion and path summaries",
+        "outcome": "completed",
+        "wall_seconds": 140,
+        "notes": "Next completedfirstmodule andopenedsecond;course50%,followedpathcard/detail25%;Finishcompletedcourse100%. ResumedothercoursefromDashboardandfinishedbothmodules. Reloadretainedselected1/active0/completed1,coursesinprogress0,4modulesweek,1session. EmptyContinueLearningcopyincorrectlysaidneverstarted; fixrequested."
+      }
+    },
+    {
+      "record": 26,
+      "journey_ids": [
+        "STATS-02"
+      ],
+      "scenario": "Timezone preference validation",
+      "observed_status": "completed",
+      "elapsed_seconds": null,
+      "timing_source": "wall_seconds",
+      "timing_interpretation": "Not measured or interrupted; see original notes",
+      "later_retest_records": [],
+      "source": {
+        "id": "STATS-02",
+        "subflow": "Timezone preference validation",
+        "outcome": "completed",
+        "wall_seconds": null,
+        "notes": "OpeningSettingskeptUTCdefault;invalidMars/OlympusrejectedwithIANAexample;America/Los_AngelespersistedreloadandDashboardusedit;restoredUTC. Historicaldayboundaries/longeststreaktestedwithcontrolledclock,notrealelapsedmultidaywaiting."
+      }
+    },
+    {
+      "record": 27,
+      "journey_ids": [
+        "PATH-05"
+      ],
+      "scenario": "Revocation and retained personal history",
+      "observed_status": "completed",
+      "elapsed_seconds": null,
+      "timing_source": "wall_seconds",
+      "timing_interpretation": "Not measured or interrupted; see original notes",
+      "later_retest_records": [],
+      "source": {
+        "id": "PATH-05",
+        "subflow": "Revocation and retained personal history",
+        "outcome": "completed",
+        "wall_seconds": null,
+        "notes": "Afterfourmodulecompletion,path100%. OwnerchangedAcoursepublic\u2192privatewithoutstudentgrant: Dashboardkept4weeklycompletions/1session/streak1/time2.5m,redactedprivatetitles,andselectedpathbecameactive. Pathdetail50%,1unavailable,genericplaceholderwithoutprivatecounts/title. Namedcoursegrantrestoredpath100%andpersonalprogress."
+      }
+    },
+    {
+      "record": 28,
+      "journey_ids": [
+        "STATS-03"
+      ],
+      "scenario": "STATS-03",
+      "observed_status": "pass-subflow",
+      "elapsed_seconds": null,
+      "timing_source": "elapsed_seconds",
+      "timing_interpretation": "Not measured or interrupted; see original notes",
+      "later_retest_records": [],
+      "source": {
+        "journey": "STATS-03",
+        "status": "pass-subflow",
+        "elapsed_seconds": null,
+        "notes": "Latest Task3 commit: completed selected path shows 1 selected, 0 active, 1 completed, no unfinished courses guidance. No false never-started claim."
+      }
+    },
+    {
+      "record": 29,
+      "journey_ids": [
+        "MODULE-04"
+      ],
+      "scenario": "MODULE-04",
+      "observed_status": "pass-subflow",
+      "elapsed_seconds": 12.449,
+      "timing_source": "elapsed_seconds",
+      "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
+      "later_retest_records": [],
+      "source": {
+        "journey": "MODULE-04",
+        "status": "pass-subflow",
+        "elapsed_seconds": 12.449,
+        "notes": "Remove Sandbox \u2192 Save \u2192 reload \u2192 No Code Sandbox persisted."
+      }
+    },
+    {
+      "record": 30,
+      "journey_ids": [
+        "AUTH-02"
+      ],
+      "scenario": "AUTH-02",
+      "observed_status": "fail-subflow",
+      "elapsed_seconds": null,
+      "timing_source": "elapsed_seconds",
+      "timing_interpretation": "Not measured or interrupted; see original notes",
+      "later_retest_records": [
+        52,
+        53
+      ],
+      "source": {
+        "journey": "AUTH-02",
+        "status": "fail-subflow",
+        "elapsed_seconds": null,
+        "notes": "Logout Baseline Student\u2192login Baseline History without reload: greeting changes but dashboard shows Student private lesson titles, completed path, quiz and activity. Concrete Task5 cache-isolation reproduction."
+      }
+    },
+    {
+      "record": 31,
+      "journey_ids": [
+        "STATS-01",
+        "STATS-02"
+      ],
+      "scenario": "STATS-01/STATS-02",
+      "observed_status": "pass-subflow",
+      "elapsed_seconds": null,
+      "timing_source": "elapsed_seconds",
+      "timing_interpretation": "Not measured or interrupted; see original notes",
+      "later_retest_records": [],
+      "source": {
+        "journey": "STATS-01/STATS-02",
+        "status": "pass-subflow",
+        "elapsed_seconds": null,
+        "notes": "Controlled synthetic history for same module at today and 4/5/6/8 days ago: rendered weekly sessions4, current streak1, longest3, lifetime5min, startedcourse1; oldest event excluded weekly. API/isolated storage setup, actual UI rendering. NextUp misses directly studied nonowned course; reported Task3 fix."
+      }
+    },
+    {
+      "record": 32,
+      "journey_ids": [
+        "STUDY-06",
+        "STATS-03"
+      ],
+      "scenario": "STUDY-06/STATS-03",
+      "observed_status": "pass-subflow",
+      "elapsed_seconds": null,
+      "timing_source": "elapsed_seconds",
+      "timing_interpretation": "Not measured or interrupted; see original notes",
+      "later_retest_records": [],
+      "source": {
+        "journey": "STUDY-06/STATS-03",
+        "status": "pass-subflow",
+        "elapsed_seconds": null,
+        "notes": "After fix, History dashboard recommends directly studied public Fixture lesson1 despite owning no courses and following no paths."
+      }
+    },
+    {
+      "record": 33,
+      "journey_ids": [
+        "STUDY-02",
+        "STUDY-03"
+      ],
+      "scenario": "STUDY-02/STUDY-03",
+      "observed_status": "pass-subflow",
+      "elapsed_seconds": 45.97,
+      "timing_source": "elapsed_seconds",
+      "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
+      "later_retest_records": [],
+      "source": {
+        "journey": "STUDY-02/STUDY-03",
+        "status": "pass-subflow",
+        "elapsed_seconds": 45.97,
+        "notes": "Flip first card\u2192rate Easy\u2192Next\u2192Previous\u2192Space flip: visible reviewed1/2 throughout; secondary stored check exactly2 review events for1 stable cardID. Rating+Next same encounter deduplicated; genuine revisit retained."
+      }
+    },
+    {
+      "record": 34,
+      "journey_ids": [
+        "MODULE-02"
+      ],
+      "scenario": "MODULE-02",
+      "observed_status": "fail-subflow",
+      "elapsed_seconds": 25.422,
+      "timing_source": "elapsed_seconds",
+      "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
+      "later_retest_records": [
+        55
+      ],
+      "source": {
+        "journey": "MODULE-02",
+        "status": "fail-subflow",
+        "elapsed_seconds": 25.422,
+        "notes": "Adding third flashcard with nonempty front and empty back then Save silently removes entered card and shows Module updated successfully. Need explicit validation and draft preservation. Original two cards preserved."
+      }
+    },
+    {
+      "record": 35,
+      "journey_ids": [
+        "MODULE-03"
+      ],
+      "scenario": "MODULE-03",
+      "observed_status": "fail-subflow",
+      "elapsed_seconds": null,
+      "timing_source": "elapsed_seconds",
+      "timing_interpretation": "Not measured or interrupted; see original notes",
+      "later_retest_records": [
+        56
+      ],
+      "source": {
+        "journey": "MODULE-03",
+        "status": "fail-subflow",
+        "elapsed_seconds": null,
+        "notes": "Author can save quiz question with only one nonempty answer and three empty answer strings; success reported. UI has no add/remove option controls required by catalog. Need validation preserving draft and safe option-index editing."
+      }
+    },
+    {
+      "record": 36,
+      "journey_ids": [
+        "COURSE-02"
+      ],
+      "scenario": "COURSE-02",
+      "observed_status": "pass-subflow",
+      "elapsed_seconds": 27.226,
+      "timing_source": "elapsed_seconds",
+      "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
+      "later_retest_records": [],
+      "source": {
+        "journey": "COURSE-02",
+        "status": "pass-subflow",
+        "elapsed_seconds": 27.226,
+        "notes": "Stopped disposable API before Save: explicit save error, outline draft retained. Restarted API, retried same Save, reload/reopen confirms edited description and original two modules without duplicates."
+      }
+    },
+    {
+      "record": 37,
+      "journey_ids": [
+        "COURSE-04"
+      ],
+      "scenario": "COURSE-04",
+      "observed_status": "pass-subflow",
+      "elapsed_seconds": 51.292,
+      "timing_source": "elapsed_seconds",
+      "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
+      "later_retest_records": [],
+      "source": {
+        "journey": "COURSE-04",
+        "status": "pass-subflow",
+        "elapsed_seconds": 51.292,
+        "notes": "Discover\u2192no-match search shows helpful empty state\u2192Fixture+Intermediate+A-Z finds public course\u2192open verifies author,2modules,own/other reuse\u2192Back retains Discover tab (filters reset). Only one public result: cross-item sort order not yet exercised."
+      }
+    },
+    {
+      "record": 38,
+      "journey_ids": [
+        "AI-02"
+      ],
+      "scenario": "AI-02",
+      "observed_status": "pass-subflow",
+      "elapsed_seconds": 22.789,
+      "timing_source": "elapsed_seconds",
+      "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
+      "later_retest_records": [],
+      "source": {
+        "journey": "AI-02",
+        "status": "pass-subflow",
+        "elapsed_seconds": 22.789,
+        "notes": "Selected llm.secondary from live hosted catalog\u2192Save\u2192reload: Selected anvil/llm.secondary persisted. Preference persistence only; generation on secondary not yet tested."
+      }
+    },
+    {
+      "record": 39,
+      "journey_ids": [
+        "COURSE-05",
+        "AI-01",
+        "AI-05"
+      ],
+      "scenario": "COURSE-05/AI-01/AI-05",
+      "observed_status": "blocked-live-provider",
+      "elapsed_seconds": 252.595,
+      "timing_source": "elapsed_seconds",
+      "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
+      "later_retest_records": [
+        44,
+        45
+      ],
+      "source": {
+        "journey": "COURSE-05/AI-01/AI-05",
+        "status": "blocked-live-provider",
+        "elapsed_seconds": 252.595,
+        "notes": "Live llm.primary outline request and one UI retry failed HTTP503. Direct minimal chat request confirms configured model service unavailable in0.09s; model catalog reachable. Draft retained, no modules written, balance100 unchanged. Elapsed includes diagnosis, not generation latency. No fallback used."
+      }
+    },
+    {
+      "record": 40,
+      "journey_ids": [
+        "AI-03"
+      ],
+      "scenario": "AI-03",
+      "observed_status": "pass-mocked-provider-subflow",
+      "elapsed_seconds": 34.866,
+      "timing_source": "elapsed_seconds",
+      "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
+      "later_retest_records": [],
+      "source": {
+        "journey": "AI-03",
+        "status": "pass-mocked-provider-subflow",
+        "elapsed_seconds": 34.866,
+        "notes": "External HTTP transport mocked: OpenAI invalid credential401 rejected; synthetic valid credential discoversgpt-test, Save/reload retains provider/model and masked key with empty input. No real vendor call; balance100."
+      }
+    },
+    {
+      "record": 41,
+      "journey_ids": [
+        "COURSE-05",
+        "MODULE-05",
+        "AI-03"
+      ],
+      "scenario": "COURSE-05/MODULE-05/AI-03",
+      "observed_status": "pass-mocked-provider-subflow",
+      "elapsed_seconds": 51.336,
+      "timing_source": "elapsed_seconds",
+      "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
+      "later_retest_records": [],
+      "source": {
+        "journey": "COURSE-05/MODULE-05/AI-03",
+        "status": "pass-mocked-provider-subflow",
+        "elapsed_seconds": 51.336,
+        "notes": "Mocked external HTTP through actual OpenAI adapter: suggest8\u2192select1\u21922cards+2quiz\u2192create\u2192Savecourse\u2192editgeneratedlesson\u2192save/refinement\u2192reload. One module with2cards/2quiz persisted, description+2objectives preserved, ledger records openai/gpt-test, balance100 unchanged. Not live vendor validation."
+      }
+    },
+    {
+      "record": 42,
+      "journey_ids": [
+        "MODULE-05"
+      ],
+      "scenario": "MODULE-05",
+      "observed_status": "fail-subflow",
+      "elapsed_seconds": null,
+      "timing_source": "elapsed_seconds",
+      "timing_interpretation": "Not measured or interrupted; see original notes",
+      "later_retest_records": [
+        46
+      ],
+      "source": {
+        "journey": "MODULE-05",
+        "status": "fail-subflow",
+        "elapsed_seconds": null,
+        "notes": "Mocked provider returned15cards; close X in Replace Flashcards dialog appended them to existing2 (17draftcards) instead of cancelling. Reported Task4 worker; reload discards unsaved change."
+      }
+    },
+    {
+      "record": 43,
+      "journey_ids": [
+        "AI-04"
+      ],
+      "scenario": "AI-04",
+      "observed_status": "pass-mocked-provider-subflow",
+      "elapsed_seconds": 119.499,
+      "timing_source": "elapsed_seconds",
+      "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
+      "later_retest_records": [],
+      "source": {
+        "journey": "AI-04",
+        "status": "pass-mocked-provider-subflow",
+        "elapsed_seconds": 119.499,
+        "notes": "Replaced synthetic OpenAI key v1\u2192v2; subsequent actual adapter card generation used v2 in two mocked requests. Removed key\u2192reload shows credentialnotconfigured/unavailablemodel without fallback. Explicitly selected Anvil+llm.primary and saved. No real external calls. Time includes card-dialog defect investigation."
+      }
+    },
+    {
+      "record": 44,
+      "journey_ids": [
+        "COURSE-05",
+        "AI-01"
+      ],
+      "scenario": "COURSE-05/AI-01",
+      "observed_status": "pass-live-anvil-subflow",
+      "elapsed_seconds": 63.422,
+      "timing_source": "elapsed_seconds",
+      "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
+      "later_retest_records": [],
+      "source": {
+        "journey": "COURSE-05/AI-01",
+        "status": "pass-live-anvil-subflow",
+        "elapsed_seconds": 63.422,
+        "notes": "After model restoration, real llm.primary returned8 coherent Python collection suggestions with descriptions and objectives; existing mocked lesson preserved. Timing includes result inspection."
+      }
+    },
+    {
+      "record": 45,
+      "journey_ids": [
+        "COURSE-05",
+        "MODULE-05",
+        "AI-01",
+        "AI-05"
+      ],
+      "scenario": "COURSE-05/MODULE-05/AI-01/AI-05",
+      "observed_status": "pass-live-anvil-subflow",
+      "elapsed_seconds": 191.273,
+      "timing_source": "elapsed_seconds",
+      "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
+      "later_retest_records": [],
+      "source": {
+        "journey": "COURSE-05/MODULE-05/AI-01/AI-05",
+        "status": "pass-live-anvil-subflow",
+        "elapsed_seconds": 191.273,
+        "notes": "Real llm.primary staged module retry completed: content22.548s, cards1.988s, quiz5.193s HTTP durations. Allfinishstop; prior rejected attempt uncharged. CreatingYourFirstList saved with2cards,2validquizquestions,description+2objectives; manually appended authornote,Save/reload verified. Originalmockmodule retained. Balance100\u219290outline\u219265successfulmodule; ledgerexact-10/-25, nofaileddebit. Elapsed includes inspection/manualedit. ExternalvendorHTTPmock remainsenabled but Anvilrequestspassthroughlive."
+      }
+    },
+    {
+      "record": 46,
+      "journey_ids": [
+        "MODULE-05"
+      ],
+      "scenario": "Generated card dialog Close and Escape discard; explicit Append and Replace persist",
+      "observed_status": "pass",
+      "elapsed_seconds": 31.168,
+      "timing_source": "duration_ms",
+      "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
+      "later_retest_records": [],
+      "source": {
+        "journey": "MODULE-05",
+        "scenario": "Generated card dialog Close and Escape discard; explicit Append and Replace persist",
+        "status": "pass",
+        "duration_ms": 31168,
+        "evidence": "31-generated-card-dismissal-fixed.png",
+        "notes": "External HTTP mocked. Close+Save+reload and Escape+Save+reload both preserve2; Append saves17; Replace saves15. No live vendor inference."
+      }
+    },
+    {
+      "record": 47,
+      "journey_ids": [
+        "COURSE-05",
+        "AI-05"
+      ],
+      "scenario": "Replace All fails after staged lesson, retry atomically replaces only selected module",
+      "observed_status": "pass",
+      "elapsed_seconds": 30.269,
+      "timing_source": "duration_ms",
+      "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
+      "later_retest_records": [],
+      "source": {
+        "journey": "COURSE-05 / AI-05",
+        "scenario": "Replace All fails after staged lesson, retry atomically replaces only selected module",
+        "status": "pass",
+        "duration_ms": 30269,
+        "evidence": "32-ai-replacement-failure-preserves-draft.png",
+        "notes": "External provider HTTP mocked; forced second stage503. Original2module IDs/content preserved on failure, selected draft retained. Explicit retry succeeded, Save/reload shows exactly1 selected module. Prior synthetic AI course modules intentionally replaced."
+      }
+    },
+    {
+      "record": 48,
+      "journey_ids": [
+        "STUDY-04",
+        "MODULE-05"
+      ],
+      "scenario": "Personal generated questions persist through reload",
+      "observed_status": "pass",
+      "elapsed_seconds": 9.691,
+      "timing_source": "duration_ms",
+      "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
+      "later_retest_records": [],
+      "source": {
+        "journey": "STUDY-04 / MODULE-05",
+        "scenario": "Personal generated questions persist through reload",
+        "status": "pass",
+        "duration_ms": 9691,
+        "evidence": "33-personal-extra-quiz-persisted.png",
+        "notes": "Submitted2-question fixture100%, generated10 mocked questions; reload shows12 and savedattempt1. Mock transport repeats question labels acrossbatches; this is fixture behavior."
+      }
+    },
+    {
+      "record": 49,
+      "journey_ids": [
+        "AI-03",
+        "AI-04"
+      ],
+      "scenario": "Gemini and Claude select/validate/save/generate; explicit return to Anvil",
+      "observed_status": "pass",
+      "elapsed_seconds": null,
+      "timing_source": "duration_ms",
+      "timing_interpretation": "Not measured or interrupted; see original notes",
+      "later_retest_records": [],
+      "source": {
+        "journey": "AI-03 / AI-04",
+        "scenario": "Gemini and Claude select/validate/save/generate; explicit return to Anvil",
+        "status": "pass",
+        "duration_ms": null,
+        "notes": "Mocked external HTTP only. Both catalog and generated15card requests use selected adapter; dismiss preserved2savedcards. Claude reload persisted. Balance remains65. Anvilprimary explicitly reselected. Timing not separately measured."
+      }
+    },
+    {
+      "record": 50,
+      "journey_ids": [
+        "STUDY-01",
+        "STUDY-02",
+        "STUDY-04",
+        "STUDY-05"
+      ],
+      "scenario": "Optional content-only, card-only, quiz-only, practice-only variants",
+      "observed_status": "partial",
+      "elapsed_seconds": 52.061,
+      "timing_source": "duration_ms",
+      "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
+      "later_retest_records": [
+        57,
+        58
+      ],
+      "source": {
+        "journey": "STUDY-01 / STUDY-02 / STUDY-04 / STUDY-05",
+        "scenario": "Optional content-only, card-only, quiz-only, practice-only variants",
+        "status": "partial",
+        "duration_ms": 52061,
+        "evidence": "34-empty-content-tab-before-fix.png",
+        "notes": "Availableactivities: contentread/next; singlecardflip/next; singlequiz100%. Cards/quiz/practice-only default to emptyContenttab with Markcontentread, reportedTask5. First standaloneJSrun storedhistory1 but outputreset to initialinstruction instead of5; also reportedTask5. Fixture APIseeded; actualUI performed activities."
+      }
+    },
+    {
+      "record": 51,
+      "journey_ids": [
+        "COURSE-04"
+      ],
+      "scenario": "Discovery sorting with three public fixtures and distinct reuse counts",
+      "observed_status": "pass",
+      "elapsed_seconds": 19.61,
+      "timing_source": "duration_ms",
+      "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
+      "later_retest_records": [],
+      "source": {
+        "journey": "COURSE-04",
+        "scenario": "Discovery sorting with three public fixtures and distinct reuse counts",
+        "status": "pass",
+        "duration_ms": 19610,
+        "notes": "MostPopular SharedEngineering1reference first; Newest ZZZ first; A-Z AAA\u2192Fixture\u2192ZZZ; Advanced onlyZZZ; restoredAllLevels/MostPopular. Privatecoursesabsent. APIseededpublicsortingfixtures, actualUIcontrols."
+      }
+    },
+    {
+      "record": 52,
+      "journey_ids": [
+        "AUTH-02"
+      ],
+      "scenario": "Student to History account switch without reload",
+      "observed_status": "pass",
+      "elapsed_seconds": 8.11,
+      "timing_source": "duration_ms",
+      "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
+      "later_retest_records": [],
+      "source": {
+        "journey": "AUTH-02",
+        "scenario": "Student to History account switch without reload",
+        "status": "pass",
+        "duration_ms": 8110,
+        "evidence": "36-account-switch-cache-isolated.png",
+        "notes": "Student private dashboard populated first; Logout\u2192HistorySignIn immediate dashboard shows History selected0/weekly4/longest3, no Studentprivatecourse or completion/quiz data. No reload between identities."
+      }
+    },
+    {
+      "record": 53,
+      "journey_ids": [
+        "AUTH-02"
+      ],
+      "scenario": "Cross-tab sign-out and browser Back",
+      "observed_status": "pass",
+      "elapsed_seconds": null,
+      "timing_source": "duration_ms",
+      "timing_interpretation": "Not measured or interrupted; see original notes",
+      "later_retest_records": [],
+      "source": {
+        "journey": "AUTH-02",
+        "scenario": "Cross-tab sign-out and browser Back",
+        "status": "pass",
+        "duration_ms": null,
+        "notes": "Secondlocalhosttab loggedout; existingdashboard immediatelyredirectedlogin and browserBack remainedlogin. No fullpagereload required; testtabclosed. Separate AnvilAuthor127originunaffected."
+      }
+    },
+    {
+      "record": 54,
+      "journey_ids": [
+        "AUTH-03"
+      ],
+      "scenario": "Ordinary user direct admin route",
+      "observed_status": "pass",
+      "elapsed_seconds": 16.146,
+      "timing_source": "duration_ms",
+      "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
+      "later_retest_records": [],
+      "source": {
+        "journey": "AUTH-03",
+        "scenario": "Ordinary user direct admin route",
+        "status": "pass",
+        "duration_ms": 16146,
+        "evidence": "37-nonadmin-guard.png",
+        "notes": "One access-denied message and ReturntoDashboard; no adminscreen/toastflood. Before-querybehavior coveredfocusedtests."
+      }
+    },
+    {
+      "record": 55,
+      "journey_ids": [
+        "MODULE-02"
+      ],
+      "scenario": "Partial card rejected without draft loss, repaired card persists",
+      "observed_status": "pass",
+      "elapsed_seconds": 17.915,
+      "timing_source": "duration_ms",
+      "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
+      "later_retest_records": [],
+      "source": {
+        "journey": "MODULE-02",
+        "scenario": "Partial card rejected without draft loss, repaired card persists",
+        "status": "pass",
+        "duration_ms": 17915,
+        "evidence": "38-incomplete-card-validation-fixed.png",
+        "notes": "FrontonlythirdcardSave shows clearfront/backerror and retains3draftcards. Fillback\u2192Save/reload3; removeonlytestcard\u2192Save/reload2. Existingcards/content/quiz preserved."
+      }
+    },
+    {
+      "record": 56,
+      "journey_ids": [
+        "MODULE-03"
+      ],
+      "scenario": "Invalid quiz, add/remove options, answer-key remapping and reselection",
+      "observed_status": "pass",
+      "elapsed_seconds": 61.858,
+      "timing_source": "duration_ms",
+      "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
+      "later_retest_records": [],
+      "source": {
+        "journey": "MODULE-03",
+        "scenario": "Invalid quiz, add/remove options, answer-key remapping and reselection",
+        "status": "pass",
+        "duration_ms": 61858,
+        "evidence": "39-quiz-validation-fixed.png",
+        "notes": "Onefilledoption rejectsSave andpreservesdraft. CorrectD8\u2192removeB remapsC8; removecorrectC requiresreselection andblocksSave; minimum2removaldisabled. Add/removeoptionworks. SelectA5\u2192Save/reload correct2-optionquestion. Removedonlytestquestion andrestoredoriginal2."
+      }
+    },
+    {
+      "record": 57,
+      "journey_ids": [
+        "STUDY-05"
+      ],
+      "scenario": "Fresh practice first run keeps output after history save",
+      "observed_status": "pass",
+      "elapsed_seconds": 8.419,
+      "timing_source": "duration_ms",
+      "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
+      "later_retest_records": [],
+      "source": {
+        "journey": "STUDY-05",
+        "scenario": "Fresh practice first run keeps output after history save",
+        "status": "pass",
+        "duration_ms": 8419,
+        "evidence": "40-first-practice-output-fixed.png",
+        "notes": "Fresh modulewithnopersonalprogress opensPractice directly (noemptyContent). FirstRunconsole.log2+3 displays5 and Savedruns1 simultaneously. Priorresetbugfixed."
+      }
+    },
+    {
+      "record": 58,
+      "journey_ids": [
+        "MODULE-01",
+        "STUDY-01"
+      ],
+      "scenario": "Optional activity tabs and empty outline recovery",
+      "observed_status": "pass",
+      "elapsed_seconds": null,
+      "timing_source": "duration_ms",
+      "timing_interpretation": "Not measured or interrupted; see original notes",
+      "later_retest_records": [],
+      "source": {
+        "journey": "MODULE-01 / STUDY-01",
+        "scenario": "Optional activity tabs and empty outline recovery",
+        "status": "pass",
+        "duration_ms": null,
+        "notes": "Cards-only opensFlashcards, quiz-only opensQuiz, practice-only opensPractice; absentContent/readcredit hidden. FullyemptyNumbersoutline has truthful noactivitiesyet guidance and explicitnavigation. Content-only earlier opensreadingnormally."
+      }
+    },
+    {
+      "record": 59,
+      "journey_ids": [
+        "SUPPORT-01"
+      ],
+      "scenario": "Notification availability, E164 validation and saved toggles",
+      "observed_status": "pass",
+      "elapsed_seconds": 48.414,
+      "timing_source": "duration_ms",
+      "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
+      "later_retest_records": [],
+      "source": {
+        "journey": "SUPPORT-01",
+        "scenario": "Notification availability, E164 validation and saved toggles",
+        "status": "pass",
+        "duration_ms": 48414,
+        "evidence": "41-notifications-unavailable-and-saved.png",
+        "notes": "Unconfiguredemail/SMS explicitlyunavailable; testbuttonsdisabled. Invalid555 rejectedwithE164guidance; reservedsynthetic+12025550123 saves. Email/dailyquiz/SMS togglesoff persistafterreload, checkedstateexposed. No realdelivery; capturedadapters testedbackend."
+      }
+    },
+    {
+      "record": 60,
+      "journey_ids": [
+        "SUPPORT-01"
+      ],
+      "scenario": "Captured delivery success and failure feedback",
+      "observed_status": "pass",
+      "elapsed_seconds": null,
+      "timing_source": "duration_ms",
+      "timing_interpretation": "Not measured or interrupted; see original notes",
+      "later_retest_records": [],
+      "source": {
+        "journey": "SUPPORT-01",
+        "scenario": "Captured delivery success and failure feedback",
+        "status": "pass",
+        "duration_ms": null,
+        "evidence": "42-captured-notification-feedback.png",
+        "notes": "Disposablecapture-onlyadapters/noexternalmessages: UIemail success, SMSsuccess, forcedemailfailure displayedaccurately. Safeadapterlog confirms3calls. Captureavailabilitydisabledafterward; email/SMSoffrestored, dailyoffunchanged."
+      }
+    },
+    {
+      "record": 61,
+      "journey_ids": [
+        "AUTH-02",
+        "SUPPORT-02"
+      ],
+      "scenario": "API outage while resuming session, private gate and recovery",
+      "observed_status": "pass",
+      "elapsed_seconds": 19.114,
+      "timing_source": "duration_ms",
+      "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
+      "later_retest_records": [],
+      "source": {
+        "journey": "AUTH-02 / SUPPORT-02",
+        "scenario": "API outage while resuming session, private gate and recovery",
+        "status": "pass",
+        "duration_ms": 19114,
+        "evidence": "43-session-outage-retry-gate.png",
+        "notes": "StoppeddisposableAPI,reloadedSettings: onlyverificationerror/Retry/Signout visible,noprivatecontent. RestartAPI\u2192Retry restoresAuthorSettings withoutreenteringcredentials. ExpiredJWT/401coveredfocusedtests."
+      }
+    },
+    {
+      "record": 62,
+      "journey_ids": [
+        "AUTH-01"
+      ],
+      "scenario": "Account-created recovery after failed automatic sign-in",
+      "observed_status": "pass",
+      "elapsed_seconds": 16.858,
+      "timing_source": "duration_ms",
+      "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
+      "later_retest_records": [],
+      "source": {
+        "journey": "AUTH-01",
+        "scenario": "Account-created recovery after failed automatic sign-in",
+        "status": "pass",
+        "duration_ms": 16858,
+        "evidence": "45-registration-recovery-fixed.png",
+        "notes": "Successfulregistration+injectedloginautomaticfailure showsaccountcreatedmessage andonlySigninlink(noresubmit). SigninwithsamecredentialopenscorrectfreshRecoveryVerifieddashboard, zeroactivities/paths/privatecontent. DuplicateemailseparatelyshowedEmailalreadyregistered."
+      }
+    },
+    {
+      "record": 63,
+      "journey_ids": [
+        "COURSE-03"
+      ],
+      "scenario": "Edited disposable unreferenced course title/description/difficulty, saved and reloaded; Delete\u2192Cancel retained it; Delete\u2192confirm removed list card; old direct URL recovers gracefully.",
+      "observed_status": "pass-subflow",
+      "elapsed_seconds": 28.859,
+      "timing_source": "elapsed_seconds",
+      "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
+      "later_retest_records": [],
+      "source": {
+        "journey": "COURSE-03",
+        "status": "pass-subflow",
+        "elapsed_seconds": 28.859,
+        "steps": "Edited disposable unreferenced course title/description/difficulty, saved and reloaded; Delete\u2192Cancel retained it; Delete\u2192confirm removed list card; old direct URL recovers gracefully.",
+        "notes": "Synthetic AAA discovery fixture intentionally deleted after prior sorting checks. Timing includes tool inspection."
+      }
+    },
+    {
+      "record": 64,
+      "journey_ids": [
+        "SUPPORT-02"
+      ],
+      "scenario": "390 CSSpx viewport retest: course cards, pathdetailactions, moduleactivitytabs and editortabs now have documentwidth390/scrollWidth390. Practice click opens exercise; keyboardTab fromQuiz thenSpace opensSandbox. Creation,discovery,pathlist,coursedetail,settings also fit.",
+      "observed_status": "pass-subflow",
+      "elapsed_seconds": 23.676,
+      "timing_source": "elapsed_seconds",
+      "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
+      "later_retest_records": [],
+      "source": {
+        "journey": "SUPPORT-02",
+        "status": "pass-subflow",
+        "elapsed_seconds": 23.676,
+        "steps": "390 CSSpx viewport retest: course cards, pathdetailactions, moduleactivitytabs and editortabs now have documentwidth390/scrollWidth390. Practice click opens exercise; keyboardTab fromQuiz thenSpace opensSandbox. Creation,discovery,pathlist,coursedetail,settings also fit.",
+        "notes": "DOM-backed actual browser geometry and real interactions. IAB screenshot compositor does not reliably reflect device override; not claiming screenshot-based phone visual audit."
+      }
+    },
+    {
+      "record": 65,
+      "journey_ids": [
+        "MODULE-01",
+        "STUDY-01"
+      ],
+      "scenario": "Manual rich Markdown and embedded example",
+      "observed_status": "pass",
+      "elapsed_seconds": 39.998,
+      "timing_source": "duration_ms",
+      "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
+      "later_retest_records": [],
+      "source": {
+        "journey": "MODULE-01 / STUDY-01",
+        "scenario": "Manual rich Markdown and embedded example",
+        "status": "pass",
+        "duration_ms": 39998,
+        "notes": "Added heading/list/bold/documentation link/JavaScript code to existing protected-image lesson. Preview rendered; Save/reload retained Markdown. Empty title rejected with retained content. Restored title/saved; learner view renders all content and Run code prints Hello, learner!. Existing cards/quiz/practice retained."
+      }
+    },
+    {
+      "record": 66,
+      "journey_ids": [
+        "SHARE-01",
+        "AUTH-03"
+      ],
+      "scenario": "Public discovery, unlisted direct lesson, private denial",
+      "observed_status": "pass",
+      "elapsed_seconds": 41.911,
+      "timing_source": "duration_ms",
+      "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
+      "later_retest_records": [],
+      "source": {
+        "journey": "SHARE-01 / AUTH-03",
+        "scenario": "Public discovery, unlisted direct lesson, private denial",
+        "status": "pass",
+        "duration_ms": 41911,
+        "notes": "Owner UI Private\u2192Public; unrelated fresh learner found course in Discover and saw two modules without author controls. Unlisted survived reload/directlesson including protectedimage while disappearing from Discover. Restored Private with original Student grant intact; unrelated direct lesson now Module not found. No normal userdata changed."
+      }
+    },
+    {
+      "record": 67,
+      "journey_ids": [
+        "SHARE-05",
+        "PATH-02",
+        "PATH-03"
+      ],
+      "scenario": "Distinct references and deleting a curator path",
+      "observed_status": "pass",
+      "elapsed_seconds": 42.562,
+      "timing_source": "duration_ms",
+      "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
+      "later_retest_records": [],
+      "source": {
+        "journey": "SHARE-05 / PATH-02 / PATH-03",
+        "scenario": "Distinct references and deleting a curator path",
+        "status": "pass",
+        "duration_ms": 42562,
+        "notes": "Createddisposablelearnerpath, added publicotherauthorcourse. Samecourse excludedfromsecondAddpicker; otheraccountcoursedetailreferences1\u21922,author0/otherowners2. Deletedonlydisposablepath; sourcecourseand2modulesremain, countsreturn1,total0author/1other. Syntheticpathsneverimplyfollow."
+      }
+    },
+    {
+      "record": 68,
+      "journey_ids": [
+        "STATS-04",
+        "STATS-01",
+        "STATS-03",
+        "STUDY-04"
+      ],
+      "scenario": "Read and quiz history survive dashboard navigation and reload",
+      "observed_status": "pass",
+      "elapsed_seconds": 48.517,
+      "timing_source": "duration_ms",
+      "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
+      "later_retest_records": [],
+      "source": {
+        "journey": "STATS-04 / STATS-01 / STATS-03 / STUDY-04",
+        "scenario": "Read and quiz history survive dashboard navigation and reload",
+        "status": "pass",
+        "duration_ms": 48517,
+        "notes": "FreshRecoverylearnerexplicitread+2correctquizanswers recordsone100%attempt. Dashboardnavigation+reloadretain1session,1courseinprogress,0selectedpaths,0completedmodules,100%quiz,read+quizactivity. ContinueLearningopenssamecourse/module; contentreadstateandonequizhistoryattemptpersist. Passiveadditionalnavigationdoesnotaddattempt."
+      }
+    }
+  ]
+}

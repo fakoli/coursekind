@@ -4,26 +4,33 @@ A learning platform for visual learners who learn by doing. Combines flashcards,
 
 ## Features
 
-- **Flashcard Decks**: Create and study flashcard decks with spaced repetition
+- **Flashcard Decks**: Create, review, rate and filter module flashcards with persistent personal progress
 - **Quizzes**: AI-generated quizzes to test your knowledge
 - **Course Authoring**: Create structured courses with modules, content, and assessments
 - **Learning Paths**: Organize courses into learning paths for guided learning
-- **AI-Powered Content**: Generate module content, flashcards, quizzes, and visuals via the self-hosted Anvil router
-- **Progress Tracking**: Track your learning progress, streaks, and mastery
+- **AI-Powered Content**: Generate editable module content, flashcards and quizzes with Anvil or an explicitly selected external provider; image generation is unavailable
+- **Progress Tracking**: Track explicit study events, sessions, streaks and personal course/path completion
 - **Admin Console**: User management and token administration (admin role)
-- **Notifications**: Configurable email and SMS reminders
+- **Notifications**: Saved email/SMS preferences and truthful provider availability; delivery requires a configured transport
 
 ## User Journeys and Validation
 
 See the [user journey and UI validation catalog](docs/user-journeys.md) for the
 expected course, module, study, learning-path, sharing, statistics, and AI-model
-workflows. It distinguishes current UI from partial/planned features and defines
-acceptance checks for future browser tests.
+workflows, adopted policies, and acceptance boundaries. The [26 October baseline
+audit](docs/audits/2026-10-26/README.md) separates real rendered evidence, mocked
+external integrations, durable tests, timings and remaining limits. The
+[40-journey Playwright suite](frontend/e2e/README.md) runs in GitHub Actions against
+isolated synthetic storage and reports each journey independently.
 
-The [timed walkthrough report](docs/audits/2026-10-25/README.md) records outcomes,
+The historical [25 October walkthrough](docs/audits/2026-10-25/README.md) records outcomes,
 timings, evidence, and issues for all 40 journeys. The
 [AI workspace proposal](docs/ai-workspace-proposal.md) outlines one workflow for
 planning, generating, and revising paths, courses, and modules.
+
+Shared lesson HTML is sanitized, and Mermaid diagrams use strict mode. Scripts,
+iframes, event handlers, inline CSS and unsafe link protocols are removed from
+rendered output; standard Markdown, tables, code and protected images remain usable.
 
 ## Tech Stack
 
@@ -41,7 +48,7 @@ planning, generating, and revising paths, courses, and modules.
 ### Prerequisites
 
 - Python 3.11+
-- Node.js 18+
+- Node.js 22.12+ or 24 LTS (CI tests 22 and 24)
 - [uv](https://github.com/astral-sh/uv) (Python package manager)
 
 ### Backend Setup

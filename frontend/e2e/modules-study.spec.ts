@@ -109,6 +109,20 @@ test('MODULE-05 — generate activities, cancel then append, refine and save', a
   const saved = await api<Lesson>(request, world.author, `/courses/${world.course.id}/modules/${world.lessons[0].id}`);
   expect(saved.flashcards.length).toBeGreaterThan(2);
   expect(saved.flashcards[0].front).toBe('First question');
+  await page.getByRole('button', { name: 'Content', exact: true }).click();
+  await page.getByRole('button', { name: /AI Content Generation/ }).click();
+  await page.getByPlaceholder(/^e.g., Cover DataFrame basics/).fill('Teach addition with worked examples and a short exercise.');
+  await page.getByRole('button', { name: 'Generate All', exact: true }).click();
+  await expect(page.getByLabel('Module content Markdown')).toHaveValue(/Generated lesson/);
+  await page.getByLabel('Module content Markdown').fill('# Generated lesson\n\nManually refined explanation.');
+  await saveModule(page);
+  await page.goto(url);
+  await page.reload();
+  await expect(page.getByRole('heading', { name: 'Generated lesson' })).toBeVisible();
+  await expect(page.getByText('Manually refined explanation.')).toBeVisible();
+  const generated = await api<Lesson & {quiz: {questions: unknown[]}}>(request, world.author, `/courses/${world.course.id}/modules/${world.lessons[0].id}`);
+  expect(generated.flashcards).toHaveLength(15);
+  expect(generated.quiz.questions).toHaveLength(10);
 });
 
 test('STUDY-01 — read content, run embedded code and rerun changed code', async ({ page, world }) => {
