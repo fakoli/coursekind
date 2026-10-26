@@ -18,8 +18,8 @@ Coursekind turns a learning goal into a course or path that its author can revie
 | Start with a goal or existing content in one workspace | Private brief, idempotent existing-material entry, reload/archive/restore, mobile creation | Passed Task1 UI/review/CI; final polish remains |
 | AI plans courses/modules with less manual entry | Structured plans, manual edits, refinement, private apply, explicit course reuse | Actual first-course and mixed-reuse UI passed; corrected Task2 CI passes all42 browser cases |
 | Build study-ready material from the plan | Default one module, maximum three per batch, lesson plus requested cards/quiz, explicit review/apply | Actual build/reload/dismiss/apply/study and partial retry passed with mock provider |
-| Safely revise what AI creates | Typed scoped revisions, before/after review and conflict-safe apply | Task3 in progress |
-| Recover earlier content without erasing learning history | Immutable history and compensating restore | Task3 in progress |
+| Safely revise what AI creates | Typed scoped revisions, before/after review and conflict-safe apply | Accepted through cc6fd8f: local suites, independent review, actual UI and44-case CI passed |
+| Recover earlier content without erasing learning history | Immutable history and compensating restore | Accepted through cc6fd8f: local suites, independent review, actual UI and44-case CI passed |
 | Complement generation with JEV | Explicit advisory review of selected objective, lesson excerpt and quiz item | Task4 pending; initial synthetic API connectivity is not feature acceptance |
 | Credible product operation | Onboarding, recovery, accessibility, dependencies, backup and rollback instructions, truthful limits | Task5 and final adversarial review pending |
 

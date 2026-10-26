@@ -144,5 +144,41 @@
     "provider": "mock OpenAI/gpt-test",
     "commit": "a1e6f33",
     "notes": "Five cards reviewed/rated (Easy3/Medium1/Hard1), next-module completion saves one of two complete, course50%, quiz100%, five-of-five cards. Second unbuilt module honestly shows no activities. Helper Playwright AX-role mismatch used native accessible control, not an app failure."
+  },
+  {
+    "journey": "WORKSPACE-04",
+    "scenario": "Quiz-only revision, study, reload and compensating restore",
+    "result": "pass",
+    "duration_ms": 154031,
+    "provider": "mock OpenAI/gpt-test",
+    "commit": "928d7f9",
+    "notes": "Reviewed before3/proposed2 questions; apply left lesson/cards/sandbox/ratings/progress/activity byte-equivalent. Studied new quiz50% beside original100%; reloaded history and restored original3-question quiz. Both attempts, original cardIDs/ratings and all prior activity retained; new Restored content history entry visible."
+  },
+  {
+    "journey": "WORKSPACE-04",
+    "scenario": "Original editor changes while proposal pending, conflict and explicit regenerate",
+    "result": "pass",
+    "duration_ms": 142006,
+    "provider": "mock OpenAI/gpt-test",
+    "commit": "928d7f9",
+    "notes": "Second tab saved manual lesson note through original ModuleEditor. Stale quiz Apply blocked with proposal retained/current-module link/regenerate. Explicit regeneration produced new job; review/apply succeeded and manual note plus both prior quiz attempts stayed. Duplicate conflict copy noted for focused repair."
+  },
+  {
+    "journey": "WORKSPACE-04",
+    "scenario": "Read and apply module draft saved before revision upgrade",
+    "result": "pass",
+    "duration_ms": 35096,
+    "provider": "mock OpenAI/gpt-test",
+    "commit": "928d7f9",
+    "notes": "Task2 persisted draft remains readable with Lesson/cards/quiz comparison, applies to original target, records immutable history, retains second pending draft."
+  },
+  {
+    "journey": "WORKSPACE-04",
+    "scenario": "Manual path reference removal, saved proposal recovery and restore",
+    "result": "pass",
+    "duration_ms": 218263,
+    "provider": "no inference/manual",
+    "commit": "cc6fd8f",
+    "notes": "Removed reusedcourse from draft, reviewed savedmanualproposal after frontend reload, applied free. Pathmembership becameone; sourcecourse and bothoriginalmoduleIDs remained. Restored priorreferences asnewhistory; actualpathshows originaltwo-courseorder/authorship/counts. Readabilityminor CourseUUID comparisonlabels assignedTask5."
   }
 ]

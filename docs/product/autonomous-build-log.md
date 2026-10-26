@@ -87,3 +87,15 @@ The next task is scoped revisions and conflict-safe restore. Its actual UI fixtu
 ## Planning and build accepted
 
 CI40337912952 at `81bb7d2` completed successfully: all42 browser cases passed in5.6minutes, including both new workspace loops, plus383 backend tests and169 frontend tests with Node22/24 lint/build. Independent initial/fix reviews and actual UI evidence are recorded in the product audit. Task2 is accepted; scoped revisions are now in final local verification before their independent review.
+
+
+## Revision checkpoint — approximately08:00 Pacific
+
+Scoped revisions, immutable history and compensating restore are implemented. Local full verification passes454 backend and175 frontend tests. The independent review required one repair: flashcard visuals were editable and significant for identity but missing from comparison displays. Commit `cc6fd8f` shows the exact visual reference or “No visual” as inert text on both proposal and history views; six cases cover changes, removal and untrusted markup. The same repair removes duplicate conflict copy. Scoped review is now approved; remote browser CI remains pending.
+
+Actual UI changed only a quiz, studied it, reloaded history, and restored its prior version. Both the original100% and new50% attempts survived, along with the original card identities, ratings and activity records. A pending proposal then encountered a manual edit through the original editor in another tab; Apply was blocked, the proposal stayed visible, and explicit regeneration succeeded against the new state without removing the manual note. A draft created before this feature upgrade still read and applied. Removing/restoring a path reference kept its source course and both original module IDs intact.
+
+JEV implementation is now underway. It will use explicit exact-source selection and show what goes to TypeSafe; the result is advisory probability data, not a learner score or automatic edit. The earlier API connectivity call is not treated as completed feature qualification.
+
+
+Final revision gate passed: CI40344615240 at `cc6fd8f` completed all44 browser cases with no retries in7.1minutes, plus454 backend tests and181 frontend tests on both Node22/24 lint/build jobs. Initial Task3 CI40342873356 also passed. Revision/restore is accepted; JEV implementation and final product polish remain.
