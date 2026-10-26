@@ -60,3 +60,13 @@ The existing 4 production npm metadata advisories (0 high), legacy Ruff debt, an
 ## Review boundaries / coordinator evidence
 
 The coordinator separately reported real rendered WB-06 PASS at `fe99812` (earlier review failure survives a later success; recovery then Finish yields 2/2), and actual two-tab WB-02 conflict/preservation plus owner Follow/Unfollow dashboard counts at `5c1cf7a`. Their raw records/screenshots/timing remain the evidence source; this report does not reclassify their audit. This implementer ran no local browser automation and does not claim final browser CI or independent rereview passed. Remaining gates are that scoped rereview, final-head CI, coordinator UI audit consolidation and comprehensive PR update; no merge is authorized.
+
+## Scoped rereview follow-up — WB-R1 immutable quiz encounters
+
+The scoped reviewer found a new interaction between retained failed actions and the old single `quiz` request key: editing an answer removed the original request while its failed action remained, so recovery could assign a second event ID to an already committed attempt. A later submission also reused the failed-action key and could clear the earlier failure.
+
+Changed only ModuleViewer and its tests for this targeted repair. Each quiz submission now has an encounter key. Editing answers, choosing Retry Quiz, or adding questions starts a new draft without deleting any prior request. Retrying an unchanged submission reuses its encounter; explicitly submitting an edited draft creates a distinct one. Recovery preserves every original event ID, answers, score and time payload. A retry of an older encounter acknowledges that history without replacing an edited draft or newer successful feedback. Existing card encounter recovery is unchanged.
+
+RED: Node24.18.0 `cd frontend && npm test -- --run src/pages/ModuleViewer.test.tsx` → **3 failed / 14 passed**. The failures cover lost response after a simulated idempotent server commit, answer edit then Retry study save; the same sequence through Finish; and a new successful submission while an earlier submission remains unresolved.
+
+GREEN: same command → **17 passed in 2.25s**. The lost-response cases compare the full replay payload and assert only one committed event identity. The distinct-submission case verifies both answers/IDs remain independent and retrying the old attempt preserves newer 100% feedback. `npm run lint` and `git diff --check` also passed. Backend and unrelated suites were unchanged and were not rerun. No runtime, user data, root-owned audit files, or PR/CI were changed. The requested `final-scoped-review.md` was not yet present when checked; this repair follows the coordinator's explicit quoted WB-R1 finding.

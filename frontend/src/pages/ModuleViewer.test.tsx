@@ -274,3 +274,74 @@ it('keeps multiple settled review failures until each original encounter is ackn
   expect(state.progress.get('m1')?.reviews).toBe(3);
   for (const id of ['a','b']) expect(new Set(requests.filter(r=>r.flashcard_id === id).map(r=>r.event_id)).size).toBe(1);
 });
+
+it.each(['retry', 'finish'] as const)('replays a committed quiz with its original event and payload after answer edits via %s', async recovery => {
+  const state = installJourneyApi([makeModule()]);
+  const original = fetch;
+  const attempts: Record<string, unknown>[] = [];
+  const committed = new Map<string, Record<string, unknown>>();
+  vi.stubGlobal('fetch', async (input: string, init?: RequestInit) => {
+    const body = init?.body ? JSON.parse(String(init.body)) : {};
+    if (body.action === 'submit_quiz') {
+      attempts.push(body);
+      // Model an idempotent server commit followed by a lost response.
+      if (!committed.has(body.event_id)) committed.set(body.event_id, body);
+      if (attempts.length === 1) return new Response(JSON.stringify({detail:'Response lost after commit'}), {status:503});
+      return new Response(JSON.stringify({id:'saved-quiz'}));
+    }
+    return original(input, init);
+  });
+  renderJourney(<ModuleViewer />, '/courses/c1/modules/m1', '/courses/:courseId/modules/:moduleId');
+  fireEvent.click(await screen.findByRole('button',{name:'Quiz (1)'}));
+  fireEvent.click(screen.getByRole('button',{name:'6'}));
+  fireEvent.click(screen.getByRole('button',{name:'Submit Quiz'}));
+  await screen.findByRole('button',{name:'Retry study save'});
+  fireEvent.click(screen.getByRole('button',{name:'5'}));
+  fireEvent.click(screen.getByRole('button',{name:recovery === 'retry' ? 'Retry study save' : 'Finish'}));
+  await waitFor(()=>expect(attempts).toHaveLength(2));
+  expect(attempts[1]).toEqual(attempts[0]);
+  expect(committed.size).toBe(1);
+  expect(attempts[1].quiz_answers).toEqual({0:1});
+  if (recovery === 'retry') {
+    await waitFor(()=>expect(screen.queryByRole('button',{name:'Retry study save'})).not.toBeInTheDocument());
+    // A retry acknowledges history; it must not discard the edited answer draft.
+    expect(screen.getByRole('button',{name:'5'})).toHaveAttribute('aria-pressed','true');
+    expect(screen.getByRole('button',{name:'Submit Quiz'})).toBeInTheDocument();
+  } else {
+    await screen.findByText('Course saved');
+    expect(state.progress.get('m1')?.completed).toBe(true);
+  }
+});
+
+it('keeps distinct quiz submissions and retries an earlier failure without replacing newer feedback', async () => {
+  installJourneyApi([makeModule()]);
+  const original = fetch;
+  const attempts: Record<string, unknown>[] = [];
+  vi.stubGlobal('fetch', async (input: string, init?: RequestInit) => {
+    const body = init?.body ? JSON.parse(String(init.body)) : {};
+    if (body.action === 'submit_quiz') {
+      attempts.push(body);
+      if (attempts.length === 1) return new Response(JSON.stringify({detail:'Save unavailable'}),{status:503});
+      return new Response(JSON.stringify({id:'saved-quiz'}));
+    }
+    return original(input,init);
+  });
+  renderJourney(<ModuleViewer />, '/courses/c1/modules/m1', '/courses/:courseId/modules/:moduleId');
+  fireEvent.click(await screen.findByRole('button',{name:'Quiz (1)'}));
+  fireEvent.click(screen.getByRole('button',{name:'6'}));
+  fireEvent.click(screen.getByRole('button',{name:'Submit Quiz'}));
+  await screen.findByRole('button',{name:'Retry study save'});
+  fireEvent.click(screen.getByRole('button',{name:'5'}));
+  fireEvent.click(screen.getByRole('button',{name:'Submit Quiz'}));
+  await screen.findByText('Score: 100%');
+  expect(attempts[0].event_id).not.toBe(attempts[1].event_id);
+  expect(attempts.map(attempt=>attempt.quiz_answers)).toEqual([{0:1},{0:0}]);
+  fireEvent.click(screen.getByRole('button',{name:'Retry study save'}));
+  await waitFor(()=>expect(attempts).toHaveLength(3));
+  expect(attempts[2]).toEqual(attempts[0]);
+  await waitFor(()=>expect(screen.queryByRole('button',{name:'Retry study save'})).not.toBeInTheDocument());
+  expect(screen.getByText('Score: 100%')).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button',{name:'Finish'}));
+  await screen.findByText('Course saved');
+  expect(attempts).toHaveLength(3);
+});

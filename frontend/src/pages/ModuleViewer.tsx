@@ -72,6 +72,9 @@ function StudyModule() {
   const [personalSaveError, setPersonalSaveError] = useState(false);
   const personalDraft = useRef<UpdateModuleProgressRequest>({ action: 'save_state' });
   const eventRequests = useRef(new Map<string, UpdateModuleProgressRequest>());
+  // The currently displayed quiz draft may start a new encounter. Previously
+  // submitted encounters stay immutable in the request/recovery maps.
+  const quizEncounterKey = useRef<string | null>(null);
   const takeStudyTime = useActiveStudyTime();
 
   const { data: courseData } = useCourse(courseId || '');
@@ -117,7 +120,7 @@ function StudyModule() {
     if (isQuiz) setQuizSubmissionPending(true);
     try {
       await saveAction(failed.key, failed.data);
-      if (isQuiz) {
+      if (isQuiz && failed.key === quizEncounterKey.current) {
         const snapshot = Object.fromEntries(
           Object.entries(failed.data.quiz_answers ?? {}).map(([index, answer]) => [Number(index), answer]),
         );
@@ -303,8 +306,8 @@ function StudyModule() {
 
   const handleQuizAnswer = (questionIndex: number, answerIndex: number) => {
     if (!quizSubmitted && !quizSubmissionPending) {
-      eventRequests.current.delete('quiz');
-      // Keep failed attempts and their original answers available until acknowledged.
+      if (quizAnswers[questionIndex] !== answerIndex) quizEncounterKey.current = null;
+      // Editing the draft never deletes or changes a submitted encounter.
       setQuizAnswers({ ...quizAnswers, [questionIndex]: answerIndex });
     }
   };
@@ -313,9 +316,11 @@ function StudyModule() {
     if (!courseId || !moduleId || quizSubmissionPending) return;
     const snapshot = { ...quizAnswers };
     const score = Math.round(allQuizQuestions.filter((q, i) => snapshot[i] === q.correct_index).length / allQuizQuestions.length * 100);
+    const encounterKey = quizEncounterKey.current ?? `quiz:${crypto.randomUUID()}`;
+    quizEncounterKey.current = encounterKey;
     setQuizSubmissionPending(true);
     try {
-      await saveAction('quiz', { action: 'submit_quiz', quiz_score: score, quiz_answers: snapshot });
+      await saveAction(encounterKey, { action: 'submit_quiz', quiz_score: score, quiz_answers: snapshot });
       setSubmittedQuizAnswers(snapshot);
       setQuizSubmitted(true);
     } catch { showError('Could not save your quiz. Please try again.'); }
@@ -339,6 +344,7 @@ function StudyModule() {
       const combined = [...extraQuizQuestions, ...newQuestions];
       setExtraQuizQuestions(combined);
       await savePersonal({ action: 'save_state', extra_quiz_questions: combined });
+      quizEncounterKey.current = null;
       setQuizSubmitted(false);
       // Keep existing answers
     }
@@ -586,7 +592,7 @@ function StudyModule() {
                     <Button
                       variant="secondary"
                       onClick={() => {
-                        eventRequests.current.delete('quiz');
+                        quizEncounterKey.current = null;
                         setQuizAnswers({});
                         setSubmittedQuizAnswers(null);
                         setQuizSubmitted(false);
