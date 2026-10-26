@@ -4,6 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
 
 jobs:
   backend:
@@ -52,8 +53,42 @@ jobs:
       - name: Run frontend test suite
         run: npm run test
 
-      # Lint is intentionally non-blocking until ticket 005 (pre-existing
-      # frontend eslint errors) lands; failures still surface in the job log.
-      - name: Lint (informational)
+      - name: Lint
         run: npm run lint
-        continue-on-error: true
+
+      - name: Production build
+        run: npm run build
+
+  browser-journeys:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Install isolated backend dependencies
+        working-directory: backend
+        run: uv sync --dev --python 3.12
+      - name: Install browser test dependencies
+        working-directory: frontend
+        run: npm ci
+      - name: Install Chromium
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+      - name: Typecheck browser fixtures and tests
+        working-directory: frontend
+        run: npm run test:e2e:types
+      - name: Run all 40 named browser journeys
+        working-directory: frontend
+        run: npm run test:e2e
+      - name: Preserve per-journey timings and failure evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-journey-evidence
+          path: |
+            frontend/playwright-report/
+            frontend/test-results/
+          retention-days: 7

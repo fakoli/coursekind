@@ -7,7 +7,7 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      '/api': 'http://localhost:8010',
+      '/api': process.env.VITE_API_PROXY || 'http://localhost:8010',
     },
   },
   test: {
@@ -15,5 +15,6 @@ export default defineConfig({
     globals: true,
     setupFiles: './src/test/setup.ts',
     css: false,
+    exclude: ['e2e/**', 'node_modules/**'],
   },
 })

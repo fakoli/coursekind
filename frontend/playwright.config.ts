@@ -1,0 +1,24 @@
+import { defineConfig, devices } from '@playwright/test';
+
+export default defineConfig({
+  testDir: './e2e',
+  timeout: 60_000,
+  expect: { timeout: 10_000 },
+  fullyParallel: false,
+  workers: 1, // The test-only clock/provider fault controls are deliberately serial.
+  retries: 0, // A retry must not conceal an acceptance failure.
+  forbidOnly: !!process.env.CI,
+  reporter: [['list'], ['html', { open: 'never' }], ['./e2e/timing-reporter.ts']],
+  use: {
+    baseURL: 'http://127.0.0.1:4178',
+    trace: 'retain-on-failure', screenshot: 'only-on-failure',
+    ...devices['Desktop Chrome'],
+  },
+  webServer: [
+    { command: 'cd ../backend && uv run python ../frontend/e2e/server.py',
+      url: 'http://127.0.0.1:8018/health', reuseExistingServer: false, timeout: 60_000 },
+    { command: 'npm run dev -- --host 127.0.0.1 --port 4178 --strictPort',
+      env: { VITE_API_PROXY: 'http://127.0.0.1:8018' },
+      url: 'http://127.0.0.1:4178', reuseExistingServer: false, timeout: 60_000 },
+  ],
+});

@@ -102,3 +102,7 @@ graphify-out/
 
 # Protected local credential encryption key
 .ai-credentials.key
+
+# Disposable browser acceptance artifacts
+frontend/playwright-report/
+frontend/test-results/
