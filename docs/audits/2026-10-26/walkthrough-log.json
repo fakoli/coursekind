@@ -475,5 +475,12 @@
     "status": "pass",
     "duration_ms": 48517,
     "notes": "FreshRecoverylearnerexplicitread+2correctquizanswers recordsone100%attempt. Dashboardnavigation+reloadretain1session,1courseinprogress,0selectedpaths,0completedmodules,100%quiz,read+quizactivity. ContinueLearningopenssamecourse/module; contentreadstateandonequizhistoryattemptpersist. Passiveadditionalnavigationdoesnotaddattempt."
+  },
+  {
+    "journey": "MODULE-01 / STUDY-01",
+    "scenario": "Sanitized lesson retains rich Markdown, protected image, Mermaid diagram and executable code",
+    "status": "pass",
+    "duration_ms": 34467,
+    "notes": "On20c9c59 source/dependencies, author appended Mermaid Learn\u2192Practice and benign strong HTML through editor; saved, reloaded course and opened lesson. RealSVG135.56\u00d7162 rendered withbothlabels, protectedimagecomplete300px, boldtextpreserved; embeddedJSprintsHello,learner! Screenshot51. Durationincludesbrowserinspection/toolcoordination,notuninterruptedhumanbenchmark."
   }
 ]

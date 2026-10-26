@@ -68,3 +68,4 @@ record,journey_ids,scenario,observed_status,elapsed_seconds,later_retest_records
 66,SHARE-01; AUTH-03,"Public discovery, unlisted direct lesson, private denial",pass,41.911,
 67,SHARE-05; PATH-02; PATH-03,Distinct references and deleting a curator path,pass,42.562,
 68,STATS-04; STATS-01; STATS-03; STUDY-04,Read and quiz history survive dashboard navigation and reload,pass,48.517,
+69,MODULE-01; STUDY-01,"Sanitized lesson retains rich Markdown, protected image, Mermaid diagram and executable code",pass,34.467,

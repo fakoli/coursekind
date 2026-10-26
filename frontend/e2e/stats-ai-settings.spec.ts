@@ -21,7 +21,9 @@ async function chooseProvider(page: Page, provider: string, model: string, key?:
   }
   await expect(page.getByLabel('Model', { exact: true }).locator(`option[value="${model}"]`)).toHaveCount(1);
   await page.getByLabel('Model', { exact: true }).selectOption(model);
+  const saved = page.waitForResponse(response => response.url().endsWith('/auth/ai-preferences') && response.request().method() === 'PUT');
   await page.getByRole('button', { name: 'Save AI preferences' }).click();
+  expect((await saved).ok()).toBeTruthy();
   await expect(page.getByText(new RegExp(`Selected: ${provider} / ${model}\\.`))).toBeVisible();
 }
 
@@ -171,7 +173,10 @@ test('AI-05 — unavailable and malformed generation retain draft, retry once wi
   await page.getByRole('button', { name: /^Flashcards/ }).click();
   for (const fault of ['unavailable', 'malformed']) {
     await control(request, { fault });
+    const rejected = page.waitForResponse(response => response.url().endsWith('/generate/flashcards') && response.request().method() === 'POST');
     await page.getByRole('button', { name: 'Generate with AI', exact: true }).click();
+    expect((await rejected).ok()).toBe(false);
+    await expect(page.getByRole('button', { name: 'Generate with AI', exact: true })).toBeEnabled();
     await expect(page.getByText(/failed|invalid|unavailable/i).last()).toBeVisible();
     await expect(page.getByLabel('Module Title')).toHaveValue('Unsaved draft survives');
     await expect(page.getByPlaceholder('What is the question?')).toHaveCount(2);
@@ -190,9 +195,13 @@ test('SUPPORT-01 — persist notification preferences, validate phone and report
   await login(page, world.author);
   await page.goto('/settings');
   const email = page.getByRole('switch', { name: 'Email notifications' });
-  const original = await email.getAttribute('aria-checked');
+  await expect(email).toHaveAttribute('aria-checked', 'true');
   await email.click();
-  await expect(email).toHaveAttribute('aria-checked', original === 'true' ? 'false' : 'true');
+  await expect(email).toHaveAttribute('aria-checked', 'false');
+  const daily = page.getByRole('switch', { name: 'Daily quiz' });
+  await expect(daily).toHaveAttribute('aria-checked', 'true');
+  await daily.click();
+  await expect(daily).toHaveAttribute('aria-checked', 'false');
   await page.getByLabel('Phone Number').fill('123');
   await page.getByRole('button', { name: 'Save Number' }).click();
   await expect(page.getByRole('alert').filter({ hasText: /international|E.164/ })).toBeVisible();
@@ -201,6 +210,8 @@ test('SUPPORT-01 — persist notification preferences, validate phone and report
   await expect(page.getByRole('switch', { name: 'SMS notifications' })).toHaveAttribute('aria-checked', 'true');
   await page.reload();
   await expect(page.getByLabel('Phone Number')).toHaveValue('+12025550123');
+  await expect(email).toHaveAttribute('aria-checked', 'false');
+  await expect(daily).toHaveAttribute('aria-checked', 'false');
   await expect(page.getByRole('button', { name: 'Test Email' })).toBeDisabled();
   await expect(page.getByRole('button', { name: 'Test SMS' })).toBeDisabled();
   await expect(page.getByText('Email delivery is unavailable: the server email provider is not configured.')).toBeVisible();

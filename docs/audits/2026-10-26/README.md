@@ -1,10 +1,10 @@
 # Baseline repair validation — 26 October 2026
 
-The repaired baseline has 40 named durable browser scenarios and 69 recorded real rendered subflows. This checkpoint **does not certify all 40 journeys as fully passed**: local unit/integration suites passed; the new Chromium suite is undergoing its first CI execution. Final CI results and independent whole-branch review remain release gates. The [25 October audit](../2026-10-25/README.md) remains unchanged.
+The repaired baseline has 40 named durable browser scenarios and 70 recorded real rendered subflows. This checkpoint **does not certify all 40 journeys as fully passed**: local unit/integration suites passed; the new Chromium suite is undergoing its first CI execution. Final CI results and independent whole-branch review remain release gates. The [25 October audit](../2026-10-25/README.md) remains unchanged.
 
 ## Evidence and timing method
 
-- [Original walkthrough log](walkthrough-log.json): all 69 source records preserved, including early failures and interrupted/unmeasured intervals. Existing first 65 records are unchanged; the final four append the coordinator's actual UI evidence.
+- [Original walkthrough log](walkthrough-log.json): all 70 source records preserved, including early failures and interrupted/unmeasured intervals. Existing first 65 records are unchanged; the final five append the coordinator's actual UI evidence.
 - [Normalized evidence](walkthrough-normalized.json) and [subflow timings CSV](subflow-timings.csv): stable zero-based record indices, journey IDs, observed outcome, duration in seconds and explicit later retests. Each normalized record embeds its original source object. Seventeen intervals remain null; they are never treated as zero or pass. Rebuild with `python3 scripts/normalize-journey-audit.py`.
 - Manual checks used separate synthetic author/learner identities on an isolated backend/front end, ports 8011/5174. Times include orchestration, diagnosis, inspection and fixture interruptions; they are neither human benchmarks nor whole-journey completion times. Do not add overlapping subflow times together.
 - [Browser acceptance implementation](../../../frontend/e2e/README.md): real routes, authentication, storage and UI interactions; isolated temporary storage on 8018/4178, unique synthetic accounts, no normal-instance data or secrets. Each test gets a fresh browser context. A serial worker controls deterministic backend clock/failures.
@@ -25,12 +25,12 @@ Every row has a named executable UI scenario, not a status-only assertion. “CI
 | COURSE-03 | [edit metadata, cancel deletion, then delete and reopen old URL](../../../frontend/e2e/accounts-courses.spec.ts) | 63 | 63: 28.859 | CI pending |
 | COURSE-04 | [discover by search, difficulty and sort, recover empty results](../../../frontend/e2e/accounts-courses.spec.ts) | 37, 51 | 37: 51.292, 51: 19.61 | CI pending |
 | COURSE-05 | [generate selected AI outlines, append and persist editable lessons](../../../frontend/e2e/accounts-courses.spec.ts) | 39, 41, 44, 45, 47 | 39: 252.595, 41: 51.336, 44: 63.422, 45: 191.273, 47: 30.269 | CI pending |
-| MODULE-01 | [edit Markdown, preview, reject empty title and persist learner rendering](../../../frontend/e2e/modules-study.spec.ts) | 58, 65 | 65: 39.998 | CI pending |
+| MODULE-01 | [edit Markdown, preview, reject empty title and persist learner rendering](../../../frontend/e2e/modules-study.spec.ts) | 58, 65, 69 | 65: 39.998, 69: 34.467 | CI pending |
 | MODULE-02 | [add, edit, reorder and remove flashcards with saved learner order](../../../frontend/e2e/modules-study.spec.ts) | 11, 34, 55 | 11: 20, 34: 25.422, 55: 17.915 | CI pending |
 | MODULE-03 | [edit quiz options and answer key then verify learner scoring](../../../frontend/e2e/modules-study.spec.ts) | 12, 35, 56 | 12: 40, 56: 61.858 | CI pending |
 | MODULE-04 | [configure practice, execute, reload and explicitly remove it](../../../frontend/e2e/modules-study.spec.ts) | 13, 29 | 13: 21, 29: 12.449 | CI pending |
 | MODULE-05 | [generate activities, cancel then append, refine and save](../../../frontend/e2e/modules-study.spec.ts) | 41, 42, 45, 46, 48 | 41: 51.336, 45: 191.273, 46: 31.168, 48: 9.691 | CI pending |
-| STUDY-01 | [read content, run embedded code and rerun changed code](../../../frontend/e2e/modules-study.spec.ts) | 23, 50, 58, 65 | 50: 52.061, 65: 39.998 | CI pending |
+| STUDY-01 | [read content, run embedded code and rerun changed code](../../../frontend/e2e/modules-study.spec.ts) | 23, 50, 58, 65, 69 | 50: 52.061, 65: 39.998, 69: 34.467 | CI pending |
 | STUDY-02 | [flip and persist every card including the final card](../../../frontend/e2e/modules-study.spec.ts) | 20, 33, 50 | 20: 117, 33: 45.97, 50: 52.061 | CI pending |
 | STUDY-03 | [rate cards, filter and retain personal ratings](../../../frontend/e2e/modules-study.spec.ts) | 21, 33 | 33: 45.97 | CI pending |
 | STUDY-04 | [incomplete quiz is blocked, score 50%, retry and persist 100%](../../../frontend/e2e/modules-study.spec.ts) | 24, 48, 50, 68 | 24: 28, 48: 9.691, 50: 52.061, 68: 48.517 | CI pending |
@@ -57,6 +57,8 @@ Every row has a named executable UI scenario, not a status-only assertion. “CI
 | AI-05 | [unavailable and malformed generation retain draft, retry once with one debit](../../../frontend/e2e/stats-ai-settings.spec.ts) | 39, 45, 47 | 39: 252.595, 45: 191.273, 47: 30.269 | CI pending |
 | SUPPORT-01 | [persist notification preferences, validate phone and report unavailable transport](../../../frontend/e2e/stats-ai-settings.spec.ts) | 59, 60 | 59: 48.414 | CI pending |
 | SUPPORT-02 | [mobile navigation, keyboard tabs/dialogs and missing-route recovery](../../../frontend/e2e/stats-ai-settings.spec.ts) | 61, 64 | 61: 19.114, 64: 23.676 | CI pending |
+
+The initial CI run was canceled after 14 cases timed out at required form labels, before their main UI flows. Its trace showed that exact label matching included a visual asterisk; anchored labels now allow that marker. No initial case is counted as passed. The corrected run remains pending.
 
 ## Negative branches and persistence contracts
 
@@ -89,6 +91,8 @@ These existing regression suites run with disposable storage/fake external bound
 | Four mobile overflows | 64: all four document/viewport widths 390; keyboard Tab/Space works | Actual geometry/actions pass; in-app screenshot compositor did not reliably mirror emulated phone dimensions. |
 
 Additional visible persistence evidence: [manual rich lesson and runnable example](screenshots/47-manual-rich-lesson-runs.png), [private visibility denial after public/unlisted checks](screenshots/48-visibility-boundary-denied.png), [reuse counts after path deletion](screenshots/49-reuse-count-after-path-delete.png), [personal history after navigation/reload](screenshots/50-personal-history-reloaded.png), [course deletion recovery](screenshots/46-deleted-course-recovery.png).
+
+The coordinator also verified the upgraded strict Mermaid renderer through actual UI on `20c9c59`: author edit → save → reload → lesson retained a real 135.56×162 SVG, protected image, bold/benign HTML and executable JavaScript ([51](screenshots/51-sanitized-lesson-diagram.png), record69,34.467s including coordination). This is a real rendering check; hostile HTML/directives are separately covered by security regressions and the pending browser scenario.
 
 ## Live versus mocked external integrations
 

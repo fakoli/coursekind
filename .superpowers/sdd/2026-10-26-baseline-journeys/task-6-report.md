@@ -40,7 +40,7 @@ still being collected by the coordinator; subsequent repairs must append here.
   missing selectors while whole-journey budget remains60s.
 - CI adds browser job, gates frontend lint and build, and supports manual
   workflow dispatch. Existing Python3.12 and Node22/24 matrix remains.
-- All69 actual CUA source records preserved. Normalizer embeds original records,
+- All70 actual CUA source records preserved. Normalizer embeds original records,
   handles three timing units, retains17 null times and maps explicit later
   retests. All40 IDs have raw evidence and durable scenario rows. No blank status
   is promoted to Pass. Historical25October audit unchanged.
@@ -90,7 +90,7 @@ No command requiring service API keys was executed.
 | isolated Python `frontend/e2e/smoke.py` | Passed real auth/storage + all four mocked provider adapters; initially caught unsupported `.test` registration emails, corrected to synthetic `example.com` |
 | `uv run --with ruff ruff check .` in backend, Ruff0.17.2 | 80 existing errors; not claimed clean or newly gated; no automatic broad reformat |
 | `npm audit --omit=dev --json` after compatible updates | 4 metadata advisories:0high/2moderate/2low; see dependency review |
-| `python3 scripts/normalize-journey-audit.py` | 69 records,17 unmeasured; all40 journey IDs mapped |
+| `python3 scripts/normalize-journey-audit.py` | 70 records,17 unmeasured; all40 journey IDs mapped |
 | `git diff --check` | Passed at each implementation checkpoint |
 
 Direct standalone `ruff` was unavailable; the successful diagnostic invocation
@@ -127,3 +127,21 @@ actual browser-rendering assertion.
 - `0e01523` — compatible rendering/routing dependency updates and advisory review.
 - `20c9c59` — safe shared HTML/strict Mermaid plus bounded browser waits.
 - Subsequent docs/scenario/CI followups are recorded below as they complete.
+
+### First CI feedback and diagram followup
+
+- Initial run40305008539 canceled after14 browser cases timed out at first form
+  fill. Trace/error-context artifacts showed exact `getByLabel` matching the
+  required visual `*`, despite the accessible-name snapshot omitting it. Commit
+  `5dd788a` uses anchored optional-marker labels for auth/path forms; all visible
+  and persisted assertions remain. No initial browser case is reported passed.
+- Corrected run40307745119 passes backend and both Node22/24 test/lint/build
+  jobs; browser execution is pending at this checkpoint.
+- Coordinator actual CUA on20c9c59 verified strict Mermaid real SVG, protected
+  image, rich formatting and executable JavaScript after save/reload. Raw
+  record69 and screenshot51 merged verbatim; normalized log now70 records and
+  still17 null durations.
+- Bounded source audit added explicit response waits for failed generation and
+  unchanged-provider credential replacement to prevent test-control mutations
+  racing in-flight requests; notification toggles wait for loaded defaults.
+- `7f0a505` records the catalog/audit/report; `5dd788a` repairs first CI labels.
