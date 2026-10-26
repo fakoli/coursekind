@@ -85,6 +85,7 @@
 **Interfaces:** Sign-out/token identity changes cancel old queries and remove user-specific cache before new identity renders. Handle other-tab storage changes. API error extraction understands backend `{error:{code,message,details}}` and ordinary FastAPI errors. Admin guard runs before admin queries; one understandable denial, no toast loop. Phone number validates international E.164 when SMS enabled, and delivery tests use captured adapters.
 
 - [ ] Add failing tests for A→logout→B without reload with cached/in-flight private queries, auth expiry and cross-tab logout, structured server errors, non-admin direct navigation, invalid phone preferences, disabled unconfigured delivery, toggle state announcements, and keyboard-only primary study actions/dialogs.
+- [ ] Repair manual activity validation found during rendered tests: incomplete flashcards must retain their draft and show a clear error rather than being silently removed; quizzes require nonempty questions and at least two nonempty options with a valid correct index. Add safe add/remove option controls that preserve/remap the answer key, with frontend and backend agreement and regression tests.
 - [ ] Implement cache isolation and guards, useful recoverable errors, notification input/state validation and honest provider availability. Use native/radio/button semantics and accessible names throughout touched flows. Preserve saved preferences per user and no real delivery in tests.
 - [ ] Run relevant tests, full frontend lint and build; fix touched-flow regressions and commit.
 

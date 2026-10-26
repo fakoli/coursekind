@@ -205,5 +205,47 @@
     "status": "pass-subflow",
     "elapsed_seconds": 12.449,
     "notes": "Remove Sandbox → Save → reload → No Code Sandbox persisted."
+  },
+  {
+    "journey": "AUTH-02",
+    "status": "fail-subflow",
+    "elapsed_seconds": null,
+    "notes": "Logout Baseline Student→login Baseline History without reload: greeting changes but dashboard shows Student private lesson titles, completed path, quiz and activity. Concrete Task5 cache-isolation reproduction."
+  },
+  {
+    "journey": "STATS-01/STATS-02",
+    "status": "pass-subflow",
+    "elapsed_seconds": null,
+    "notes": "Controlled synthetic history for same module at today and 4/5/6/8 days ago: rendered weekly sessions4, current streak1, longest3, lifetime5min, startedcourse1; oldest event excluded weekly. API/isolated storage setup, actual UI rendering. NextUp misses directly studied nonowned course; reported Task3 fix."
+  },
+  {
+    "journey": "STUDY-06/STATS-03",
+    "status": "pass-subflow",
+    "elapsed_seconds": null,
+    "notes": "After fix, History dashboard recommends directly studied public Fixture lesson1 despite owning no courses and following no paths."
+  },
+  {
+    "journey": "STUDY-02/STUDY-03",
+    "status": "pass-subflow",
+    "elapsed_seconds": 45.97,
+    "notes": "Flip first card→rate Easy→Next→Previous→Space flip: visible reviewed1/2 throughout; secondary stored check exactly2 review events for1 stable cardID. Rating+Next same encounter deduplicated; genuine revisit retained."
+  },
+  {
+    "journey": "MODULE-02",
+    "status": "fail-subflow",
+    "elapsed_seconds": 25.422,
+    "notes": "Adding third flashcard with nonempty front and empty back then Save silently removes entered card and shows Module updated successfully. Need explicit validation and draft preservation. Original two cards preserved."
+  },
+  {
+    "journey": "MODULE-03",
+    "status": "fail-subflow",
+    "elapsed_seconds": null,
+    "notes": "Author can save quiz question with only one nonempty answer and three empty answer strings; success reported. UI has no add/remove option controls required by catalog. Need validation preserving draft and safe option-index editing."
+  },
+  {
+    "journey": "COURSE-02",
+    "status": "pass-subflow",
+    "elapsed_seconds": 27.226,
+    "notes": "Stopped disposable API before Save: explicit save error, outline draft retained. Restarted API, retried same Save, reload/reopen confirms edited description and original two modules without duplicates."
   }
 ]

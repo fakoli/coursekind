@@ -69,3 +69,11 @@ See `walkthrough-log.json` for subflows, measured times, and limitations. Final 
 - Completed modules produce a [completed selected path](screenshots/13-completed-selected-path.png). The screenshot also records an incorrect empty-state sentence, reported for repair. Revoking one course reduces the path to [50% with a redacted unavailable reference](screenshots/14-revoked-path-progress.png) while retaining historical study totals.
 
 - The final Task 3 build repairs that empty-state sentence: [completed dashboard guidance](screenshots/15-completed-dashboard-guidance.png). Practice removal also persists across Save and reload; re-enabling and saving restores the configured exercise.
+
+- Controlled dated events for one module show [four weekly sessions, current streak one, longest three](screenshots/17-history-based-statistics.png). The same screen exposes a missing Continue Learning recommendation for a directly studied course; repair pending.
+- Switching synthetic accounts without reload reproduces [stale private dashboard data](screenshots/16-account-switch-cache-leak-before-fix.png); account-cache repair remains pending.
+
+- Directly studied courses now appear in [Continue Learning](screenshots/18-direct-course-resume-fixed.png), and the recommendation opens the correct lesson. A repeated card encounter records a second review event while [unique deck progress stays at one of two](screenshots/19-repeated-card-distinct-progress.png).
+
+- Negative authoring checks reproduced [silent partial-card removal](screenshots/20-incomplete-card-silently-discarded.png) and [acceptance of blank quiz options](screenshots/21-invalid-quiz-accepted.png); explicit validation/draft-preservation repairs are planned.
+- Course Save during a stopped local API retained the draft and showed failure; after restart, retry and reload [preserved the outline edit without duplicates](screenshots/22-course-save-retry-persisted.png).
