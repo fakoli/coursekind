@@ -220,5 +220,77 @@
     "duration_ms": null,
     "commit": "06b17dc",
     "notes": "Disposable backend restarted with WORKSPACE_ENABLED=false and WORKSPACE_REVIEW_ENABLED=false. Existing workspace reads/history remain visible by design. Explicit refinement blocked with Workspace changes are currently disabled; TypeSafe Send disabled. Linked generated course and lesson opened normally, preserving two quiz attempts, 50% latest score and five cards. Gates restored afterward; no normal user instance changes."
+  },
+  {
+    "journey": "WORKSPACE-01",
+    "scenario": "Disabled activity count normalization and review focus recovery",
+    "status": "pass",
+    "duration_ms": 19832,
+    "commit": "095542c",
+    "notes": "Actual CUA at final-pass head: enabled flashcard count0 disabled Build; unchecking flashcards enabled Build and produced a lesson-plus-three-question draft without flashcard changes. Draft review received focus and Dismiss returned focus to originating Review draft button. Mock OpenAI explicitly selected; no live inference claim."
+  },
+  {
+    "journey": "WORKSPACE-06",
+    "scenario": "Compact 360px navigation, keyboard disclosure and unsaved draft preservation",
+    "status": "pass",
+    "duration_ms": null,
+    "commit": "095542c",
+    "notes": "Actual CUA viewport360x800: clientWidth=scrollWidth=360, full height2363 versus prior5416 mobile screenshot. Next action and six section links visible; saved brief/applied plan/revisions/review/history collapsed. Typed unsaved audience suffix, Return collapsed/reopened brief and preserved it; restored original field without saving. Return expanded linked module outline with both original links. Cleared viewport override. Screenshot12 records compact layout."
+  },
+  {
+    "journey": "WORKSPACE-06",
+    "scenario": "Real Chrome 200% zoom, six sections, review focus and primary Next recovery",
+    "status": "pass",
+    "duration_ms": null,
+    "commit": "4744158",
+    "notes": "Native Chrome UI explicitly reported Zoom:200%. At that actual zoom the page clientWidth and scrollWidth were both932. All six section links opened their content; saved draft review focused its region and Dismiss returned to its trigger; History exposed compare/restore controls. Manually collapsed Plan then primary Next opened it, confirming repair. Live failure account showed available100 credits and safe503 guidance; no retry sent. Native input used after extension/embedded-browser zoom attempts proved unreliable; these were tooling issues, not app failures. Restored Chrome Zoom:100% and closed only two temporary validation tabs. Screenshot13 contains only app content."
+  },
+  {
+    "journey": "WORKSPACE-06",
+    "scenario": "Held old-account response arrives after sign-out and account switch",
+    "status": "pass",
+    "duration_ms": null,
+    "commit": "4744158",
+    "notes": "Disposable middleware held exactly one authenticated GET response for the live-helper private workspace. Confirmed claimed and not delivered; signed out and into Baseline Author before explicitly releasing response. Middleware confirmed delivery afterward. Navigating old workspace showed generic Workspace unavailable, no prior goal/jobs/drafts. Screenshot14. No production auth/config changes."
+  },
+  {
+    "journey": "WORKSPACE-06",
+    "scenario": "Insufficient local quota preserves drafts and rejects before provider call",
+    "status": "pass",
+    "duration_ms": null,
+    "commit": "4744158",
+    "notes": "Explicit UI selected Anvil/llm.primary on disposable Author only. With its API stopped, fixture balance temporarily set15 from saved200; normal user untouched. Workspace showed available15 and required25 with manual/BYOK/operator recovery guidance. Explicit Build created a discoverable failed job with insufficient-credit category and zero debit; diagnostic wrapper recorded InsufficientTokensException before any provider POST. Earlier ready drafts remained. Restored original200 fixture balance while stopped."
+  },
+  {
+    "journey": "WORKSPACE-04",
+    "scenario": "Readable manual path comparison and saved-versus-new focus recovery",
+    "status": "partial-fail",
+    "duration_ms": null,
+    "commit": "4744158",
+    "notes": "Proposed reordered path references display authorized current course titles with original ID links. Saved manual review focuses region and Dismiss returns to the saved button. Newly prepared manual proposal focuses region, but Dismiss returns to document body; reproduced by pointer and keyboard Return. Originating Review path changes button remains available. Sent residual focus issue to aggregate review; proposals were not applied."
+  },
+  {
+    "journey": "WORKSPACE-06",
+    "scenario": "Revoked reused-course access hides title but blocks workspace repair controls",
+    "status": "partial-fail",
+    "duration_ms": null,
+    "commit": "4744158",
+    "notes": "Owner of synthetic public reused course changed it to private. Referencing Author workspace reload correctly removed source title and showed Course unavailable; however Plan/Build/Revision/Review/History disappeared behind Saved plans and jobs unavailable, preventing workspace manual path cleanup/owned-material workflows. Aggregate review assessing coupling. Restored original public visibility through owner UI and reloaded; controls returned. Screenshot15 preserves blocked state."
+  },
+  {
+    "journey": "WORKSPACE-01",
+    "scenario": "Fresh goal-only entry through reviewed plan, default module build and study entry",
+    "status": "pass",
+    "duration_ms": 59500,
+    "commit": "4744158",
+    "notes": "Entered only learning goal; defaults one course/5 cards/3 questions. Created private workspace456212f2, generated mock OpenAI plan, applied2-module course, built default first module, reviewed5cards/3questions, explicitly applied, opened Study this module with Content/Flashcards(5)/Quiz(3). Saved brief and applied plan collapsed, next action advanced. Time includes observation/tool overhead; provider mocked, not live Anvil quality evidence."
+  },
+  {
+    "journey": "WORKSPACE-01",
+    "scenario": "Study new generated module and continue with saved learning records",
+    "status": "pass",
+    "duration_ms": null,
+    "commit": "4744158",
+    "notes": "Fresh course0e91223c/module3dd37fdc: marked content read, reviewed5/5cards including lastcard, ratedcard1Hard, submitted3-questionquiz100% exactly1attempt, continued to nextmodule and returned. Course shows1/2completed50%,5/5cards,quiz100%. Useful warmed-state fixture for aggregate cache repair; elapsed time not measured."
   }
 ]
