@@ -394,7 +394,7 @@ function StudyModule() {
       {personal?.quiz_history?.length ? <details><summary>Quiz history</summary><ul>{personal.quiz_history.map((attempt, i) => <li key={i}>{new Date(attempt.created_at).toLocaleString()}: {attempt.score}%</li>)}</ul></details> : null}
       {/* Tabs */}
       <div className="border-b border-gray-200">
-        <nav className="-mb-px flex space-x-8">
+        <nav aria-label="Module study activities" className="-mb-px flex flex-wrap gap-x-4 sm:gap-x-8">
           {module.content_markdown.trim() && <button
             aria-pressed={activeTab === 'content'}
             onClick={() => setActiveTab('content')}

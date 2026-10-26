@@ -188,18 +188,18 @@ export function LearningPathDetail() {
   return (
     <div className="space-y-6 page-enter">
       {/* Header */}
-      <div className="flex items-start justify-between">
-        <div className="flex items-start gap-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
+        <div className="flex min-w-0 items-start gap-4 sm:flex-1">
           <button
             aria-label="Back to paths"
             onClick={() => navigate(-1)}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="shrink-0 p-2 hover:bg-gray-100 rounded-lg transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">{path.title}</h1>
-            <div className="flex items-center gap-4 text-gray-500 mt-1">
+          <div className="min-w-0">
+            <h1 className="break-words text-2xl font-bold text-gray-900">{path.title}</h1>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-gray-500 mt-1">
               <span>{path.course_ids.length} {path.course_ids.length === 1 ? 'course' : 'courses'} · {data.unavailable_courses?.length ?? 0} unavailable</span>
               {path.estimated_hours && (
                 <span className="flex items-center gap-1">
@@ -210,7 +210,7 @@ export function LearningPathDetail() {
             </div>
           </div>
         </div>
-        {isOwner && <div className="flex gap-2">
+        {isOwner && <div className="flex flex-wrap gap-2">
           <Button variant="secondary" onClick={() => setAddCourseModalOpen(true)}>
             <Plus className="w-4 h-4 mr-2" />
             Add Course
