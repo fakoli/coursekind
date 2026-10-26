@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 class FlashcardData(BaseModel):
@@ -44,11 +44,28 @@ class ModuleBase(BaseModel):
     order_index: int = Field(..., ge=0)
 
 
+def validate_activity_write(flashcards, quiz):
+    """Strict new writes; legacy read models remain repairable."""
+    for index, card in enumerate(flashcards or []):
+        if not card.front.strip() or not card.back.strip():
+            raise ValueError(f"Flashcard {index + 1}: enter both a front and a back")
+    for index, question in enumerate(quiz.questions if quiz else []):
+        if not question.question.strip() or any(not option.strip() for option in question.options):
+            raise ValueError(f"Question {index + 1}: question and options must not be blank")
+        if not 0 <= question.correct_index < len(question.options):
+            raise ValueError(f"Question {index + 1}: select a valid correct answer")
+
+
 class ModuleCreate(ModuleBase):
     content_markdown: str = ""
     flashcards: list[FlashcardData] = Field(default_factory=list)
     quiz: QuizData | None = None
     sandbox: SandboxData | None = None
+
+    @model_validator(mode="after")
+    def valid_activities(self):
+        validate_activity_write(self.flashcards, self.quiz)
+        return self
 
 
 class ModuleUpdate(BaseModel):
@@ -60,6 +77,11 @@ class ModuleUpdate(BaseModel):
     flashcards: list[FlashcardData] | None = None
     quiz: QuizData | None = None
     sandbox: SandboxData | None = None
+
+    @model_validator(mode="after")
+    def valid_activities(self):
+        validate_activity_write(self.flashcards, self.quiz)
+        return self
 
 
 class Module(ModuleBase):

@@ -127,6 +127,7 @@ export function Courses() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input
                   type="text"
+                  aria-label="Search courses"
                   placeholder="Search courses..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -138,6 +139,7 @@ export function Courses() {
               </div>
               <div className="flex gap-2">
                 <select
+                  aria-label="Difficulty"
                   value={difficultyFilter}
                   onChange={(e) => setDifficultyFilter(e.target.value as CourseDifficulty | '')}
                   className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -148,6 +150,7 @@ export function Courses() {
                   <option value="advanced">Advanced</option>
                 </select>
                 <select
+                  aria-label="Sort courses"
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
                   className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"

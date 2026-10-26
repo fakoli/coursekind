@@ -7,7 +7,7 @@ import { CourseCard } from '../courses/CourseCard';
 import type { CourseResponse } from '../../types';
 
 const identity = vi.hoisted(() => ({ user: { id: 'owner' }, isLoading: false }));
-vi.mock('./AuthProvider', () => ({ useAuthContext: () => identity }));
+vi.mock('./AuthContext', () => ({ useAuthContext: () => identity }));
 const RealURL = URL;
 
 beforeEach(() => {

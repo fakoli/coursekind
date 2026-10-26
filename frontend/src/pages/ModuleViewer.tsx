@@ -1,4 +1,4 @@
-import { useAuthContext } from '../components/common/AuthProvider';
+import { useAuthContext } from '../components/common/AuthContext';
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
@@ -55,7 +55,7 @@ function StudyModule() {
   const { error: showError } = useToast();
   const [isCompleting, setIsCompleting] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<ViewTab>('content');
+  const [requestedTab, setActiveTab] = useState<ViewTab>('content');
   const [currentFlashcardIndex, setCurrentFlashcardIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [quizAnswers, setQuizAnswers] = useState<Record<number, number>>({});
@@ -154,6 +154,14 @@ function StudyModule() {
     const moduleQuestions = module?.quiz?.questions || [];
     return [...moduleQuestions, ...extraQuizQuestions];
   }, [module?.quiz?.questions, extraQuizQuestions]);
+
+  const availableTabs: ViewTab[] = [
+    ...(module?.content_markdown.trim() ? ['content' as const] : []),
+    ...(module?.flashcards.length ? ['flashcards' as const] : []),
+    ...(allQuizQuestions.length ? ['quiz' as const] : []),
+    ...(module?.sandbox ? ['practice' as const] : []),
+  ];
+  const activeTab = availableTabs.includes(requestedTab) ? requestedTab : availableTabs[0];
 
   // Filter flashcards based on selected filter
   const filteredFlashcards = useMemo(() => {
@@ -357,6 +365,7 @@ function StudyModule() {
       <div className="flex items-start justify-between">
         <div className="flex items-start gap-4 min-w-0 flex-1">
           <button
+            aria-label="Back"
             onClick={() => navigate(`/courses/${courseId}`)}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
           >
@@ -386,7 +395,8 @@ function StudyModule() {
       {/* Tabs */}
       <div className="border-b border-gray-200">
         <nav className="-mb-px flex space-x-8">
-          <button
+          {module.content_markdown.trim() && <button
+            aria-pressed={activeTab === 'content'}
             onClick={() => setActiveTab('content')}
             className={`py-2 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${
               activeTab === 'content'
@@ -396,9 +406,10 @@ function StudyModule() {
           >
             <BookOpen className="w-4 h-4" />
             Content
-          </button>
+          </button>}
           {module.flashcards.length > 0 && (
             <button
+              aria-pressed={activeTab === 'flashcards'}
               onClick={() => setActiveTab('flashcards')}
               className={`py-2 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${
                 activeTab === 'flashcards'
@@ -412,6 +423,7 @@ function StudyModule() {
           )}
           {allQuizQuestions.length > 0 && (
             <button
+              aria-pressed={activeTab === 'quiz'}
               onClick={() => setActiveTab('quiz')}
               className={`py-2 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${
                 activeTab === 'quiz'
@@ -425,6 +437,7 @@ function StudyModule() {
           )}
           {module.sandbox && (
             <button
+              aria-pressed={activeTab === 'practice'}
               onClick={() => setActiveTab('practice')}
               className={`py-2 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${
                 activeTab === 'practice'
@@ -440,7 +453,8 @@ function StudyModule() {
       </div>
 
       {/* Content */}
-      {activeTab === 'content' && (
+      {availableTabs.length === 0 && <p>This module has no study activities yet. You can return later or explicitly finish it.</p>}
+      {activeTab === 'content' && module.content_markdown.trim() && (
         <Card>
           <CardContent>
             <MarkdownRenderer
@@ -616,6 +630,7 @@ function StudyModule() {
                     return (
                       <button
                         key={oIndex}
+                        aria-pressed={quizAnswers[qIndex] === oIndex}
                         onClick={() => handleQuizAnswer(qIndex, oIndex)}
                         className={`w-full text-left p-3 rounded-lg border transition-colors ${optionClass}`}
                         disabled={quizSubmitted || quizSubmissionPending}

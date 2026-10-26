@@ -8,6 +8,8 @@ export interface QuizQuestionItemProps {
   index: number;
   onUpdateQuestion: (field: keyof QuizQuestionData, value: string | number | string[] | undefined) => void;
   onUpdateOption: (optionIndex: number, value: string) => void;
+  onAddOption?: () => void;
+  onRemoveOption?: (optionIndex: number) => void;
   onRemove: () => void;
 }
 
@@ -16,6 +18,8 @@ export function QuizQuestionItem({
   index,
   onUpdateQuestion,
   onUpdateOption,
+  onAddOption,
+  onRemoveOption,
   onRemove,
 }: QuizQuestionItemProps) {
   return (
@@ -40,6 +44,7 @@ export function QuizQuestionItem({
           </div>
 
           <Textarea
+            aria-label={`Question ${index + 1}`}
             value={question.question}
             onChange={(e) => onUpdateQuestion('question', e.target.value)}
             placeholder="Enter your question..."
@@ -71,6 +76,7 @@ export function QuizQuestionItem({
                     {String.fromCharCode(65 + oIndex)}.
                   </span>
                   <input
+                    aria-label={`Question ${index + 1} option ${String.fromCharCode(65 + oIndex)}`}
                     type="text"
                     value={option}
                     onChange={(e) => {
@@ -85,6 +91,7 @@ export function QuizQuestionItem({
                         : 'border-gray-300 bg-white'
                     }`}
                   />
+                  <button type="button" aria-label={`Remove option ${String.fromCharCode(65 + oIndex)} from question ${index + 1}`} disabled={question.options.length <= 2} onClick={() => onRemoveOption?.(oIndex)}><Trash2 className="w-4 h-4" /></button>
                   {isCorrect && (
                     <span className="text-xs font-medium text-green-600 px-2 py-1 bg-green-100 rounded-full">
                       Correct
@@ -93,6 +100,8 @@ export function QuizQuestionItem({
                 </div>
               );
             })}
+            <button type="button" className="text-indigo-700" disabled={question.options.length >= 6} onClick={onAddOption}>Add option</button>
+            {question.correct_index < 0 && <p role="alert">Select a correct answer.</p>}
           </div>
 
           <Textarea

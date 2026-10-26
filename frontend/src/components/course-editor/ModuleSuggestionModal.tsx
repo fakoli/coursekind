@@ -156,6 +156,7 @@ export function ModuleSuggestionModal({
                     </label>
                     <input
                       type="number"
+                      aria-label="Flashcards per module"
                       value={options.flashcardCount}
                       onChange={(e) =>
                         onOptionsChange({
@@ -176,6 +177,7 @@ export function ModuleSuggestionModal({
                     </label>
                     <input
                       type="number"
+                      aria-label="Quiz questions per module"
                       value={options.quizQuestionCount}
                       onChange={(e) =>
                         onOptionsChange({

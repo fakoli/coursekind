@@ -1,7 +1,8 @@
+import re
 from datetime import datetime, timezone
 from uuid import uuid4
 
-from exceptions import NotFoundException
+from exceptions import NotFoundException, ValidationException
 from models.notification import (
     NotificationChannel,
     NotificationHistoryResponse,
@@ -23,6 +24,15 @@ class NotificationService:
         self.email_service = email_service
         self.sms_service = sms_service
 
+    def _with_availability(self, data: dict) -> NotificationPreferences:
+        return NotificationPreferences(
+            **{
+                **data,
+                "email_available": bool(self.email_service.is_configured),
+                "sms_available": bool(self.sms_service.is_configured),
+            }
+        )
+
     async def get_preferences(self, user_id: str, email: str) -> NotificationPreferences:
         """Get notification preferences for a user."""
         prefs_data = await self.storage.get("notification_preferences", user_id)
@@ -30,7 +40,7 @@ class NotificationService:
         user = await self.storage.get("users", user_id)
         canonical_timezone = (user or {}).get("timezone", "UTC")
         if prefs_data:
-            return NotificationPreferences(**{**prefs_data, "timezone": canonical_timezone})
+            return self._with_availability({**prefs_data, "timezone": canonical_timezone})
 
         default_prefs = NotificationPreferences(
             user_id=user_id,
@@ -40,7 +50,7 @@ class NotificationService:
         data = default_prefs.model_dump()
         data["id"] = user_id  # Use user_id as document id
         await self.storage.create("notification_preferences", data)
-        return default_prefs
+        return self._with_availability(data)
 
     async def update_preferences(
         self, user_id: str, updates: NotificationPreferencesUpdate
@@ -51,6 +61,14 @@ class NotificationService:
             if not prefs_data:
                 raise NotFoundException("Notification preferences not found")
             update_dict = updates.model_dump(exclude_unset=True)
+            candidate = {**prefs_data, **update_dict}
+            if candidate.get("sms_enabled") and not re.fullmatch(
+                r"\+[1-9]\d{1,14}", candidate.get("phone_number") or ""
+            ):
+                raise ValidationException(
+                    "SMS requires a phone number in international E.164 format, "
+                    "such as +12025550123"
+                )
             user = await self.storage.get("users", user_id)
             canonical = (user or {}).get("timezone", "UTC")
             if update_dict.get("timezone") is not None:
@@ -58,7 +76,7 @@ class NotificationService:
                 await self.storage.update("users", user_id, {"timezone": canonical})
             update_dict["timezone"] = canonical
             updated = await self.storage.update("notification_preferences", user_id, update_dict)
-            return NotificationPreferences(**updated)
+            return self._with_availability(updated)
 
     async def get_history(
         self, user_id: str, limit: int = 50, offset: int = 0
@@ -123,6 +141,10 @@ class NotificationService:
         if not prefs:
             return False, "Notification preferences not found"
 
+        if not prefs.get("email_enabled"):
+            return False, "Email notifications are disabled"
+        if not self.email_service.is_configured:
+            return False, "Email delivery is unavailable: provider is not configured"
         email_address = prefs.get("email_address")
         if not email_address:
             return False, "No email address configured"
@@ -153,6 +175,10 @@ class NotificationService:
         if not prefs:
             return False, "Notification preferences not found"
 
+        if not prefs.get("sms_enabled"):
+            return False, "SMS notifications are disabled"
+        if not self.sms_service.is_configured:
+            return False, "SMS delivery is unavailable: provider is not configured"
         phone_number = prefs.get("phone_number")
         if not phone_number:
             return False, "No phone number configured"
@@ -184,14 +210,18 @@ class NotificationService:
         channel = prefs.get("reminder_channel", NotificationChannel.EMAIL)
         success = False
 
-        if channel == NotificationChannel.EMAIL:
+        if channel == NotificationChannel.EMAIL and prefs.get("email_enabled"):
             success = await self.email_service.send(
                 to=prefs["email_address"],
                 subject="Study Buddy - Time to Study!",
                 template="reminder",
                 context={"content": content},
             )
-        elif channel == NotificationChannel.SMS and prefs.get("phone_number"):
+        elif (
+            channel == NotificationChannel.SMS
+            and prefs.get("sms_enabled")
+            and prefs.get("phone_number")
+        ):
             success = await self.sms_service.send(
                 to=prefs["phone_number"],
                 message=f"📚 Study Buddy: {content}",

@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useRef, useCallback } from 'react';
+import { ReactNode, useEffect, useRef, useCallback, useId } from 'react';
 import { X } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -10,12 +10,13 @@ interface ModalProps {
   size?: 'sm' | 'md' | 'lg';
 }
 
-const FOCUSABLE_ELEMENTS = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+const FOCUSABLE_ELEMENTS = 'button:not(:disabled), [href], input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"]):not(:disabled)';
 
 export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalProps) {
   const modalRef = useRef<HTMLDivElement>(null);
   const previousActiveElement = useRef<HTMLElement | null>(null);
-  const titleId = title ? 'modal-title' : undefined;
+  const generatedId = useId();
+  const titleId = title ? generatedId : undefined;
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -49,7 +50,7 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalPr
     document.body.style.overflow = 'hidden';
 
     // Focus first focusable element in modal (only on initial open)
-    setTimeout(() => {
+    const focusTimer = setTimeout(() => {
       if (modalRef.current) {
         const focusableElements = modalRef.current.querySelectorAll(FOCUSABLE_ELEMENTS);
         const firstElement = focusableElements[0] as HTMLElement;
@@ -58,6 +59,7 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalPr
     }, 0);
 
     return () => {
+      clearTimeout(focusTimer);
       document.body.style.overflow = 'unset';
 
       // Restore focus to previously focused element

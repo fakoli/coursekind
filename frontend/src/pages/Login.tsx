@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuthContext } from '../components/common/AuthProvider';
+import { useAuthContext } from '../components/common/AuthContext';
 import { Button } from '../components/common/Button';
 import { Input } from '../components/common/Input';
 import { Card, CardContent, CardHeader } from '../components/common/Card';

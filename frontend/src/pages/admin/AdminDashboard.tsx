@@ -1,5 +1,4 @@
-import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Search } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
@@ -8,30 +7,24 @@ import { AdminStatsGrid, UserTable, TokenAdjustmentModal } from '../../component
 import { useAdminStats, useAdminUsers } from '../../hooks/useAdmin';
 import { useUserSearch } from '../../hooks/useUserSearch';
 import { useTokenAdjustment } from '../../hooks/useTokenAdjustment';
-import { useToast } from '../../components/common/ToastProvider';
-import { useAuthContext } from '../../components/common/AuthProvider';
+import { useAuthContext } from '../../components/common/AuthContext';
 import { getErrorMessage } from '../../utils/errors';
 import { DEFAULTS } from '../../utils/constants';
 
 export function AdminDashboard() {
-  const { showToast } = useToast();
-  const { user } = useAuthContext();
-  const navigate = useNavigate();
+  const { user, isLoading } = useAuthContext();
+  if (isLoading) return <p>Checking admin access…</p>;
+  if (user?.role !== 'admin') return <div role="alert">Access denied. Admin privileges required. <Link to="/">Return to Dashboard</Link></div>;
+  return <AdminContent />;
+}
 
+function AdminContent() {
   // Search and pagination
   const { search, setSearch, debouncedSearch, currentPage, handleKeyDown, goToPage } =
     useUserSearch();
 
   // Token adjustment
   const tokenAdjustment = useTokenAdjustment();
-
-  // Protect route on frontend - redirect non-admin users
-  useEffect(() => {
-    if (user && user.role !== 'admin') {
-      showToast('Access denied. Admin privileges required.', 'error');
-      navigate('/', { replace: true });
-    }
-  }, [user, navigate, showToast]);
 
   // Data fetching
   const {

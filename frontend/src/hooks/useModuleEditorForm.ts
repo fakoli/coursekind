@@ -1,3 +1,4 @@
+import { validateActivities } from '../utils/activityValidation';
 import { useState, useCallback, useRef } from 'react';
 import type { Module, FlashcardData, QuizQuestionData, ModuleCreate, ModuleUpdate } from '../types';
 
@@ -54,19 +55,18 @@ export function useModuleEditorForm() {
       flashcards: FlashcardData[],
       quizQuestions: QuizQuestionData[]
     ): ModuleCreate => {
+      validateActivities(flashcards, quizQuestions);
       return {
         title: title.trim(),
         order_index: orderIndex,
         content_markdown: contentMarkdown,
-        flashcards: flashcards.filter((f) => f.front.trim() && f.back.trim()),
+        flashcards,
         quiz:
           quizQuestions.length > 0
             ? {
-                questions: quizQuestions.filter(
-                  (q) => q.question.trim() && q.options.some((o) => o.trim())
-                ),
+                questions: quizQuestions,
               }
-            : undefined,
+            : null,
       };
     },
     [title, contentMarkdown]
@@ -77,18 +77,17 @@ export function useModuleEditorForm() {
       flashcards: FlashcardData[],
       quizQuestions: QuizQuestionData[]
     ): ModuleUpdate => {
+      validateActivities(flashcards, quizQuestions);
       return {
         title: title.trim(),
         content_markdown: contentMarkdown,
-        flashcards: flashcards.filter((f) => f.front.trim() && f.back.trim()),
+        flashcards,
         quiz:
           quizQuestions.length > 0
             ? {
-                questions: quizQuestions.filter(
-                  (q) => q.question.trim() && q.options.some((o) => o.trim())
-                ),
+                questions: quizQuestions,
               }
-            : undefined,
+            : null,
       };
     },
     [title, contentMarkdown]

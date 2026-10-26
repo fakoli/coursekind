@@ -27,13 +27,8 @@ export function CodeSandbox({
   const [result, setResult] = useState<ExecutionResult | null>(null);
   const [showSolution, setShowSolution] = useState(false);
 
-  // Reset code when sandbox changes
-  useEffect(() => {
-    setCode(savedCode ?? sandbox.starter_code);
-    setResult(null);
-    setShowSolution(false);
-  }, [sandbox.starter_code, savedCode]);
-
+  // The parent keys this editor by module and waits for saved state before
+  // mounting. A progress acknowledgement must never erase the current output.
   const handleCodeChange = useCallback(
     (value: string) => {
       setCode(value);

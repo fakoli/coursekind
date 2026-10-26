@@ -53,7 +53,7 @@ afterEach(() => { cleanup(); vi.unstubAllGlobals(); localStorage.clear(); });
 it('saves visibility, grants a named recipient, and revokes persistently', async () => {
   const state = fixture();
   renderJourney(<SharingPanel resource="courses" id="c1" visibility="private" />, '/sharing', '/sharing');
-  fireEvent.change(screen.getByLabelText('Visibility'), { target: { value: 'unlisted' } });
+  fireEvent.change(await screen.findByLabelText('Visibility'), { target: { value: 'unlisted' } });
   fireEvent.click(screen.getByRole('button', { name: 'Save visibility' }));
   await waitFor(() => expect(state.course.visibility).toBe('unlisted'));
   await waitFor(() => expect(screen.getByRole('button', { name: 'Grant access' })).not.toBeDisabled());

@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate, Outlet, Link, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { AuthProvider, useAuthContext } from './components/common/AuthProvider';
+import { AuthProvider } from './components/common/AuthProvider';
+import { useAuthContext } from './components/common/AuthContext';
 import { ToastProvider } from './components/common/ToastProvider';
 import { LiveRegionProvider } from './components/common/LiveRegion';
 import { Login } from './pages/Login';

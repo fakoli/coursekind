@@ -1,5 +1,5 @@
 import { SharingPanel } from '../components/courses/SharingPanel';
-import { useAuthContext } from '../components/common/AuthProvider';
+import { useAuthContext } from '../components/common/AuthContext';
 import { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
@@ -115,6 +115,7 @@ export function CourseDetail() {
       <div className="flex items-start justify-between">
         <div className="flex items-start gap-4 min-w-0 flex-1">
           <button
+            aria-label="Back"
             onClick={() => navigate(-1)}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
           >
@@ -134,7 +135,7 @@ export function CourseDetail() {
               )}
             </div>
             <p className="text-gray-500 mt-1">
-              by {course.author_name} · {modules.length} modules
+              by {course.author_name} · {modules.length} {modules.length === 1 ? 'module' : 'modules'}
             </p>
           </div>
         </div>
@@ -185,7 +186,7 @@ export function CourseDetail() {
             <div className="space-y-3">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-gray-600">
-                  {progressData.completed_modules} of {progressData.total_modules} modules completed
+                  {progressData.completed_modules} of {progressData.total_modules} {progressData.total_modules === 1 ? 'module' : 'modules'} completed
                 </span>
                 <span className="font-medium text-indigo-600">
                   {progressData.completion_percentage}%

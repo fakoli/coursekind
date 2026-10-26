@@ -172,10 +172,10 @@ export function renderJourney(page: ReactNode, route: string, path: string,
   } });
   prepare?.(queryClient);
   render(<QueryClientProvider client={queryClient}>
-    <AuthProvider><MemoryRouter initialEntries={[route]}><ToastProvider><Routes>
+    <MemoryRouter initialEntries={[route]}><AuthProvider><ToastProvider><Routes>
       <Route path={path} element={page} />
       <Route path="/courses/:courseId" element={<p>Course saved</p>} />
-    </Routes></ToastProvider></MemoryRouter></AuthProvider>
+    </Routes></ToastProvider></AuthProvider></MemoryRouter>
   </QueryClientProvider>);
   return queryClient;
 }

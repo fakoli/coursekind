@@ -1,5 +1,5 @@
 import { useEffect, useState, type ImgHTMLAttributes } from 'react';
-import { useAuthContext } from './AuthProvider';
+import { useAuthContext } from './AuthContext';
 
 /** Only the configured API's course media may receive an Authorization header. */
 function localCourseMediaUrl(src: string | undefined): string | null {

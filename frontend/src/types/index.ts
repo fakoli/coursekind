@@ -331,6 +331,8 @@ export type ReminderFrequency = 'daily' | 'every_other_day' | 'weekly' | 'none';
 export type SummaryDay = 'monday' | 'friday' | 'sunday';
 
 export interface NotificationPreferences {
+  email_available?: boolean;
+  sms_available?: boolean;
   user_id: string;
   email_enabled: boolean;
   email_address: string;
@@ -565,7 +567,7 @@ export interface ModuleCreate {
   order_index: number;
   content_markdown?: string;
   flashcards?: FlashcardData[];
-  quiz?: QuizData;
+  quiz?: QuizData | null;
   sandbox?: SandboxData;
 }
 
@@ -575,7 +577,7 @@ export interface ModuleUpdate {
   order_index?: number;
   content_markdown?: string;
   flashcards?: FlashcardData[];
-  quiz?: QuizData;
+  quiz?: QuizData | null;
   sandbox?: SandboxData | null;
 }
 

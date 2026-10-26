@@ -1,4 +1,4 @@
-import { useAuthContext } from '../components/common/AuthProvider';
+import { useAuthContext } from '../components/common/AuthContext';
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Save, Sparkles } from 'lucide-react';
@@ -171,7 +171,7 @@ export function ModuleEditor() {
       }
     } catch (err) {
       console.error('Failed to save module:', err);
-      showError('Failed to save module. Please try again.');
+      showError(err instanceof Error ? err.message : 'Failed to save module. Please try again.');
     }
   };
 
@@ -208,6 +208,7 @@ export function ModuleEditor() {
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-start gap-4 min-w-0 flex-1">
           <button
+            aria-label="Back"
             onClick={() => navigate(`/courses/${courseId}`)}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
           >
@@ -294,6 +295,8 @@ export function ModuleEditor() {
           onAdd={quiz.addQuestion}
           onUpdateQuestion={quiz.updateQuestion}
           onUpdateOption={quiz.updateQuestionOption}
+          onAddOption={quiz.addOption}
+          onRemoveOption={quiz.removeOption}
           onRemove={quiz.removeQuestion}
           onGenerate={handleGenerateQuiz}
         />

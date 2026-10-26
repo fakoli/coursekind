@@ -11,7 +11,7 @@ afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 it('persists the module title, description and order when creating a course', async () => {
   const state = installJourneyApi();
   renderJourney(<CourseEditor />, '/courses/new', '/courses/new');
-  fireEvent.change(screen.getByLabelText(/Course Title/), { target: { value: 'Python' } });
+  fireEvent.change(await screen.findByLabelText(/Course Title/), { target: { value: 'Python' } });
   fireEvent.click(screen.getByRole('button', { name: 'Next' }));
   fireEvent.click(screen.getByRole('button', { name: 'Add First Module' }));
   fireEvent.change(screen.getByPlaceholderText('Module title'), { target: { value: 'Variables' } });
@@ -46,7 +46,7 @@ it('keeps the editor open on outline save failure and retries without another co
   const state = installJourneyApi();
   state.failModuleCreate = true;
   renderJourney(<CourseEditor />, '/courses/new', '/courses/new');
-  fireEvent.change(screen.getByLabelText(/Course Title/), { target: { value: 'Retry course' } });
+  fireEvent.change(await screen.findByLabelText(/Course Title/), { target: { value: 'Retry course' } });
   fireEvent.click(screen.getByRole('button', { name: 'Next' }));
   fireEvent.click(screen.getByRole('button', { name: 'Add First Module' }));
   fireEvent.click(screen.getByRole('button', { name: 'Create Course' }));
@@ -77,7 +77,7 @@ it('retries a partially saved outline without duplicating modules', async () => 
   const state = installJourneyApi();
   state.failModuleCreateAfter = 1;
   renderJourney(<CourseEditor />, '/courses/new', '/courses/new');
-  fireEvent.change(screen.getByLabelText(/Course Title/), { target: { value: 'Partial save' } });
+  fireEvent.change(await screen.findByLabelText(/Course Title/), { target: { value: 'Partial save' } });
   fireEvent.click(screen.getByRole('button', { name: 'Next' }));
   fireEvent.click(screen.getByRole('button', { name: 'Add First Module' }));
   fireEvent.click(screen.getByRole('button', { name: 'Add Module' }));

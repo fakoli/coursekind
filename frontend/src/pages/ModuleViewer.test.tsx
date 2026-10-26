@@ -191,3 +191,13 @@ it('retains generated personal questions across remounts', async () => {
   fireEvent.click(await screen.findByRole('button', { name: 'Quiz (2)' }));
   expect(await screen.findByText('2. Extra question?')).toBeInTheDocument();
 });
+
+it('opens cards-only lessons on cards and never offers empty-content credit', async () => {
+  const module = makeModule(); module.content_markdown = ''; module.quiz = null;
+  installJourneyApi([module]);
+  renderJourney(<ModuleViewer />, '/courses/c1/modules/m1', '/courses/:courseId/modules/:moduleId');
+  await screen.findByRole('heading', { name: 'Lesson m1' });
+  expect(screen.queryByRole('button', { name: 'Content' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Mark content read' })).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Flip flashcard' })).toBeInTheDocument();
+});

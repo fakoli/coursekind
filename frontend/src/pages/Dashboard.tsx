@@ -1,4 +1,4 @@
-import { useAuthContext } from '../components/common/AuthProvider';
+import { useAuthContext } from '../components/common/AuthContext';
 import { StreakDisplay } from '../components/dashboard/StreakDisplay';
 import { ActionCard } from '../components/dashboard/ActionCard';
 import { StatsGrid } from '../components/dashboard/StatsGrid';

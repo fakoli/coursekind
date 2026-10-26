@@ -21,6 +21,8 @@ class NotificationType(str, Enum):
 
 class NotificationPreferences(BaseModel):
     user_id: str
+    email_available: bool = False
+    sms_available: bool = False
 
     # Email settings
     email_enabled: bool = True

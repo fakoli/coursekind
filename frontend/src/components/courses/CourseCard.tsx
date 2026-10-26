@@ -27,7 +27,7 @@ export function CourseCard({ course, onOptions, onAddToPath, showAuthor = true }
   const colors = difficultyColors[course.difficulty];
 
   return (
-    <Link to={`/courses/${course.id}`} className="group">
+    <div className="group">
       <Card className="card-interactive h-full hover:shadow-md transition-shadow">
         <CardContent className="flex flex-col h-full">
           <div className="flex items-start justify-between">
@@ -40,7 +40,7 @@ export function CourseCard({ course, onOptions, onAddToPath, showAuthor = true }
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <h3 className="text-lg font-semibold text-gray-900 truncate group-hover:text-indigo-600 transition-colors">
-                    {course.title}
+                    <Link to={`/courses/${course.id}`} className="focus:underline">{course.title}</Link>
                   </h3>
                   {course.ai_enabled && (
                     <span title="AI-Assisted Course">
@@ -116,6 +116,6 @@ export function CourseCard({ course, onOptions, onAddToPath, showAuthor = true }
           )}
         </CardContent>
       </Card>
-    </Link>
+    </div>
   );
 }

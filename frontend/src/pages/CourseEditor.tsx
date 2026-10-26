@@ -1,4 +1,4 @@
-import { useAuthContext } from '../components/common/AuthProvider';
+import { useAuthContext } from '../components/common/AuthContext';
 import { useEffect, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -182,7 +182,8 @@ export function CourseEditor() {
       {/* Header */}
       <div className="flex items-center gap-4">
         <button
-          onClick={() => navigate(-1)}
+          aria-label="Back"
+            onClick={() => navigate(-1)}
           className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
         >
           <ArrowLeft className="w-5 h-5" />

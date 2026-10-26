@@ -1,4 +1,4 @@
-import { TextareaHTMLAttributes, forwardRef } from 'react';
+import { TextareaHTMLAttributes, forwardRef, useId } from 'react';
 import clsx from 'clsx';
 
 interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
@@ -11,8 +11,10 @@ interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
 
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
   ({ className, label, error, hint, showCharCount, maxLength, id, required, value, ...props }, ref) => {
-    const errorId = id ? `${id}-error` : undefined;
-    const hintId = id ? `${id}-hint` : undefined;
+    const generatedId = useId();
+    const fieldId = id || generatedId;
+    const errorId = fieldId ? `${fieldId}-error` : undefined;
+    const hintId = fieldId ? `${fieldId}-hint` : undefined;
     const describedBy = [error && errorId, hint && !error && hintId].filter(Boolean).join(' ') || undefined;
     const charCount = typeof value === 'string' ? value.length : 0;
 
@@ -20,7 +22,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
       <div className="space-y-1">
         {label && (
           <label
-            htmlFor={id}
+            htmlFor={fieldId}
             className="block text-sm font-medium text-gray-700"
           >
             {label}
@@ -29,7 +31,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
         )}
         <textarea
           ref={ref}
-          id={id}
+          id={fieldId}
           required={required}
           value={value}
           maxLength={maxLength}

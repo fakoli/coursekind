@@ -2,7 +2,7 @@ import { usePathProgress } from '../hooks/useProgress';
 import { SharingPanel } from '../components/courses/SharingPanel';
 import { useFollowPath, useReorderCoursesInPath } from '../hooks/useLearningPaths';
 import { useCourses } from '../hooks/useCourses';
-import { useAuthContext } from '../components/common/AuthProvider';
+import { useAuthContext } from '../components/common/AuthContext';
 import { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
