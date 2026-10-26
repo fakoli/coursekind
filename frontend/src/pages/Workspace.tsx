@@ -50,6 +50,11 @@ function WorkspaceDetail({ workspace }: { workspace: WorkspaceData }) {
   const appliedPlan = latestPlan?.status === 'applied';
   const planOpen = latestPlan ? !appliedPlan : workspace.course_ids.length === 0;
   const nextSection = workspace.course_ids.length ? 'build' : 'plan';
+  const openSection = (section: string) => {
+    if (section === 'brief' && briefDisclosure.current) briefDisclosure.current.open = true;
+    if (sectionDisclosures.current[section]) sectionDisclosures.current[section]!.open = true;
+    if (section === 'plan' && planDisclosure.current) planDisclosure.current.open = true;
+  };
   const [archiveError, setArchiveError] = useState('');
   const [confirmedArchive, setConfirmedArchive] = useState<WorkspaceData | null>(null);
   const handleArchive = async () => {
@@ -99,13 +104,7 @@ function WorkspaceDetail({ workspace }: { workspace: WorkspaceData }) {
             key={section}
             className="underline text-indigo-700"
             href={`#workspace-${section}`}
-            onClick={() => {
-              if (section === 'brief' && briefDisclosure.current)
-                briefDisclosure.current.open = true;
-              if (sectionDisclosures.current[section])
-                sectionDisclosures.current[section]!.open = true;
-              if (section === 'plan' && planDisclosure.current) planDisclosure.current.open = true;
-            }}
+            onClick={() => openSection(section)}
           >
             {section[0].toUpperCase() + section.slice(1)}
           </a>
@@ -129,6 +128,7 @@ function WorkspaceDetail({ workspace }: { workspace: WorkspaceData }) {
         <a
           className="inline-block rounded bg-indigo-700 text-white px-4 py-2"
           href={`#workspace-${nextSection}`}
+          onClick={() => openSection(nextSection)}
         >
           {nextSection === 'build'
             ? 'Next: build or recover a lesson'

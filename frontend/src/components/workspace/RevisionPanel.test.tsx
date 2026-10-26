@@ -1,7 +1,7 @@
 import { afterEach, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react';
 import { renderJourney } from '../../test/journeyApi';
-import { installWorkspaceBuildApi } from '../../test/workspaceBuildApi';
+import { installWorkspaceBuildApi, jobFixture } from '../../test/workspaceBuildApi';
 import { RevisionPanel } from './RevisionPanel';
 import { workspacesApi } from '../../api/workspaces';
 import type { AIPreferenceData } from '../../api/userSettings';
@@ -83,4 +83,27 @@ it('manual path removal prepares a free proposal and never deletes a source', as
   ]);
   expect(state.journey.modules).toHaveLength(2);
   expect(state.writes).toHaveLength(0);
+});
+
+
+it('returns focus to the saved manual proposal after another review used a different trigger', async () => {
+  const state = installWorkspaceBuildApi();
+  vi.spyOn(workspacesApi, 'changes').mockResolvedValue([{ ...state.change, origin_job_id: null }]);
+  renderJourney(
+    <RevisionPanel workspace={state.workspace} jobs={[{ ...jobFixture(), kind: 'revision' }]}
+      preferences={preferences} onChanged={async () => {}} />,
+    '/workspaces/w1', '/workspaces/:workspaceId',
+  );
+  const generated = await screen.findByRole('button', { name: 'Review draft 1' });
+  generated.focus();
+  fireEvent.click(generated);
+  await waitFor(() => expect(screen.getByRole('region', { name: 'Draft review' })).toHaveFocus());
+  fireEvent.click(screen.getByRole('button', { name: 'Dismiss review' }));
+  expect(generated).toHaveFocus();
+  const manual = await screen.findByRole('button', { name: /Review saved manual change/ });
+  manual.focus();
+  fireEvent.click(manual);
+  await waitFor(() => expect(screen.getByRole('region', { name: 'Draft review' })).toHaveFocus());
+  fireEvent.click(screen.getByRole('button', { name: 'Dismiss review' }));
+  expect(manual).toHaveFocus();
 });

@@ -256,7 +256,7 @@ export function RevisionPanel({
           titles={Object.fromEntries((courses.data || []).map((c) => [c.id, c.title]))}
           disabled={workspace.archived}
           onReview={(id) => {
-            setReview(id);
+            openReview(id);
             void manualDrafts.refetch();
           }}
         />
@@ -264,7 +264,7 @@ export function RevisionPanel({
       {(manualDrafts.data || [])
         .filter((change) => !change.origin_job_id && change.status === 'ready')
         .map((change) => (
-          <Button key={change.id} variant="secondary" onClick={() => setReview(change.id)}>
+          <Button key={change.id} variant="secondary" onClick={() => openReview(change.id)}>
             Review saved manual change · {new Date(change.created_at).toLocaleString()}
           </Button>
         ))}

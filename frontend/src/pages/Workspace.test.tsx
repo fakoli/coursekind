@@ -261,3 +261,17 @@ it('does not accept an archive response version when another save changed the se
   expect(state.workspaces[0].version).toBe(4);
   expect(screen.getByRole('textbox', { name: 'Learning goal' })).toHaveValue('My unsaved draft');
 });
+
+
+it('the primary next action reopens a collapsed Plan and retains planning instructions', async () => {
+  const state = installWorkspaceApi();
+  state.workspaces[0].course_ids = [];
+  renderJourney(<Workspace />, '/workspaces/w1', '/workspaces/:workspaceId');
+  const instructions = await screen.findByRole('textbox', { name: 'Additional planning instructions' });
+  fireEvent.change(instructions, { target: { value: 'Keep these planning instructions' } });
+  fireEvent.click(screen.getByText('Plan · review before creating material'));
+  expect(screen.getByRole('button', { name: 'Generate plan' })).not.toBeVisible();
+  fireEvent.click(screen.getByRole('link', { name: 'Next: generate and review a plan' }));
+  expect(screen.getByRole('button', { name: 'Generate plan' })).toBeVisible();
+  expect(screen.getByRole('textbox', { name: 'Additional planning instructions' })).toHaveValue('Keep these planning instructions');
+});
