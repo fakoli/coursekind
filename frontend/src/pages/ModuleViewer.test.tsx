@@ -313,16 +313,23 @@ it.each(['retry', 'finish'] as const)('replays a committed quiz with its origina
   }
 });
 
-it('keeps distinct quiz submissions and retries an earlier failure without replacing newer feedback', async () => {
+it('resolves a failed quiz before accepting a newer submission and keeps the newer durable score', async () => {
   installJourneyApi([makeModule()]);
   const original = fetch;
   const attempts: Record<string, unknown>[] = [];
+  let persistedScore: unknown = null;
+  let persistedAttempts = 0;
+  let releaseRecovery: (() => void) | undefined;
   vi.stubGlobal('fetch', async (input: string, init?: RequestInit) => {
     const body = init?.body ? JSON.parse(String(init.body)) : {};
     if (body.action === 'submit_quiz') {
       attempts.push(body);
-      if (attempts.length === 1) return new Response(JSON.stringify({detail:'Save unavailable'}),{status:503});
-      return new Response(JSON.stringify({id:'saved-quiz'}));
+      // First submission and its first recovery fail before committing.
+      if (attempts.length <= 2) return new Response(JSON.stringify({detail:'Save unavailable'}),{status:503});
+      if (attempts.length === 3) await new Promise<void>(resolve=>{releaseRecovery=resolve;});
+      persistedScore = body.quiz_score;
+      persistedAttempts++;
+      return new Response(JSON.stringify({id:'saved-quiz',quiz_score:persistedScore,quiz_attempts:persistedAttempts}));
     }
     return original(input,init);
   });
@@ -332,16 +339,37 @@ it('keeps distinct quiz submissions and retries an earlier failure without repla
   fireEvent.click(screen.getByRole('button',{name:'Submit Quiz'}));
   await screen.findByRole('button',{name:'Retry study save'});
   fireEvent.click(screen.getByRole('button',{name:'5'}));
+  expect(screen.getByRole('button',{name:'Submit Quiz'})).toBeDisabled();
+  expect(screen.getByText(/Save your previous quiz attempt/)).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button',{name:'Submit Quiz'}));
+  expect(attempts).toHaveLength(1);
+  fireEvent.click(screen.getByRole('button',{name:'Retry study save'}));
+  await waitFor(()=>expect(attempts).toHaveLength(2));
+  await waitFor(()=>expect(screen.getByRole('button',{name:'Retry study save'})).toBeEnabled());
+  expect(screen.getByRole('button',{name:'Submit Quiz'})).toBeDisabled();
+  expect(screen.getByRole('button',{name:'5'})).toHaveAttribute('aria-pressed','true');
+  fireEvent.click(screen.getByRole('button',{name:'Retry study save'}));
+  await waitFor(()=>expect(releaseRecovery).toBeDefined());
+  expect(screen.getByRole('button',{name:'Submit Quiz'})).toBeDisabled();
+  expect(screen.getByRole('button',{name:'Retry study save'})).toBeDisabled();
+  fireEvent.click(screen.getByRole('button',{name:'Submit Quiz'}));
+  fireEvent.click(screen.getByRole('button',{name:'Retry study save'}));
+  expect(attempts).toHaveLength(3);
+  releaseRecovery?.();
+  await waitFor(()=>expect(screen.getByRole('button',{name:'Submit Quiz'})).toBeEnabled());
+  expect(persistedScore).toBe(0);
+  expect(persistedAttempts).toBe(1);
+  expect(screen.getByRole('button',{name:'5'})).toHaveAttribute('aria-pressed','true');
   fireEvent.click(screen.getByRole('button',{name:'Submit Quiz'}));
   await screen.findByText('Score: 100%');
-  expect(attempts[0].event_id).not.toBe(attempts[1].event_id);
-  expect(attempts.map(attempt=>attempt.quiz_answers)).toEqual([{0:1},{0:0}]);
-  fireEvent.click(screen.getByRole('button',{name:'Retry study save'}));
-  await waitFor(()=>expect(attempts).toHaveLength(3));
+  expect(persistedScore).toBe(100);
+  expect(persistedAttempts).toBe(2);
+  expect(attempts[1]).toEqual(attempts[0]);
   expect(attempts[2]).toEqual(attempts[0]);
-  await waitFor(()=>expect(screen.queryByRole('button',{name:'Retry study save'})).not.toBeInTheDocument());
-  expect(screen.getByText('Score: 100%')).toBeInTheDocument();
+  expect(attempts[3].event_id).not.toBe(attempts[0].event_id);
+  expect(attempts[3].quiz_answers).toEqual({0:0});
   fireEvent.click(screen.getByRole('button',{name:'Finish'}));
   await screen.findByText('Course saved');
-  expect(attempts).toHaveLength(3);
+  expect(persistedScore).toBe(100);
+  expect(attempts).toHaveLength(4);
 });

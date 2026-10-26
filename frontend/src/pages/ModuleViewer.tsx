@@ -66,6 +66,7 @@ function StudyModule() {
   const [localExtraQuestions, setExtraQuizQuestions] = useState<QuizQuestionData[] | null>(null);
   const [localPracticeCode, setLocalPracticeCode] = useState<string | null>(null);
   const [failedStudyActions, setFailedStudyActions] = useState(new Map<string, UpdateModuleProgressRequest>());
+  const hasFailedQuiz = [...failedStudyActions.values()].some(action => action.action === 'submit_quiz');
   const unsavedStudyActions = useRef(new Map<string, UpdateModuleProgressRequest>());
   const firstFailed = failedStudyActions.entries().next().value;
   const failedStudyAction = firstFailed ? { key: firstFailed[0], data: firstFailed[1] } : null;
@@ -115,7 +116,7 @@ function StudyModule() {
   };
   const retryFailedStudySave = async () => {
     const failed = failedStudyAction;
-    if (!failed) return;
+    if (!failed || quizSubmissionPending || isCompleting || updateProgress.isPending) return;
     const isQuiz = failed.data.action === 'submit_quiz';
     if (isQuiz) setQuizSubmissionPending(true);
     try {
@@ -313,7 +314,8 @@ function StudyModule() {
   };
 
   const handleQuizSubmit = async () => {
-    if (!courseId || !moduleId || quizSubmissionPending) return;
+    if (!courseId || !moduleId || quizSubmissionPending || isCompleting
+      || [...unsavedStudyActions.current.values()].some(action => action.action === 'submit_quiz')) return;
     const snapshot = { ...quizAnswers };
     const score = Math.round(allQuizQuestions.filter((q, i) => snapshot[i] === q.correct_index).length / allQuizQuestions.length * 100);
     const encounterKey = quizEncounterKey.current ?? `quiz:${crypto.randomUUID()}`;
@@ -354,7 +356,7 @@ function StudyModule() {
   const currentRating = currentFlashcard ? ratingsMap.get(currentFlashcard.originalIndex) : undefined;
 
   const handleCompleteModule = async () => {
-    if (!courseId || !moduleId || isCompleting) return;
+    if (!courseId || !moduleId || isCompleting || quizSubmissionPending) return;
     setIsCompleting(true);
     try {
       if (activeTab === 'flashcards') await trackFlashcardReview();
@@ -663,10 +665,11 @@ function StudyModule() {
             </Card>
           ))}
 
+          {hasFailedQuiz && <p role="status">Save your previous quiz attempt before submitting again. Your edited answers are kept. Use Retry study save.</p>}
           {!quizSubmitted && (
             <Button
               onClick={handleQuizSubmit}
-              disabled={quizSubmissionPending || Object.keys(quizAnswers).length !== allQuizQuestions.length}
+              disabled={quizSubmissionPending || isCompleting || hasFailedQuiz || Object.keys(quizAnswers).length !== allQuizQuestions.length}
               isLoading={quizSubmissionPending}
             >
               Submit Quiz
@@ -715,13 +718,14 @@ function StudyModule() {
         {nextModule ? (
           <Button
             onClick={handleCompleteModule}
+            disabled={quizSubmissionPending}
             isLoading={isCompleting}
           >
             {nextModule.title}
             <ChevronRight className="w-4 h-4 ml-2" />
           </Button>
         ) : (
-          <Button onClick={handleCompleteModule} isLoading={isCompleting}>
+          <Button onClick={handleCompleteModule} disabled={quizSubmissionPending} isLoading={isCompleting}>
             Finish
           </Button>
         )}

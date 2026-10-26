@@ -35,9 +35,17 @@ test('MODULE-01 — edit Markdown, preview, reject empty title and persist learn
   await other.goto('/settings');
   await api(request, world.author, `/courses/${world.course.id}/modules/${world.lessons[0].id}`, 'PUT', {title:'Concurrent server title'});
   await page.clock.fastForward(6 * 60 * 1000);
+  const refreshedModule = page.waitForResponse(response =>
+    new URL(response.url()).pathname === `/api/v1${url}`
+    && response.request().method() === 'GET');
   await page.bringToFront();
-  // Browser visibility is the ordinary TanStack refetch signal; no query cache injection.
-  await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));
+  // TanStack listens on window. A synthetic document event does not bubble;
+  // headless Chromium does not reliably emit a native visibility transition.
+  // Deliver the same focus signal and require a real HTTP read of the new version.
+  await page.evaluate(() => window.dispatchEvent(new Event('visibilitychange')));
+  const refreshed = await refreshedModule;
+  expect(refreshed.ok()).toBe(true);
+  expect((await refreshed.json()).title).toBe('Concurrent server title');
   await expect(page.getByText(/This module changed on the server/)).toBeVisible();
   await expect(page.getByLabel('Module Title')).toHaveValue('Retained title draft');
   await expect(page.getByPlaceholder(/Write your code here/)).toHaveValue('console.log("draft");');
@@ -221,19 +229,43 @@ test('STUDY-03 — rate cards, filter and retain personal ratings', async ({ pag
 test('STUDY-04 — incomplete quiz is blocked, score 50%, retry and persist 100%', async ({ page, world, request }) => {
   await login(page, world.learner);
   await page.goto(`/courses/${world.otherCourse.id}/modules/${world.otherLesson.id}`);
+  const quizRequests: {event_id:string;quiz_answers:Record<string,number>;quiz_score:number}[] = [];
+  await page.route('**/api/v1/progress/modules/**', async route => {
+    const request = route.request();
+    const body = request.method() === 'POST' ? request.postDataJSON() : {};
+    if (body.action === 'submit_quiz') {
+      quizRequests.push(body);
+      if (quizRequests.length === 1) {
+        await route.fulfill({status:503,json:{detail:'Synthetic failure before commit'}});
+        return;
+      }
+    }
+    await route.continue();
+  });
   await page.getByRole('button', { name: /^Quiz/ }).click();
   await expect(page.getByRole('button', { name: 'Submit Quiz' })).toBeDisabled();
   await page.getByRole('button', { name: 'Five', exact: true }).click();
   await page.getByRole('button', { name: 'Nine', exact: true }).click();
   await page.getByRole('button', { name: 'Submit Quiz' }).click();
-  await expect(page.getByText('Score: 50%', { exact: true })).toBeVisible();
-  await expect(page.getByText(/Double four is eight/)).toBeVisible();
-  await page.getByRole('button', { name: 'Retry Quiz' }).click();
-  await expect(page.getByRole('button', { name: 'Submit Quiz' })).toBeDisabled();
-  await page.getByRole('button', { name: 'Five', exact: true }).click();
-  await page.getByRole('button', { name: 'Eight', exact: true }).click();
-  await page.getByRole('button', { name: 'Submit Quiz' }).click();
+  await expect(page.getByRole('button', {name:'Retry study save'})).toBeVisible();
+  await page.getByRole('button', {name:'Eight',exact:true}).click();
+  await expect(page.getByRole('button', {name:'Submit Quiz'})).toBeDisabled();
+  await expect(page.getByText(/Save your previous quiz attempt/)).toBeVisible();
+  expect(quizRequests).toHaveLength(1);
+  await page.getByRole('button', {name:'Retry study save'}).click();
+  await expect(page.getByRole('button', {name:'Submit Quiz'})).toBeEnabled();
+  await expect(page.getByRole('button', {name:'Eight',exact:true})).toHaveAttribute('aria-pressed','true');
+  const recovered = await api<{quiz_score:number;quiz_attempts:number}>(request,world.learner,
+    `/progress/modules/${world.otherCourse.id}/${world.otherLesson.id}`);
+  expect(recovered.quiz_score).toBe(50);
+  expect(recovered.quiz_attempts).toBe(1);
+  expect(quizRequests[1]).toEqual(quizRequests[0]);
+  await page.getByRole('button', {name:'Submit Quiz'}).click();
   await expect(page.getByText('Score: 100%', { exact: true })).toBeVisible();
+  expect(quizRequests[2].event_id).not.toBe(quizRequests[0].event_id);
+  await expect(page.getByText(/Double four is eight/)).toBeVisible();
+  await page.getByRole('button', {name:'Retry Quiz'}).click();
+  await expect(page.getByRole('button', {name:'Submit Quiz'})).toBeDisabled();
   await page.reload();
   await page.getByRole('button', { name: /^Quiz/ }).click();
   await expect(page.getByText(/Saved quiz attempts: 2/)).toBeVisible();
