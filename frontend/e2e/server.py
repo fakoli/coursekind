@@ -24,6 +24,7 @@ settings = config.Settings(
     storage_backend="json", storage_path=sandbox.name,
     anvil_router_base_url="https://anvil.invalid/v1", anvil_router_token="synthetic-host-key",
     anvil_model="llm.primary",
+    typesafe_api_key="synthetic-typesafe-key", workspace_review_enabled=True,
     ai_credentials_key="YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=",
     mailgun_api_key=None, mailgun_domain=None, sms_provider=None,
     twilio_account_sid=None, twilio_auth_token=None, twilio_phone_number=None,
@@ -31,7 +32,7 @@ settings = config.Settings(
     cors_origins=["http://127.0.0.1:4178"],
 )
 config.get_settings = lambda: settings
-state = {"fault": None, "calls": [], "deliveries": [], "now": "2026-10-26T12:00:00+00:00"}
+state = {"review_fault": None, "fault": None, "calls": [], "deliveries": [], "now": "2026-10-26T12:00:00+00:00"}
 
 
 def remote(request):
@@ -43,6 +44,16 @@ def remote(request):
         return httpx.Response(200, json={"data": [{"id": model} for model in models]})
     body = json.loads(request.content)
     state["calls"].append({"host": request.url.host, "path": request.url.path, "model": body.get("model")})
+    if request.url.host == "api.typesafe.ai":
+        if state["review_fault"] == "unavailable":
+            return httpx.Response(401, json={"error": "Synthetic review unavailable"})
+        answers = {key: {"type": "noul", "noul": value} for key, value in {
+            "answer_supported": .9, "answer_ambiguous": .15, "objective_aligned": .8,
+        }.items()}
+        if state["review_fault"] == "malformed":
+            answers.pop("objective_aligned")
+        return httpx.Response(200, json={"model": "jev-1.14.0", "answers": answers,
+                                        "usage": {"input_tokens": 50, "output_tokens": 12}})
     if state["fault"] == "unavailable":
         return httpx.Response(503, json={"error": "Synthetic provider unavailable"})
     if request.url.host == "generativelanguage.googleapis.com":
@@ -120,6 +131,14 @@ def provider_init(self, settings, transport=None):
 
 ProviderClient.__init__ = provider_init
 
+from services.jev_client import JevClient
+original_jev_init = JevClient.__init__
+
+def jev_init(self, settings, transport=None):
+    original_jev_init(self, settings, transport=httpx.MockTransport(remote))
+
+JevClient.__init__ = jev_init
+
 # No delivery adapter can contact a provider, even if a future route calls send.
 from services.notifications.email_service import EmailService
 from services.notifications.sms_service import SMSService
@@ -146,8 +165,8 @@ from main import app
 async def control(request: Request):
     updates = await request.json()
     if updates.get("reset"):
-        state.update(fault=None, calls=[], deliveries=[], now="2026-10-26T12:00:00+00:00")
-    for key in ("fault", "now"):
+        state.update(review_fault=None, fault=None, calls=[], deliveries=[], now="2026-10-26T12:00:00+00:00")
+    for key in ("fault", "review_fault", "now"):
         if key in updates:
             state[key] = updates[key]
     return state

@@ -1,3 +1,4 @@
+import { MaterialReview } from './MaterialReview';
 import { useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
@@ -239,6 +240,9 @@ export function ChangeReview({
           </article>
         );
       })}
+      {proposal.status === 'ready' && proposal.patches.some((p) => p.target.kind === 'module') && (
+        <MaterialReview workspaceId={workspaceId} changeId={changeId} />
+      )}
       {error && (
         <p role="alert" className="text-red-700">
           {error}

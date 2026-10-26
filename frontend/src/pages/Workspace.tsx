@@ -1,3 +1,4 @@
+import { MaterialReview } from '../components/workspace/MaterialReview';
 import { RevisionPanel } from '../components/workspace/RevisionPanel';
 import { WorkspaceHistory } from '../components/workspace/WorkspaceHistory';
 import { PlanPanel } from '../components/workspace/PlanPanel';
@@ -132,6 +133,7 @@ function WorkspaceDetail({ workspace }: { workspace: WorkspaceData }) {
             preferences={preferences.data}
             onChanged={activity.refresh}
           />
+          <MaterialReview workspaceId={workspace.id} />
           <WorkspaceHistory
             workspaceId={workspace.id}
             disabled={workspace.archived}

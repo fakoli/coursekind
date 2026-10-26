@@ -39,6 +39,8 @@ export function useWorkspaceActivity(id: string) {
         'workspace-jobs',
         'workspace-plans',
         'workspace-history',
+        'workspace-review',
+        'workspace-review-sources',
         'workspace-snapshots',
         'workspace-change',
         'workspace-changes',

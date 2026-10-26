@@ -106,7 +106,13 @@ export interface BuildRequest {
   quiz_question_count: number;
 }
 export type JobState =
-  'queued' | 'running' | 'ready' | 'partial' | 'failed' | 'cancelled' | 'interrupted';
+  | 'queued'
+  | 'running'
+  | 'ready'
+  | 'partial'
+  | 'failed'
+  | 'cancelled'
+  | 'interrupted';
 export interface JobStep {
   id: string;
   target: ResourceTarget | null;
@@ -169,7 +175,12 @@ export interface ChangeSet {
 }
 
 export type RevisionScope =
-  'course_metadata' | 'course_outline' | 'lesson' | 'flashcards' | 'quiz' | 'path_references';
+  | 'course_metadata'
+  | 'course_outline'
+  | 'lesson'
+  | 'flashcards'
+  | 'quiz'
+  | 'path_references';
 export interface RevisionRequest {
   request_id: string;
   target: ResourceTarget;
@@ -191,4 +202,37 @@ export interface WorkspaceRevision {
   restorable: boolean;
   kind: 'editorial' | 'creation';
   created_at: string;
+}
+
+export interface MaterialReviewRequest {
+  request_id: string;
+  change_id?: string | null;
+  target: ResourceTarget;
+  question_index: number;
+  lesson_excerpt: string;
+  objective: string;
+  expected_fingerprint: string;
+  expected_revision_marker: string;
+  refresh?: boolean;
+}
+export interface MaterialReview {
+  id: string;
+  state: 'ready' | 'unavailable' | 'stale';
+  model: string;
+  prompt_version: string;
+  content_hash: string;
+  revision_marker: string;
+  dimensions: Record<string, number> | null;
+  usage: { input_tokens: number; output_tokens: number } | null;
+  created_at: string;
+  safe_error: string | null;
+}
+export interface ReviewSource {
+  snapshot: ResourceSnapshot;
+  revision_marker: string;
+  change_id: string | null;
+}
+export interface ReviewSources {
+  configured: boolean;
+  sources: ReviewSource[];
 }

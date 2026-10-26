@@ -12,9 +12,20 @@ import type {
   RevisionRequest,
   WorkspaceRevision,
   ResourceSnapshot,
+  MaterialReview,
+  MaterialReviewRequest,
+  ReviewSources,
 } from '../types/workspace';
 
 export const workspacesApi = {
+  reviewSources: (id: string, changeId?: string) =>
+    api.get<ReviewSources>(
+      `/workspaces/${id}/review-sources${changeId ? `?change_id=${encodeURIComponent(changeId)}` : ''}`,
+    ),
+  review: (id: string, data: MaterialReviewRequest) =>
+    api.post<MaterialReview>(`/workspaces/${id}/reviews`, data),
+  getReview: (id: string, reviewId: string) =>
+    api.get<MaterialReview>(`/workspaces/${id}/reviews/${reviewId}`),
   changes: (id: string) => api.get<ChangeSet[]>(`/workspaces/${id}/changes`),
   revise: (id: string, data: RevisionRequest) =>
     api.post<WorkspaceJob>(`/workspaces/${id}/revisions`, data),

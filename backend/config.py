@@ -2,7 +2,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
-from pydantic import model_validator
+from pydantic import SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Define paths for hierarchical .env loading
@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=(
             str(PROJECT_ROOT / ".env"),  # Project root (base config)
-            str(BACKEND_DIR / ".env"),   # Backend dir (overrides)
+            str(BACKEND_DIR / ".env"),  # Backend dir (overrides)
         ),
         env_file_encoding="utf-8",
         case_sensitive=False,
@@ -24,6 +24,9 @@ class Settings(BaseSettings):
     # App
     app_name: str = "Coursekind"
     workspace_enabled: bool = True
+    workspace_review_enabled: bool = True
+    typesafe_api_key: SecretStr | None = None
+    jev_model: Literal["jev-1.14.0"] = "jev-1.14.0"
     debug: bool = False
 
     # Storage

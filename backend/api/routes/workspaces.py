@@ -16,10 +16,12 @@ from models.workspace_change import (
 )
 from models.workspace_job import BuildRequest, MutationRequest, RetryRequest, WorkspaceJob
 from models.workspace_plan import ApplyPlanRequest, PlanProposal, PlanRequest, PlanUpdateRequest
+from models.workspace_review import MaterialReview, MaterialReviewRequest, ReviewSources
 from services.workspace_change_service import WorkspaceChangeService
 from services.workspace_context import WorkspaceContext
 from services.workspace_job_service import WorkspaceJobService
 from services.workspace_plan_service import WorkspacePlanService
+from services.workspace_review_service import WorkspaceReviewService
 from services.workspace_service import WorkspaceService
 
 router = APIRouter()
@@ -258,3 +260,32 @@ async def workspace_snapshots(workspace_id: str, user: CurrentUser, storage: Sto
 @router.get("/{workspace_id}/changes", response_model=list[ChangeSet])
 async def list_changes(workspace_id: str, user: CurrentUser, storage: StorageDep):
     return await WorkspaceChangeService(storage).list_changes(user.id, workspace_id)
+
+
+@router.get("/{workspace_id}/review-sources", response_model=ReviewSources)
+async def review_sources(
+    workspace_id: str,
+    user: CurrentUser,
+    storage: StorageDep,
+    settings: SettingsDep,
+    change_id: str | None = None,
+):
+    return await WorkspaceReviewService(storage, settings).sources(user.id, workspace_id, change_id)
+
+
+@router.post("/{workspace_id}/reviews", response_model=MaterialReview)
+async def review_material(
+    workspace_id: str,
+    data: MaterialReviewRequest,
+    user: CurrentUser,
+    storage: StorageDep,
+    settings: SettingsDep,
+):
+    return await WorkspaceReviewService(storage, settings).review(user.id, workspace_id, data)
+
+
+@router.get("/{workspace_id}/reviews/{review_id}", response_model=MaterialReview)
+async def get_material_review(
+    workspace_id: str, review_id: str, user: CurrentUser, storage: StorageDep, settings: SettingsDep
+):
+    return await WorkspaceReviewService(storage, settings).get(user.id, workspace_id, review_id)
