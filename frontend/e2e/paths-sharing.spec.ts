@@ -12,14 +12,14 @@ test('PATH-01 — create a goal, edit its details and reload the empty path', as
   await page.goto('/paths');
   await page.getByRole('button', { name: 'Create new learning path' }).click();
   let dialog = page.getByRole('dialog');
-  await dialog.getByLabel('Title', { exact: true }).fill('Become a senior software engineer');
+  await dialog.getByLabel(/^Title(?:\s*\*)?$/).fill('Become a senior software engineer');
   await dialog.getByLabel('Description (optional)').fill('A deliberate learning goal');
   await dialog.getByLabel('Est. Hours (optional)').fill('40');
   await dialog.getByRole('button', { name: 'Create Path', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Become a senior software engineer' })).toBeVisible();
   await page.getByRole('button', { name: 'Edit', exact: true }).click();
   dialog = page.getByRole('dialog');
-  await dialog.getByLabel('Title', { exact: true }).fill('Senior engineer goal');
+  await dialog.getByLabel(/^Title(?:\s*\*)?$/).fill('Senior engineer goal');
   await dialog.getByRole('button', { name: 'Save Changes' }).click();
   await expect(page.getByRole('heading', { name: 'Senior engineer goal' })).toBeVisible();
   await page.reload();

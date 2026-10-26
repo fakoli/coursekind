@@ -168,7 +168,7 @@ test('STUDY-03 — rate cards, filter and retain personal ratings', async ({ pag
   await page.getByRole('combobox').selectOption('easy');
   await expect(page.getByRole('button', { name: 'Flip flashcard' })).toContainText(/First (question|answer)/);
   await page.getByRole('combobox').selectOption('hard');
-  await expect(page.getByText(/no cards/i)).toBeVisible();
+  await expect(page.getByText(/No flashcards match this filter/i)).toBeVisible();
   await page.reload();
   await page.getByRole('button', { name: /^Flashcards/ }).click();
   await page.getByRole('combobox').selectOption('easy');

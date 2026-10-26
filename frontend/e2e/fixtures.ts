@@ -15,8 +15,8 @@ export async function api<T>(request: APIRequestContext, user: Persona | null, p
 }
 export async function login(page: Page, user: Persona) {
   await page.goto('/login');
-  await page.getByLabel('Email', { exact: true }).fill(user.email);
-  await page.getByLabel('Password', { exact: true }).fill(password);
+  await page.getByLabel(/^Email(?:\s*\*)?$/).fill(user.email);
+  await page.getByLabel(/^Password(?:\s*\*)?$/).fill(password);
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   await expect(page).toHaveURL('/');
   await expect(page.getByRole('heading', { name: new RegExp(`Welcome back, ${user.name}`) })).toBeVisible();

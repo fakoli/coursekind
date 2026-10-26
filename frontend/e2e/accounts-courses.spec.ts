@@ -3,9 +3,9 @@ import { test, expect, login, signOut, api, password, type Course, type Lesson }
 test('AUTH-01 — register, inspect identity, sign out and sign in', async ({ page, world }) => {
   const email = `new-${world.author.email}`;
   await page.goto('/register');
-  await page.getByLabel('Name', { exact: true }).fill('New Learner');
-  await page.getByLabel('Email', { exact: true }).fill(email);
-  await page.getByLabel('Password', { exact: true }).fill(password);
+  await page.getByLabel(/^Name(?:\s*\*)?$/).fill('New Learner');
+  await page.getByLabel(/^Email(?:\s*\*)?$/).fill(email);
+  await page.getByLabel(/^Password(?:\s*\*)?$/).fill(password);
   await page.getByRole('button', { name: 'Create account', exact: true }).click();
   await expect(page).toHaveURL('/');
   await page.goto('/settings');
@@ -18,8 +18,8 @@ test('AUTH-01 — register, inspect identity, sign out and sign in', async ({ pa
 
 test('AUTH-02 — reject bad login, reload session, sign out and isolate the next user', async ({ page, world }) => {
   await page.goto('/login');
-  await page.getByLabel('Email', { exact: true }).fill(world.author.email);
-  await page.getByLabel('Password', { exact: true }).fill('Wrong-password');
+  await page.getByLabel(/^Email(?:\s*\*)?$/).fill(world.author.email);
+  await page.getByLabel(/^Password(?:\s*\*)?$/).fill('Wrong-password');
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   await expect(page.getByText(/invalid.*(credentials|email|password)|incorrect/i)).toBeVisible();
   await login(page, world.author);
