@@ -1,0 +1,48 @@
+Browser tab: 5, Title: "Study Buddy", URL: "http://127.0.0.1:5174/settings".
+0 AXWebArea Study Buddy, URL: 127.0.0.1:5174/settings
+	1 container root
+		2 link Description: Skip to main content, Value: 127.0.0.1:5174/settings#main-content
+		3 container Main navigation
+			4 link Description: Study Buddy, Value: 127.0.0.1:5174/
+			5 link Description: Dashboard, Value: 127.0.0.1:5174/
+			6 link Description: Paths, Value: 127.0.0.1:5174/paths
+			7 link Description: Courses, Value: 127.0.0.1:5174/courses
+			8 link Description: Settings, Value: 127.0.0.1:5174/settings
+			9 button Logout
+		11 container main-content
+			12 heading Settings, Value: 1
+				13 text Settings
+			14 heading Profile, Value: 3
+				15 text Profile
+			16 text Name
+			17 text Journey Author A
+			18 text Email
+			19 text qa-author-20261025@example.com
+			20 text Token Balance
+			21 container
+				22 text 65  tokens
+			23 heading AI Assistant, Value: 3
+				24 text AI Assistant
+			25 text AI features run on a shared self-hosted router. No API keys required.
+			26 text Anvil Router
+			27 text Model: llm.primary
+			28 text Connected
+			29 heading Notifications, Value: 3
+				30 text Notifications
+			31 button Email notifications Receive reminders and updates via email
+				32 text Email notifications
+				33 text Receive reminders and updates via email
+			34 button Daily quiz Receive a daily quiz via SMS
+				35 text Daily quiz
+				36 text Receive a daily quiz via SMS
+			37 text Phone Number
+			38 text field (settable)
+			39 button (disabled) Save Number
+			40 button Test Email
+			41 button (disabled) Test SMS
+			42 heading Account, Value: 3
+				43 text Account
+			44 button Sign out
+		10 container Notifications
+
+The focused UI element is 0 AXWebArea Study Buddy, URL: 127.0.0.1:5174/settings

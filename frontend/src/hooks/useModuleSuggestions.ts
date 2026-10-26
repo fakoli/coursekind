@@ -190,6 +190,7 @@ export function useModuleSuggestions() {
         // Invalidate queries
         queryClient.invalidateQueries({ queryKey: ['modules', courseId] });
         queryClient.invalidateQueries({ queryKey: ['course', courseId] });
+        queryClient.invalidateQueries({ queryKey: ['path'] });
 
         if (createdModules.length > 0) {
           onSuccess(createdModules, mode === 'replace');

@@ -111,7 +111,9 @@ class RecentActivity(BaseModel):
 
     id: str
     user_id: str
-    activity_type: Literal["module_started", "module_completed", "quiz_submitted", "content_read"]
+    activity_type: Literal[
+        "module_started", "module_completed", "quiz_submitted", "content_read", "flashcard_reviewed"
+    ]
     module_id: str | None = None
     module_title: str | None = None
     course_id: str | None = None

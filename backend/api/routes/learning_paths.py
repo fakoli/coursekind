@@ -81,12 +81,12 @@ async def get_path(
     courses = []
     for course_id in path.course_ids:
         try:
-            course = await course_service.get_course(course_id, user_id)
+            course, modules = await course_service.get_course_with_modules(course_id, user_id)
             # Convert to CourseResponse
             courses.append(
                 CourseResponse(
                     **course.model_dump(),
-                    module_count=0,  # Could fetch actual count if needed
+                    module_count=len(modules),
                 )
             )
         except Exception:

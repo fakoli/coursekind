@@ -1,0 +1,52 @@
+Browser tab: 4, Title: "Study Buddy", URL: "http://127.0.0.1:5174/courses/50d4af7f-2b97-49c5-bb8d-c9f4a8e32d50/edit".
+1 AXWebArea Study Buddy, URL: 127.0.0.1:5174/courses/50d4af7f-2b97-49c5-bb8d-c9f4a8e32d50/edit
+	2 container root
+		3 link Description: Skip to main content, Value: 127.0.0.1:5174/courses/50d4af7f-2b97-49c5-bb8d-c9f4a8e32d50/edit#main-content
+		4 container Main navigation
+			5 link Description: Study Buddy, Value: 127.0.0.1:5174/
+			6 link Description: Dashboard, Value: 127.0.0.1:5174/
+			7 link Description: Paths, Value: 127.0.0.1:5174/paths
+			8 link Description: Courses, Value: 127.0.0.1:5174/courses
+			9 link Description: Settings, Value: 127.0.0.1:5174/settings
+			10 button Logout
+		11 container main-content
+			12 button
+			13 heading Edit Course, Value: 1
+				14 text Edit Course
+			15 text Update your course details
+			16 container Progress
+				17 content list
+					18 button 1 Basic Info
+						19 text 1
+						20 text Basic Info
+					21 button (disabled) 2 Modules
+						22 text 2 Modules
+			23 text Course Title
+			24 text field (settable) Course Title, Value: Audit — Python Basics, ID: title
+			25 text Description
+			26 text entry area (settable) Description, Value: A disposable two-module course for the timed journey audit., ID: description
+			27 container
+				28 text 59 / 500
+			29 text Difficulty
+			30 pop up button (collapsed, settable) Value: Beginner, Secondary Actions: Expand
+				31 menu
+					32 (selected) Beginner
+					33 Intermediate
+					34 Advanced
+			35 text Tags
+			36 text field (settable)
+			37 button Add
+			38 text audit
+			39 button
+			40 text Course Type
+			41 container
+				42 radio button (settable, integer) Description: Manual Course Write all content yourself. Full control over every module., Value: 1
+				43 text Manual Course Write all content yourself. Full control over every module.
+			44 container
+				45 radio button (settable, integer) Value: 0, Description: AI-Assisted Course AI Generate modules, flashcards, and quizzes with AI. You can still edit everything.
+				46 text AI-Assisted Course AI Generate modules, flashcards, and quizzes with AI. You can still edit everything.
+			47 button (disabled) Back
+			48 button Next
+		49 container Notifications
+
+The focused UI element is 1 AXWebArea Study Buddy, URL: 127.0.0.1:5174/courses/50d4af7f-2b97-49c5-bb8d-c9f4a8e32d50/edit

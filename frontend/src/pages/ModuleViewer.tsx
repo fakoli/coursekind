@@ -21,6 +21,7 @@ import { useModule, useModules } from '../hooks/useModules';
 import { useCourse } from '../hooks/useCourses';
 import { useUpdateModuleProgress } from '../hooks/useProgress';
 import { useModuleGeneration } from '../hooks/useModuleGeneration';
+import { useToast } from '../hooks/useToast';
 import {
   useFlashcardRatings,
   useFlashcardRatingSummary,
@@ -33,6 +34,8 @@ type ViewTab = 'content' | 'flashcards' | 'quiz' | 'practice';
 export function ModuleViewer() {
   const { courseId, moduleId } = useParams<{ courseId: string; moduleId: string }>();
   const navigate = useNavigate();
+  const { error: showError } = useToast();
+  const [isCompleting, setIsCompleting] = useState(false);
 
   const [activeTab, setActiveTab] = useState<ViewTab>('content');
   const [currentFlashcardIndex, setCurrentFlashcardIndex] = useState(0);
@@ -46,6 +49,7 @@ export function ModuleViewer() {
   const { data: module, isLoading, error } = useModule(courseId || '', moduleId || '');
   const { data: modules } = useModules(courseId || '');
   const updateProgress = useUpdateModuleProgress();
+  const { mutate: saveContentProgress } = updateProgress;
 
   // Flashcard rating hooks
   const { data: ratingsData } = useFlashcardRatings(courseId || '', moduleId || '');
@@ -66,29 +70,29 @@ export function ModuleViewer() {
 
   const hasTrackedContentRead = useRef(false);
   const trackedFlashcardReviews = useRef(new Set<number>());
-
-  // Track content read when content tab is viewed
-  useEffect(() => {
-    if (activeTab === 'content' && courseId && moduleId && !hasTrackedContentRead.current && module) {
-      hasTrackedContentRead.current = true;
-      updateProgress.mutate({
-        courseId,
-        moduleId,
-        data: { action: 'read_content' },
-      });
-    }
-  }, [activeTab, courseId, moduleId, module]);
+  const pendingFlashcardReviews = useRef(new Map<number, Promise<void>>());
 
   // Reset tracking when module changes
   useEffect(() => {
     hasTrackedContentRead.current = false;
     trackedFlashcardReviews.current = new Set();
+    pendingFlashcardReviews.current = new Map();
     setCurrentFlashcardIndex(0);
     setFlashcardFilter('all');
     setExtraQuizQuestions([]);
     setQuizAnswers({});
     setQuizSubmitted(false);
+    setActiveTab('content');
+    setIsFlipped(false);
   }, [moduleId]);
+
+  // Reset the previous module's refs before recording a cached next module.
+  useEffect(() => {
+    if (activeTab === 'content' && courseId && moduleId && !hasTrackedContentRead.current && module) {
+      hasTrackedContentRead.current = true;
+      saveContentProgress({ courseId, moduleId, data: { action: 'read_content' } });
+    }
+  }, [activeTab, courseId, moduleId, module, saveContentProgress]);
 
   // Combine module quiz questions with extra generated questions
   const allQuizQuestions = useMemo(() => {
@@ -112,10 +116,35 @@ export function ModuleViewer() {
   }, [module?.flashcards, flashcardFilter, ratingsMap]);
 
   // Handle rating a flashcard
+  const trackFlashcardReview = (): Promise<void> => {
+    const flashcard = filteredFlashcards[currentFlashcardIndex];
+    if (!courseId || !moduleId || !flashcard
+      || trackedFlashcardReviews.current.has(flashcard.originalIndex)) return Promise.resolve();
+    const trackedReviews = trackedFlashcardReviews.current;
+    const pendingReviews = pendingFlashcardReviews.current;
+    const pending = pendingReviews.get(flashcard.originalIndex);
+    if (pending) return pending;
+    const saved = updateProgress.mutateAsync({ courseId, moduleId, data: { action: 'review_flashcard' } })
+      .then(() => { trackedReviews.add(flashcard.originalIndex); })
+      .catch(error => {
+        showError('Could not save your flashcard review. Please try again.');
+        throw error;
+      })
+      .finally(() => { pendingReviews.delete(flashcard.originalIndex); });
+    pendingReviews.set(flashcard.originalIndex, saved);
+    return saved;
+  };
+
+  const handleFlipFlashcard = () => {
+    if (!isFlipped) void trackFlashcardReview().catch(() => {});
+    setIsFlipped(!isFlipped);
+  };
+
   const handleRateFlashcard = (rating: FlashcardRating) => {
     if (!courseId || !moduleId) return;
     const flashcard = filteredFlashcards[currentFlashcardIndex];
     if (!flashcard) return;
+    void trackFlashcardReview().catch(() => {});
 
     rateFlashcard.mutate({
       courseId,
@@ -166,15 +195,7 @@ export function ModuleViewer() {
     setIsFlipped(false);
 
     // Track flashcard review when navigating to next card (indicates user reviewed current card)
-    const flashcard = filteredFlashcards[currentFlashcardIndex];
-    if (direction === 'next' && courseId && moduleId && flashcard && !trackedFlashcardReviews.current.has(flashcard.originalIndex)) {
-      trackedFlashcardReviews.current.add(flashcard.originalIndex);
-      updateProgress.mutate({
-        courseId,
-        moduleId,
-        data: { action: 'review_flashcard' },
-      });
-    }
+    if (direction === 'next') void trackFlashcardReview().catch(() => {});
 
     if (direction === 'prev' && currentFlashcardIndex > 0) {
       setCurrentFlashcardIndex(currentFlashcardIndex - 1);
@@ -229,6 +250,23 @@ export function ModuleViewer() {
 
   const currentFlashcard = filteredFlashcards[currentFlashcardIndex];
   const currentRating = currentFlashcard ? ratingsMap.get(currentFlashcard.originalIndex) : undefined;
+
+  const handleCompleteModule = async () => {
+    if (!courseId || !moduleId || isCompleting) return;
+    setIsCompleting(true);
+    try {
+      if (activeTab === 'flashcards') await trackFlashcardReview();
+      await Promise.all(pendingFlashcardReviews.current.values());
+      await updateProgress.mutateAsync({ courseId, moduleId, data: { action: 'complete' } });
+      navigate(nextModule
+        ? `/courses/${courseId}/modules/${nextModule.id}`
+        : `/courses/${courseId}`);
+    } catch {
+      showError('Could not save your progress. Please try again.');
+    } finally {
+      setIsCompleting(false);
+    }
+  };
 
   return (
     <div className="space-y-6 page-enter">
@@ -353,7 +391,7 @@ export function ModuleViewer() {
           ) : (
             <>
               <div
-                onClick={() => setIsFlipped(!isFlipped)}
+                onClick={handleFlipFlashcard}
                 className="w-full max-w-2xl h-72 cursor-pointer"
                 style={{ perspective: '1000px' }}
               >
@@ -392,6 +430,7 @@ export function ModuleViewer() {
                 <Button
                   variant="secondary"
                   onClick={() => handleFlashcardNav('prev')}
+                  aria-label="Previous flashcard"
                   disabled={currentFlashcardIndex === 0}
                 >
                   <ChevronLeft className="w-4 h-4" />
@@ -402,6 +441,7 @@ export function ModuleViewer() {
                 <Button
                   variant="secondary"
                   onClick={() => handleFlashcardNav('next')}
+                  aria-label="Next flashcard"
                   disabled={currentFlashcardIndex === filteredFlashcards.length - 1}
                 >
                   <ChevronRight className="w-4 h-4" />
@@ -531,13 +571,14 @@ export function ModuleViewer() {
         )}
         {nextModule ? (
           <Button
-            onClick={() => navigate(`/courses/${courseId}/modules/${nextModule.id}`)}
+            onClick={handleCompleteModule}
+            isLoading={isCompleting}
           >
             {nextModule.title}
             <ChevronRight className="w-4 h-4 ml-2" />
           </Button>
         ) : (
-          <Button onClick={() => navigate(`/courses/${courseId}`)}>
+          <Button onClick={handleCompleteModule} isLoading={isCompleting}>
             Finish
           </Button>
         )}

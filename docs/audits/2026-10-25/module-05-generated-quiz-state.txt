@@ -1,0 +1,136 @@
+Browser tab: 4, Title: "Study Buddy", URL: "http://127.0.0.1:5174/courses/fbb542ec-1bba-41d3-b02a-ce102b18238f/modules/1a91c173-9004-42bb-bb7c-1d0d9a99e33c/edit".
+1 AXWebArea Study Buddy, URL: 127.0.0.1:5174/courses/fbb542ec-1bba-41d3-b02a-ce102b18238f/modules/1a91c173-9004-42bb-bb7c-1d0d9a99e33c/edit
+	2 container root
+		3 link Description: Skip to main content, Value: 127.0.0.1:5174/courses/fbb542ec-1bba-41d3-b02a-ce102b18238f/modules/1a91c173-9004-42bb-bb7c-1d0d9a99e33c/edit#main-content
+		4 container Main navigation
+			5 link Description: Study Buddy, Value: 127.0.0.1:5174/
+			6 link Description: Dashboard, Value: 127.0.0.1:5174/
+			7 link Description: Paths, Value: 127.0.0.1:5174/paths
+			8 link Description: Courses, Value: 127.0.0.1:5174/courses
+			9 link Description: Settings, Value: 127.0.0.1:5174/settings
+			10 button Logout
+		11 container main-content
+			12 button
+			13 text Audit — AI Python Starter
+			14 heading Edit Module AI, Value: 1
+				15 text Edit Module AI
+			16 button Save
+			17 text Module Title
+			18 text field (settable) Module Title, Value: Variables and Numbers in Python, ID: module-title
+			19 container
+				20 button Content
+				21 button Flashcards (11)
+					22 text Flashcards
+					23 text  (11)
+				24 button Quiz (5)
+					25 text Quiz
+					26 text  (5)
+				27 button Sandbox +
+					28 text Sandbox
+					29 text +
+			144 text Create quiz questions to test learner comprehension.
+			145 button Generate with AI
+			146 button Add Question
+			147 text 1 Question
+			148 button Remove question 1
+			149 text entry area (settable) After running x = 2 and y = 3, what does print(x + y) display, and why?
+			150 text Answer Options
+			151 text Click to mark as correct
+			152 container
+				153 text A .
+				154 text field (settable) x + y, because print displays the expression exactly as written
+			155 container
+				156 text B .
+				157 text field (settable) 23, because Python joins the two values together
+			158 container
+				159 text C .
+				160 text field (settable) 5, because Python adds the values stored in x and y before printing
+				161 text Correct
+			162 container
+				163 text D .
+				164 text field (settable) An error, because x and y are names, not numbers
+			165 text Explanation (optional)
+			166 text entry area (settable) Variables x and y store the numbers 2 and 3. When Python evaluates x + y, it looks up the stored values, adds them to get 5, and print displays that result — not the variable names themselves.
+			167 text 2 Question
+			168 button Remove question 2
+			169 text entry area (settable) You run these three lines in order: x = 2, then y = 3, then x = 10. What does print(x + y) output?
+			170 text Answer Options
+			171 text Click to mark as correct
+			172 container
+				173 text A .
+				174 text field (settable) 5, because x keeps its original value of 2
+			175 container
+				176 text B .
+				177 text field (settable) 13, because x now refers to 10 and y still refers to 3
+				178 text Correct
+			179 container
+				180 text C .
+				181 text field (settable) 10, because the newest assignment overwrites all variables
+			182 container
+				183 text D .
+				184 text field (settable) An error, because a variable can only be assigned once
+			185 text Explanation (optional)
+			186 text entry area (settable) Assignment replaces the value a name refers to. After x = 10, x refers to 10 while y still refers to 3, so x + y evaluates to 13. Reassigning a variable is normal and allowed in Python.
+			187 text 3 Question
+			188 button Remove question 3
+			189 text entry area (settable) In Python, what does the = sign do in the line y = 3?
+			190 text Answer Options
+			191 text Click to mark as correct
+			192 container
+				193 text A .
+				194 text field (settable) It assigns the value 3 to the name y, so y refers to 3 from now on
+				195 text Correct
+			196 container
+				197 text B .
+				198 text field (settable) It declares that y and 3 are mathematically equal
+			199 container
+				200 text C .
+				201 text field (settable) It compares y with 3 and prints True or False
+			202 container
+				203 text D .
+				204 text field (settable) It copies whatever y currently holds into the number 3
+			205 text Explanation (optional)
+			206 text entry area (settable) In Python, = is the assignment operator: it stores the value on the right under the name on the left. It does not mean 'equals' as in math class — comparison is done with == instead. This is a key difference from mathematical notation.
+			207 text 4 Question
+			208 button Remove question 4
+			209 text entry area (settable) Why would you wrap 'add two numbers' inside a function instead of writing x = 2, y = 3, print(x + y) over and over?
+			210 text Answer Options
+			211 text Click to mark as correct
+			212 container
+				213 text A .
+				214 text field (settable) Functions are required before Python allows the + operator
+			215 container
+				216 text B .
+				217 text field (settable) Functions make every program run faster automatically
+			218 container
+				219 text C .
+				220 text field (settable) Functions permanently save values so they can never be lost
+			221 container
+				222 text D .
+				223 text field (settable) A function lets you write the adding steps once and reuse them with any numbers
+				224 text Correct
+			225 text Explanation (optional)
+			226 text entry area (settable) A function packages operations into a reusable unit. You define the adding steps once, then call the function with any numbers you want — avoiding duplicated code. The other options describe things functions do not do.
+			227 text 5 Question
+			228 button Remove question 5
+			229 text entry area (settable) With x = 2 and y = 3, what is the difference between print(x + y) and print("x + y")?
+			230 text Answer Options
+			231 text Click to mark as correct
+			232 container
+				233 text A .
+				234 text field (settable) Both print 5, because print always evaluates what it receives
+			235 container
+				236 text B .
+				237 text field (settable) print(x + y) shows 5, while print("x + y") also shows 5 but with quotes around it
+			238 container
+				239 text C .
+				240 text field (settable) print(x + y) shows 5, while print("x + y") shows the literal text x + y, because quotes create a string
+				241 text Correct
+			242 container
+				243 text D .
+				244 text field (settable) print(x + y) causes an error, while print("x + y") shows 5
+			245 text Explanation (optional)
+			246 text entry area (settable) Quoted text is a string, which Python treats as literal characters rather than code — so "x + y" prints exactly as written. Without quotes, Python first evaluates the expression x + y and prints the result, 5. This shows the difference between evaluating an expression and displaying text.
+		47 container Notifications
+
+The focused UI element is 1 AXWebArea Study Buddy, URL: 127.0.0.1:5174/courses/fbb542ec-1bba-41d3-b02a-ce102b18238f/modules/1a91c173-9004-42bb-bb7c-1d0d9a99e33c/edit

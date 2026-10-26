@@ -65,6 +65,7 @@ export function CourseModulesStep({
               <div className="flex flex-col gap-1 text-gray-400">
                 <button
                   onClick={() => onMoveModule(index, 'up')}
+                  aria-label={`Move module ${index + 1} up`}
                   disabled={index === 0}
                   className="hover:text-gray-600 disabled:opacity-30"
                 >
@@ -73,6 +74,7 @@ export function CourseModulesStep({
                 <GripVertical className="w-4 h-4" />
                 <button
                   onClick={() => onMoveModule(index, 'down')}
+                  aria-label={`Move module ${index + 1} down`}
                   disabled={index === outlines.length - 1}
                   className="hover:text-gray-600 disabled:opacity-30"
                 >
@@ -100,6 +102,7 @@ export function CourseModulesStep({
               </div>
               <button
                 onClick={() => onRemoveModule(index)}
+                aria-label={`Remove module ${index + 1}`}
                 className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded"
               >
                 <Trash2 className="w-4 h-4" />

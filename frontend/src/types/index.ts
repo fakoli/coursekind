@@ -246,7 +246,7 @@ export interface DashboardStats {
   last_activity_date: string | null;
 }
 
-export type ActivityType = 'module_started' | 'module_completed' | 'quiz_submitted' | 'content_read';
+export type ActivityType = 'module_started' | 'module_completed' | 'quiz_submitted' | 'content_read' | 'flashcard_reviewed';
 
 export interface RecentActivity {
   id: string;
@@ -521,6 +521,7 @@ export interface Module {
   id: string;
   course_id: string;
   title: string;
+  description?: string;
   order_index: number;
   content_markdown: string;
   flashcards: FlashcardData[];
@@ -533,6 +534,7 @@ export interface Module {
 export interface ModuleSummary {
   id: string;
   title: string;
+  description?: string;
   order_index: number;
   flashcard_count: number;
   has_quiz: boolean;
@@ -540,6 +542,7 @@ export interface ModuleSummary {
 
 export interface ModuleCreate {
   title: string;
+  description?: string;
   order_index: number;
   content_markdown?: string;
   flashcards?: FlashcardData[];
@@ -549,11 +552,12 @@ export interface ModuleCreate {
 
 export interface ModuleUpdate {
   title?: string;
+  description?: string;
   order_index?: number;
   content_markdown?: string;
   flashcards?: FlashcardData[];
   quiz?: QuizData;
-  sandbox?: SandboxData;
+  sandbox?: SandboxData | null;
 }
 
 // Learning Path types

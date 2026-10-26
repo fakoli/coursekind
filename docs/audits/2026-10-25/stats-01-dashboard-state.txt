@@ -1,0 +1,79 @@
+Browser tab: 5, Title: "Study Buddy", URL: "http://127.0.0.1:5174/".
+1 AXWebArea Study Buddy, URL: 127.0.0.1:5174/
+	2 container root
+		3 link Description: Skip to main content, Value: 127.0.0.1:5174/#main-content
+		4 container Main navigation
+			5 link Description: Study Buddy, Value: 127.0.0.1:5174/
+			6 link Description: Dashboard, Value: 127.0.0.1:5174/
+			7 link Description: Paths, Value: 127.0.0.1:5174/paths
+			8 link Description: Courses, Value: 127.0.0.1:5174/courses
+			9 link Description: Settings, Value: 127.0.0.1:5174/settings
+			10 button Logout
+		11 container main-content
+			28 container
+				29 heading Welcome back, Journey Author A!, Value: 1
+					30 text Welcome back,  Journey Author A !
+				31 text Here's your learning progress 1 Current Streak 1 Longest Streak
+			32 heading Continue Learning, Value: 3
+				33 text Continue Learning
+			34 link Description: Variables and Numbers in Python Audit — AI Python Starter Continue your course, Value: 127.0.0.1:5174/courses/fbb542ec-1bba-41d3-b02a-ce102b18238f/modules/1a91c173-9004-42bb-bb7c-1d0d9a99e33c
+			35 text 0
+			36 text Active Paths
+			37 text 0
+			38 text Courses In Progress
+			39 text 3
+			40 text Modules This Week
+			41 text 100%
+			42 text Quiz Average
+			43 text 0m
+			44 text Total Study Time
+			45 text 1
+			46 text Day Streak
+			47 heading Recent Activity, Value: 3
+				48 text Recent Activity
+			49 text READ CONTENT
+			50 text Variables and Numbers in Python
+			51 text Audit — AI Python Starter
+			52 text Just now
+			53 text COMPLETED
+			54 text JavaScript practice
+			55 text Audit — Software Design
+			56 text 11m ago
+			57 text READ CONTENT
+			58 text JavaScript practice
+			59 text Audit — Software Design
+			60 text 11m ago
+			61 text COMPLETED
+			62 text Functions — revised
+			63 text Audit — Python Basics
+			64 text 14m ago
+			65 text READ CONTENT
+			66 text Functions — revised
+			67 text Audit — Python Basics
+			68 text 14m ago
+			69 text READ CONTENT
+			70 text Functions — revised
+			71 text Audit — Python Basics
+			72 text 14m ago
+			73 text READ CONTENT
+			74 text Functions — revised
+			75 text Audit — Python Basics
+			76 text 14m ago
+			77 text COMPLETED
+			78 text Variables
+			79 text Audit — Python Basics
+			80 text 14m ago
+			81 text QUIZ SUBMITTED 100 %
+			82 text Variables
+			83 text Audit — Python Basics
+			84 text 15m ago
+			85 text QUIZ SUBMITTED 50 %
+			86 text Variables
+			87 text Audit — Python Basics
+			88 text 15m ago
+			89 link Description: Learning Paths Follow structured learning journeys, Value: 127.0.0.1:5174/paths
+			90 link Description: Browse Courses Explore and study course modules, Value: 127.0.0.1:5174/courses?tab=discover
+			91 link Description: Create Course Author your own course content, Value: 127.0.0.1:5174/courses/new
+		27 container Notifications
+
+The focused UI element is 6 link Description: Dashboard, URL: 127.0.0.1:5174/

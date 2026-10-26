@@ -193,7 +193,11 @@ class ProgressService:
                     started_at=ensure_datetime(mod_progress.get("started_at")),
                     completed_at=ensure_datetime(mod_progress.get("completed_at")),
                     content_read=mod_progress.get("content_read", False),
-                    flashcards_reviewed=mod_progress.get("flashcards_reviewed", 0),
+                    # Review history includes repeat study sessions; deck progress
+                    # must stay within the current deck size (including after edits).
+                    flashcards_reviewed=min(
+                        mod_progress.get("flashcards_reviewed", 0), flashcard_count
+                    ),
                     flashcards_total=flashcard_count,
                     quiz_score=mod_progress.get("quiz_score"),
                     quiz_attempts=mod_progress.get("quiz_attempts", 0),

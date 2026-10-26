@@ -82,8 +82,9 @@ class OutputCapture:
         return self.stdout.getvalue() + self.stderr.getvalue()
 
     def clear(self):
-        self.stdout = StringIO()
-        self.stderr = StringIO()
+        for stream in (self.stdout, self.stderr):
+            stream.seek(0)
+            stream.truncate(0)
 
 _output_capture = OutputCapture()
 sys.stdout = _output_capture.stdout

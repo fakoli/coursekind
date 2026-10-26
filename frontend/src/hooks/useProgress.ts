@@ -44,6 +44,9 @@ export function useUpdateModuleProgress() {
   const queryClient = useQueryClient();
 
   return useMutation({
+    // Keep card reviews, quiz submissions and completion in order. Parallel
+    // read-modify-write requests can otherwise overwrite a newer progress state.
+    scope: { id: 'module-progress' },
     mutationFn: ({
       courseId,
       moduleId,
@@ -53,10 +56,8 @@ export function useUpdateModuleProgress() {
       moduleId: string;
       data: UpdateModuleProgressRequest;
     }) => progressApi.updateModuleProgress(courseId, moduleId, data),
-    onSuccess: (_, { courseId }) => {
-      queryClient.invalidateQueries({ queryKey: ['progress', 'dashboard'] });
-      queryClient.invalidateQueries({ queryKey: ['progress', 'courses', courseId] });
-      queryClient.invalidateQueries({ queryKey: ['progress', 'activity'] });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['progress'] });
     },
   });
 }

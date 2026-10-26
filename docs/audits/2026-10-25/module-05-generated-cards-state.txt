@@ -1,0 +1,129 @@
+Browser tab: 4, Title: "Study Buddy", URL: "http://127.0.0.1:5174/courses/fbb542ec-1bba-41d3-b02a-ce102b18238f/modules/1a91c173-9004-42bb-bb7c-1d0d9a99e33c/edit".
+1 AXWebArea Study Buddy, URL: 127.0.0.1:5174/courses/fbb542ec-1bba-41d3-b02a-ce102b18238f/modules/1a91c173-9004-42bb-bb7c-1d0d9a99e33c/edit
+	2 container root
+		3 link Description: Skip to main content, Value: 127.0.0.1:5174/courses/fbb542ec-1bba-41d3-b02a-ce102b18238f/modules/1a91c173-9004-42bb-bb7c-1d0d9a99e33c/edit#main-content
+		4 container Main navigation
+			5 link Description: Study Buddy, Value: 127.0.0.1:5174/
+			6 link Description: Dashboard, Value: 127.0.0.1:5174/
+			7 link Description: Paths, Value: 127.0.0.1:5174/paths
+			8 link Description: Courses, Value: 127.0.0.1:5174/courses
+			9 link Description: Settings, Value: 127.0.0.1:5174/settings
+			10 button Logout
+		11 container main-content
+			12 button
+			13 text Audit — AI Python Starter
+			14 heading Edit Module AI, Value: 1
+				15 text Edit Module AI
+			16 button Save
+			17 text Module Title
+			18 text field (settable) Module Title, Value: Variables and Numbers in Python, ID: module-title
+			19 container
+				20 button Content
+				21 button Flashcards (11)
+					22 text Flashcards
+					23 text  (11)
+				24 button Quiz (0)
+					25 text Quiz
+					26 text  (0)
+				27 button Sandbox +
+					28 text Sandbox
+					29 text +
+			48 text Create flashcards to help learners memorize key concepts.
+			49 button Generate with AI
+			52 button Add Flashcard
+			53 button (disabled) Move flashcard 1 up
+			54 text 1
+			55 button Move flashcard 1 down
+			56 text Front (Question)
+			57 text entry area (settable) Existing fixture card
+			58 text Back (Answer)
+			59 text entry area (settable) Retained when appending.
+			60 button Remove flashcard 1
+			61 button Move flashcard 2 up
+			62 text 2
+			63 button Move flashcard 2 down
+			64 text Front (Question)
+			65 text entry area (settable) What is a variable in Python?
+			66 text Back (Answer)
+			67 text entry area (settable) A variable is a name that refers to a stored value. For example, x = 2 stores the value 2 under the name x.
+			68 button Remove flashcard 2
+			69 button Move flashcard 3 up
+			70 text 3
+			71 button Move flashcard 3 down
+			72 text Front (Question)
+			73 text entry area (settable) How do you assign the value 3 to a variable named y?
+			74 text Back (Answer)
+			75 text entry area (settable) y = 3 — the = sign assigns the value on the right to the name on the left.
+			76 button Remove flashcard 3
+			77 button Move flashcard 4 up
+			78 text 4
+			79 button Move flashcard 4 down
+			80 text Front (Question)
+			81 text entry area (settable) What does print(x + y) output if x = 2 and y = 3?
+			82 text Back (Answer)
+			83 text entry area (settable) 5 — Python adds the values stored in x and y, then prints the result.
+			84 button Remove flashcard 4
+			85 button Move flashcard 5 up
+			86 text 5
+			87 button Move flashcard 5 down
+			88 text Front (Question)
+			89 text entry area (settable) What does the + operator do with numeric values?
+			90 text Back (Answer)
+			91 text entry area (settable) It adds them together. For example, 2 + 3 evaluates to 5.
+			92 button Remove flashcard 5
+			93 button Move flashcard 6 up
+			94 text 6
+			95 button Move flashcard 6 down
+			96 text Front (Question)
+			97 text entry area (settable) What is a function in Python?
+			98 text Back (Answer)
+			99 text entry area (settable) A function packages a set of operations into a reusable unit that can be called by name whenever needed.
+			100 button Remove flashcard 6
+			101 button Move flashcard 7 up
+			102 text 7
+			103 button Move flashcard 7 down
+			104 text Front (Question)
+			105 text entry area (settable) Why are functions useful in programming?
+			106 text Back (Answer)
+			107 text entry area (settable) They let you write operations once and reuse them multiple times, avoiding repeated code.
+			108 button Remove flashcard 7
+			109 button Move flashcard 8 up
+			110 text 8
+			111 button Move flashcard 8 down
+			112 text Front (Question)
+			113 text entry area (settable) Write code that stores 2 and 3 in variables and prints their sum.
+			114 text Back (Answer)
+			115 text entry area (settable) x = 2
+y = 3
+print(x + y)
+			116 button Remove flashcard 8
+			117 button Move flashcard 9 up
+			118 text 9
+			119 button Move flashcard 9 down
+			120 text Front (Question)
+			121 text entry area (settable) What happens when you call print() in Python?
+			122 text Back (Answer)
+			123 text entry area (settable) It displays the value or result of the expression passed to it on the screen.
+			124 button Remove flashcard 9
+			125 button Move flashcard 10 up
+			126 text 10
+			127 button Move flashcard 10 down
+			128 text Front (Question)
+			129 text entry area (settable) What is the difference between a variable and a function?
+			130 text Back (Answer)
+			131 text entry area (settable) A variable stores a single value under a name, while a function packages operations into a reusable unit that performs actions when called.
+			132 button Remove flashcard 10
+			133 button Move flashcard 11 up
+			134 text 11
+			135 button (disabled) Move flashcard 11 down
+			136 text Front (Question)
+			137 text entry area (settable) If you run x = 2, then x = 5, what value does x hold afterward?
+			138 text Back (Answer)
+			139 text entry area (settable) 5 — assigning a new value to a variable replaces its previous value.
+			140 button Remove flashcard 11
+		47 container Notifications
+			141 container
+				142 text Module updated successfully
+				143 button Dismiss notification
+
+The focused UI element is 16 button Save

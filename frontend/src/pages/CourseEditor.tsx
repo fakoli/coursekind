@@ -1,4 +1,5 @@
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, ChevronRight, ChevronLeft } from 'lucide-react';
 import { Card, CardContent } from '../components/common/Card';
@@ -17,15 +18,22 @@ import { useCourseSteps } from '../hooks/useCourseSteps';
 import { useModuleOutlines } from '../hooks/useModuleOutlines';
 import { useModuleSuggestions } from '../hooks/useModuleSuggestions';
 import { useToast } from '../hooks/useToast';
+import { saveModuleOutlines } from '../services/saveModuleOutlines';
 
 export function CourseEditor() {
   const { courseId } = useParams<{ courseId: string }>();
   const navigate = useNavigate();
   const { success, error: showError } = useToast();
   const isEditing = !!courseId;
+  const queryClient = useQueryClient();
+  const initializedCourse = useRef<string | null>(null);
+  const createdCourseId = useRef<string | null>(null);
+  const createdOutlineIds = useRef(new Map<string, string>());
+  const [savingOutlines, setSavingOutlines] = useState(false);
 
   // Data fetching
-  const { data: existingCourse, isLoading: loadingCourse } = useCourse(courseId || '');
+  const { data: existingCourse, isLoading: loadingCourse, isFetching: refreshingCourse,
+    error: courseLoadError, refetch: reloadCourse } = useCourse(courseId || '');
   const { data: existingModules } = useModules(courseId || '');
 
   // Mutations
@@ -37,14 +45,19 @@ export function CourseEditor() {
   const steps = useCourseSteps(form.formState.aiEnabled);
   const outlines = useModuleOutlines();
   const suggestions = useModuleSuggestions();
+  const { populateFromCourse } = form;
+  const { populateFromModules } = outlines;
 
   // Populate form when editing
   useEffect(() => {
-    if (existingCourse && isEditing) {
-      form.populateFromCourse(existingCourse.course);
-      outlines.populateFromModules(existingCourse.modules);
+    if (existingCourse && isEditing && !refreshingCourse && !courseLoadError
+      && initializedCourse.current !== courseId) {
+      populateFromCourse(existingCourse.course);
+      populateFromModules(existingCourse.modules);
+      initializedCourse.current = courseId!;
     }
-  }, [existingCourse, isEditing]);
+  }, [existingCourse, isEditing, refreshingCourse, courseLoadError, courseId,
+    populateFromCourse, populateFromModules]);
 
   // Validation
   const isStepValid = (step: string): boolean => {
@@ -66,28 +79,49 @@ export function CourseEditor() {
   };
 
   const canProceed = isStepValid(steps.currentStep);
-  const isSaving = createCourse.isPending || updateCourse.isPending;
+  const isSaving = createCourse.isPending || updateCourse.isPending || savingOutlines;
 
   // Save handler
   const handleSave = async () => {
+    if (isSaving) return;
     if (!form.formState.title.trim()) {
       showError('Please enter a course title');
       return;
     }
 
+    const desiredOutlines = outlines.outlines.map(outline => ({ ...outline }));
+    if (desiredOutlines.some(outline => !outline.title.trim())) {
+      showError('Please enter a title for every module');
+      return;
+    }
+
+    setSavingOutlines(true);
     try {
-      if (isEditing && courseId) {
-        await updateCourse.mutateAsync({ courseId, data: form.getUpdateData() });
-        success('Course updated successfully');
-        navigate(`/courses/${courseId}`);
+      let targetId = courseId || createdCourseId.current;
+      if (targetId) {
+        await updateCourse.mutateAsync({ courseId: targetId, data: form.getUpdateData() });
       } else {
         const newCourse = await createCourse.mutateAsync(form.getCreateData());
-        success('Course created successfully');
-        navigate(`/courses/${newCourse.id}`);
+        targetId = newCourse.id;
+        createdCourseId.current = targetId;
       }
+      await saveModuleOutlines(targetId, desiredOutlines, createdOutlineIds.current);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['course', targetId] }),
+        queryClient.invalidateQueries({ queryKey: ['modules', targetId] }),
+        queryClient.invalidateQueries({ queryKey: ['module', targetId] }),
+        queryClient.invalidateQueries({ queryKey: ['progress'] }),
+        queryClient.invalidateQueries({ queryKey: ['courses'] }),
+        queryClient.invalidateQueries({ queryKey: ['paths'] }),
+        queryClient.invalidateQueries({ queryKey: ['path'] }),
+      ]);
+      success(isEditing ? 'Course updated successfully' : 'Course created successfully');
+      navigate(`/courses/${targetId}`);
     } catch (err) {
       console.error('Failed to save course:', err);
       showError('Failed to save course. Please try again.');
+    } finally {
+      setSavingOutlines(false);
     }
   };
 
@@ -117,7 +151,14 @@ export function CourseEditor() {
     );
   };
 
-  if (isEditing && loadingCourse) {
+  if (isEditing && courseLoadError && initializedCourse.current !== courseId) {
+    return <div role="alert">
+      <p>Could not load the latest course. Please try again.</p>
+      <Button onClick={() => reloadCourse()}>Retry</Button>
+    </div>;
+  }
+
+  if (isEditing && (loadingCourse || initializedCourse.current !== courseId)) {
     return (
       <div className="space-y-6 page-enter">
         <div className="animate-pulse">

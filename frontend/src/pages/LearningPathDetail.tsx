@@ -261,7 +261,7 @@ export function LearningPathDetail() {
                       {course.title}
                     </h3>
                     <div className="flex items-center gap-4 text-sm text-gray-500 mt-1">
-                      <span>{course.module_count} modules</span>
+                      <span>{course.module_count} {course.module_count === 1 ? 'module' : 'modules'}</span>
                       <span className="text-xs">by {course.author_name}</span>
                     </div>
                   </Link>
@@ -346,7 +346,7 @@ export function LearningPathDetail() {
                 >
                   <div className="font-medium">{course.title}</div>
                   <div className="text-sm text-gray-500">
-                    {course.module_count} modules · by {course.author_name}
+                    {course.module_count} {course.module_count === 1 ? 'module' : 'modules'} · by {course.author_name}
                   </div>
                 </button>
               ))}

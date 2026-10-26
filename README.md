@@ -13,6 +13,18 @@ A learning platform for visual learners who learn by doing. Combines flashcards,
 - **Admin Console**: User management and token administration (admin role)
 - **Notifications**: Configurable email and SMS reminders
 
+## User Journeys and Validation
+
+See the [user journey and UI validation catalog](docs/user-journeys.md) for the
+expected course, module, study, learning-path, sharing, statistics, and AI-model
+workflows. It distinguishes current UI from partial/planned features and defines
+acceptance checks for future browser tests.
+
+The [timed walkthrough report](docs/audits/2026-10-25/README.md) records outcomes,
+timings, evidence, and issues for all 40 journeys. The
+[AI workspace proposal](docs/ai-workspace-proposal.md) outlines one workflow for
+planning, generating, and revising paths, courses, and modules.
+
 ## Tech Stack
 
 | Layer | Technology |
@@ -105,8 +117,11 @@ MAILGUN_API_KEY=...
 MAILGUN_DOMAIN=...
 ```
 
-The router credential is server-side only. Users do not provide provider API
-keys; the Settings page reports whether the shared Anvil connection is healthy.
+The router credential is server-side only. Currently, users do not provide
+provider API keys; the Settings page reports whether the shared Anvil connection
+is healthy. Per-user model choice and external-provider keys are planned in the
+[AI journeys](docs/user-journeys.md#ai-provider-and-model-choice), with Anvil as
+the default.
 
 ## Project Structure
 

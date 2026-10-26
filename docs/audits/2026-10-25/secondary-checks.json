@@ -1,0 +1,36 @@
+{
+  "private_course": {
+    "status": 404
+  },
+  "private_module": {
+    "status": 404
+  },
+  "private_module_list": {
+    "status": 404
+  },
+  "private_course_progress": {
+    "status": 200,
+    "returned_private_course_title": true,
+    "returned_module_summaries": 2
+  },
+  "recipient_public_path": {
+    "status": 200,
+    "raw_course_references": 2,
+    "visible_courses": 1
+  },
+  "saved_learning_results": {
+    "completion": 100.0,
+    "review_count_displayed": 2
+  },
+  "historical_streak_fixture": {
+    "status": 200,
+    "distinct_study_dates": 3,
+    "current_streak": 1,
+    "longest_streak": 1
+  },
+  "private_content_generation": {
+    "status": 200,
+    "returned_cards": 1,
+    "tokens_used": 8
+  }
+}

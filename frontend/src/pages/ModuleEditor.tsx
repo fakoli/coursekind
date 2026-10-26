@@ -46,8 +46,16 @@ export function ModuleEditor() {
   const markdownEditor = useMarkdownEditor(form.contentMarkdown, form.updateContent);
   const generation = useModuleGeneration();
 
-  // Sandbox state
-  const [sandbox, setSandbox] = useState<SandboxData | null>(null);
+  // Use the loaded sandbox until the learner edits it. A refetch must not
+  // overwrite an in-progress draft, including an explicit sandbox removal.
+  const editorKey = `${courseId}/${moduleId || 'new'}`;
+  const [sandboxDraft, setSandboxDraft] = useState<{
+    editorKey: string;
+    value: SandboxData | null;
+  } | null>(null);
+  const sandbox = sandboxDraft?.editorKey === editorKey
+    ? sandboxDraft.value
+    : existingModule?.sandbox ?? null;
 
   // Confirm modal for flashcard replacement
   const [showReplaceConfirm, setShowReplaceConfirm] = useState(false);
@@ -55,22 +63,21 @@ export function ModuleEditor() {
 
   // Track sandbox changes
   const handleSandboxChange = useCallback((newSandbox: SandboxData | null) => {
-    setSandbox(newSandbox);
-    if (form.hasUnsavedChanges === false) {
-      // This doesn't exist in the form hook, so we need to trigger unsaved changes manually
-      // The form.updateContent or form.updateTitle will trigger this, but we also need sandbox
-    }
-  }, [form.hasUnsavedChanges]);
+    setSandboxDraft({ editorKey, value: newSandbox });
+  }, [editorKey]);
+
+  const { populateFromModule } = form;
+  const { setAll: setFlashcards } = flashcards;
+  const { setAll: setQuizQuestions } = quiz;
 
   // Populate form when editing
   useEffect(() => {
     if (existingModule && isEditing) {
-      form.populateFromModule(existingModule);
-      flashcards.setAll(existingModule.flashcards || []);
-      quiz.setAll(existingModule.quiz?.questions || []);
-      setSandbox(existingModule.sandbox || null);
+      populateFromModule(existingModule);
+      setFlashcards(existingModule.flashcards || []);
+      setQuizQuestions(existingModule.quiz?.questions || []);
     }
-  }, [existingModule, isEditing]);
+  }, [existingModule, isEditing, populateFromModule, setFlashcards, setQuizQuestions]);
 
   const isAiEnabled = courseData?.course.ai_enabled ?? false;
   const isSaving = createModule.isPending || updateModule.isPending;
@@ -142,7 +149,7 @@ export function ModuleEditor() {
           moduleId,
           data: {
             ...form.getUpdateData(flashcards.flashcards, quiz.questions),
-            sandbox: sandbox || undefined,
+            sandbox,
           },
         });
         success('Module updated successfully');

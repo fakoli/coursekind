@@ -65,7 +65,8 @@ class AIService:
             prompt,
             system_prompt=system_prompt
             or "You are a helpful study assistant. Be concise and educational.",
-            max_tokens=1024,
+            # Leave room for reasoning as well as the learner-facing answer.
+            max_tokens=4096,
         )
 
     async def explain(self, user_id: str, request: ExplainRequest) -> AIResponse:
