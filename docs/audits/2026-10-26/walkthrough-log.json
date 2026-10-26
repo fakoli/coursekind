@@ -340,5 +340,90 @@
     "duration_ms": 52061,
     "evidence": "34-empty-content-tab-before-fix.png",
     "notes": "Availableactivities: contentread/next; singlecardflip/next; singlequiz100%. Cards/quiz/practice-only default to emptyContenttab with Markcontentread, reportedTask5. First standaloneJSrun storedhistory1 but outputreset to initialinstruction instead of5; also reportedTask5. Fixture APIseeded; actualUI performed activities."
+  },
+  {
+    "journey": "COURSE-04",
+    "scenario": "Discovery sorting with three public fixtures and distinct reuse counts",
+    "status": "pass",
+    "duration_ms": 19610,
+    "notes": "MostPopular SharedEngineering1reference first; Newest ZZZ first; A-Z AAA→Fixture→ZZZ; Advanced onlyZZZ; restoredAllLevels/MostPopular. Privatecoursesabsent. APIseededpublicsortingfixtures, actualUIcontrols."
+  },
+  {
+    "journey": "AUTH-02",
+    "scenario": "Student to History account switch without reload",
+    "status": "pass",
+    "duration_ms": 8110,
+    "evidence": "36-account-switch-cache-isolated.png",
+    "notes": "Student private dashboard populated first; Logout→HistorySignIn immediate dashboard shows History selected0/weekly4/longest3, no Studentprivatecourse or completion/quiz data. No reload between identities."
+  },
+  {
+    "journey": "AUTH-02",
+    "scenario": "Cross-tab sign-out and browser Back",
+    "status": "pass",
+    "duration_ms": null,
+    "notes": "Secondlocalhosttab loggedout; existingdashboard immediatelyredirectedlogin and browserBack remainedlogin. No fullpagereload required; testtabclosed. Separate AnvilAuthor127originunaffected."
+  },
+  {
+    "journey": "AUTH-03",
+    "scenario": "Ordinary user direct admin route",
+    "status": "pass",
+    "duration_ms": 16146,
+    "evidence": "37-nonadmin-guard.png",
+    "notes": "One access-denied message and ReturntoDashboard; no adminscreen/toastflood. Before-querybehavior coveredfocusedtests."
+  },
+  {
+    "journey": "MODULE-02",
+    "scenario": "Partial card rejected without draft loss, repaired card persists",
+    "status": "pass",
+    "duration_ms": 17915,
+    "evidence": "38-incomplete-card-validation-fixed.png",
+    "notes": "FrontonlythirdcardSave shows clearfront/backerror and retains3draftcards. Fillback→Save/reload3; removeonlytestcard→Save/reload2. Existingcards/content/quiz preserved."
+  },
+  {
+    "journey": "MODULE-03",
+    "scenario": "Invalid quiz, add/remove options, answer-key remapping and reselection",
+    "status": "pass",
+    "duration_ms": 61858,
+    "evidence": "39-quiz-validation-fixed.png",
+    "notes": "Onefilledoption rejectsSave andpreservesdraft. CorrectD8→removeB remapsC8; removecorrectC requiresreselection andblocksSave; minimum2removaldisabled. Add/removeoptionworks. SelectA5→Save/reload correct2-optionquestion. Removedonlytestquestion andrestoredoriginal2."
+  },
+  {
+    "journey": "STUDY-05",
+    "scenario": "Fresh practice first run keeps output after history save",
+    "status": "pass",
+    "duration_ms": 8419,
+    "evidence": "40-first-practice-output-fixed.png",
+    "notes": "Fresh modulewithnopersonalprogress opensPractice directly (noemptyContent). FirstRunconsole.log2+3 displays5 and Savedruns1 simultaneously. Priorresetbugfixed."
+  },
+  {
+    "journey": "MODULE-01 / STUDY-01",
+    "scenario": "Optional activity tabs and empty outline recovery",
+    "status": "pass",
+    "duration_ms": null,
+    "notes": "Cards-only opensFlashcards, quiz-only opensQuiz, practice-only opensPractice; absentContent/readcredit hidden. FullyemptyNumbersoutline has truthful noactivitiesyet guidance and explicitnavigation. Content-only earlier opensreadingnormally."
+  },
+  {
+    "journey": "SUPPORT-01",
+    "scenario": "Notification availability, E164 validation and saved toggles",
+    "status": "pass",
+    "duration_ms": 48414,
+    "evidence": "41-notifications-unavailable-and-saved.png",
+    "notes": "Unconfiguredemail/SMS explicitlyunavailable; testbuttonsdisabled. Invalid555 rejectedwithE164guidance; reservedsynthetic+12025550123 saves. Email/dailyquiz/SMS togglesoff persistafterreload, checkedstateexposed. No realdelivery; capturedadapters testedbackend."
+  },
+  {
+    "journey": "SUPPORT-01",
+    "scenario": "Captured delivery success and failure feedback",
+    "status": "pass",
+    "duration_ms": null,
+    "evidence": "42-captured-notification-feedback.png",
+    "notes": "Disposablecapture-onlyadapters/noexternalmessages: UIemail success, SMSsuccess, forcedemailfailure displayedaccurately. Safeadapterlog confirms3calls. Captureavailabilitydisabledafterward; email/SMSoffrestored, dailyoffunchanged."
+  },
+  {
+    "journey": "AUTH-02 / SUPPORT-02",
+    "scenario": "API outage while resuming session, private gate and recovery",
+    "status": "pass",
+    "duration_ms": 19114,
+    "evidence": "43-session-outage-retry-gate.png",
+    "notes": "StoppeddisposableAPI,reloadedSettings: onlyverificationerror/Retry/Signout visible,noprivatecontent. RestartAPI→Retry restoresAuthorSettings withoutreenteringcredentials. ExpiredJWT/401coveredfocusedtests."
   }
 ]
