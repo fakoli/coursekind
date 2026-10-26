@@ -1,5 +1,7 @@
 # Coursekind local v1 release readiness
 
+Release update: the owner authorized publication and repository renaming on 26 October. The canonical repository is now `fakoli/coursekind`. Live Anvil qualification subsequently passed; see [v1.0.0 release notes](releases/v1.0.0.md). The checkpoint below retains the historical pre-release state.
+
 Production candidate: **4868fd2**, 26 October 2026. Independent aggregate review and both scoped repairs are approved with no remaining identified findings. Actual UI acceptance is complete. Exact-production-head [CI40363622442](https://github.com/fakoli/my-ai-study-buddy/actions/runs/40363622442) passed all 49 browser cases with zero retries in 7.7 minutes, 536 backend tests, 211 frontend tests and Node22/24 lint/build checks. The local-v1 completion gate is satisfied. PR #23 remains a draft; no merge or public deployment occurred.
 
 Coursekind turns a goal into a course you can keep improving. The display name changed while existing routes, storage identities, course/module IDs and user data remain compatible. Anvil `llm.primary` remains the default.
