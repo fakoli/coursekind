@@ -145,3 +145,35 @@ actual browser-rendering assertion.
   unchanged-provider credential replacement to prevent test-control mutations
   racing in-flight requests; notification toggles wait for loaded defaults.
 - `7f0a505` records the catalog/audit/report; `5dd788a` repairs first CI labels.
+
+### Task6 review round1 fixes
+
+Read `task-6-review.md` and addressed Important1 plus Minor1/2. The API client
+prioritizes `VITE_API_URL`; overriding only Vite's proxy was not sufficient
+isolation. Playwright now starts explicit `--mode e2e`, pins `VITE_API_URL=/api/v1`,
+and the Vite config disables env-file loading and ambient VITE-variable exposure
+only in that mode. It also defines the relative API URL and fixed8018 proxy at
+configuration level, so an inherited URL cannot bypass fixture storage. Normal
+development mode behavior is unchanged. A focused test resolves actual Vite
+configuration in a temporary directory containing conflicting `.env`,
+`.env.local`, `.env.e2e`, `.env.e2e.local` values plus ambient URLs; it verifies
+none enter client env and both API targets remain fixed. No normal API is contacted.
+
+Pinned test-backend `anvil_model="llm.primary"`; the non-browser fixture smoke
+now asserts this while launched with conflicting `ANVIL_MODEL`. COURSE04 now
+uses three matching public courses with distinct creation order and2/1/0 active
+references. All three sort modes assert different exact visible title orders,
+then verify attribution/module count, no-match recovery and private exclusion.
+
+Focused validation only (unchanged full suites not repeated):
+- Node24 `npm run test -- src/test/e2eConfig.test.ts`:2passed,0.207s.
+- `npm run test:e2e:types`, `npx tsc -b`, `npm run lint`:passed.
+- `ANVIL_MODEL=ambient-must-not-escape` isolated Python fixture smoke:passed
+  auth/storage/allfourprovider adapters with pinnedprimary assertion.
+- `git diff --check`:passed. Browser sorting execution remains pending CI.
+
+Self-review: no production request destination changed; dedicated test mode
+excludes developer env while ordinary mode still accepts its configured proxy.
+Temporary test env files contain synthetic invalid destinations and are removed.
+No broad code/test/dependency changes or Task7 provider implementation included.
+Existing Ruff/build/dependency debt remains explicitly disclosed (review Minor3).

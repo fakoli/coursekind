@@ -3,9 +3,10 @@ import asyncio
 
 from httpx import ASGITransport, AsyncClient
 
-from server import app, sandbox, state
+from server import app, sandbox, state, settings
 
 async def main():
+    assert settings.anvil_model == "llm.primary"
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         async def call(method, path, data=None, token=None):
             result = await client.request(method, "/api/v1" + path, json=data,

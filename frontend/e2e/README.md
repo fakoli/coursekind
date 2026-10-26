@@ -7,7 +7,7 @@ packages in `frontend`, and Chromium with `npx playwright install chromium`.
 The GitHub Actions `browser-journeys` job installs these and runs all journeys.
 
 The suite binds only 127.0.0.1:8018 and 4178, refuses to reuse existing servers,
-never loads `.env` files, and uses unique synthetic example.com accounts. It
+starts Vite in explicit `e2e` mode with environment-file loading disabled, and uses unique synthetic example.com accounts. That mode fixes the browser API URL to `/api/v1` and its proxy to the disposable backend, regardless of ambient `VITE_API_URL`/`VITE_API_PROXY`. Normal development mode retains its existing environment behavior. It
 never accesses the normal development ports 8010/5173 or existing user data.
 `server.py` is a test-only executable, never imported by production. Its private
 control routes set the study clock and external failure modes. Provider requests

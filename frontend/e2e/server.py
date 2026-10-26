@@ -23,6 +23,7 @@ settings = config.Settings(
     _env_file=None, debug=False, jwt_secret="synthetic-acceptance-jwt-secret-32-characters",
     storage_backend="json", storage_path=sandbox.name,
     anvil_router_base_url="https://anvil.invalid/v1", anvil_router_token="synthetic-host-key",
+    anvil_model="llm.primary",
     ai_credentials_key="YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=",
     mailgun_api_key=None, mailgun_domain=None, sms_provider=None,
     twilio_account_sid=None, twilio_auth_token=None, twilio_phone_number=None,

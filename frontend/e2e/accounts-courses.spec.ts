@@ -116,23 +116,35 @@ test('COURSE-03 — edit metadata, cancel deletion, then delete and reopen old U
   await expect(page.getByText('Course not found')).toBeVisible();
 });
 
-test('COURSE-04 — discover by search, difficulty and sort, recover empty results', async ({ page, world }) => {
+test('COURSE-04 — discover by search, difficulty and sort, recover empty results', async ({ page, world, request }) => {
+  const prefix = `Sort ${world.learner.id}`;
+  const beta = await api<Course>(request, world.learner, `/courses/${world.otherCourse.id}`, 'PUT', { title: `${prefix} Beta` });
+  const alpha = await api<Course>(request, world.learner, '/courses', 'POST', { title: `${prefix} Alpha`, visibility: 'public', difficulty: 'intermediate' });
+  const zeta = await api<Course>(request, world.learner, '/courses', 'POST', { title: `${prefix} Zeta`, visibility: 'public', difficulty: 'intermediate' });
+  // Distinct references give Beta=2, Zeta=1, Alpha=0; creation order differs too.
+  await api(request, world.learner, `/paths/${world.learnerPath.id}/courses`, 'POST', { course_id: beta.id });
+  await api(request, world.author, '/paths', 'POST', { title: 'Sorting reference', course_ids: [zeta.id] });
   await login(page, world.author);
   await page.goto('/courses?tab=discover');
-  await page.getByRole('textbox', { name: 'Search courses' }).fill(world.otherCourse.title);
+  await page.getByRole('textbox', { name: 'Search courses' }).fill(prefix);
   await page.getByLabel('Difficulty', { exact: true }).selectOption('intermediate');
-  for (const sort of ['newest', 'alphabetical', 'popular']) {
+  const titles = page.getByRole('heading', { level: 3 }).filter({ hasText: prefix });
+  for (const [sort, expected] of [
+    ['newest', [zeta.title, alpha.title, beta.title]],
+    ['alphabetical', [alpha.title, beta.title, zeta.title]],
+    ['popular', [beta.title, zeta.title, alpha.title]],
+  ] as const) {
     await page.getByLabel('Sort courses').selectOption(sort);
-    await expect(page.getByRole('heading', { name: world.otherCourse.title })).toBeVisible();
+    await expect(titles).toHaveText([...expected]);
   }
-  await page.getByRole('heading', { name: world.otherCourse.title }).click();
-  await expect(page.getByRole('heading', { name: world.otherCourse.title })).toBeVisible();
-  await expect(page.getByText('Learner', { exact: true }).first()).toBeVisible();
+  await page.getByRole('link', { name: beta.title, exact: true }).click();
+  await expect(page.getByRole('heading', { name: beta.title })).toBeVisible();
+  await expect(page.getByText('by Learner · 1 module', { exact: true })).toBeVisible();
   await page.goBack();
   await page.getByRole('textbox', { name: 'Search courses' }).fill('no-such-course-unique');
   await expect(page.getByText(/no courses found/i)).toBeVisible();
-  await page.getByRole('textbox', { name: 'Search courses' }).fill(world.otherCourse.title);
-  await expect(page.getByRole('heading', { name: world.otherCourse.title })).toBeVisible();
+  await page.getByRole('textbox', { name: 'Search courses' }).fill(prefix);
+  await expect(titles).toHaveCount(3);
   await expect(page.getByText(world.course.title)).toHaveCount(0);
 });
 
