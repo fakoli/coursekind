@@ -22,7 +22,8 @@ class Settings(BaseSettings):
     )
 
     # App
-    app_name: str = "Study Buddy"
+    app_name: str = "Coursekind"
+    workspace_enabled: bool = True
     debug: bool = False
 
     # Storage

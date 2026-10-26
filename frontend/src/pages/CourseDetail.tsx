@@ -1,3 +1,4 @@
+import { OpenInWorkspace } from '../components/workspace/OpenInWorkspace';
 import { SharingPanel } from '../components/courses/SharingPanel';
 import { useAuthContext } from '../components/common/AuthContext';
 import { useState } from 'react';
@@ -112,7 +113,7 @@ export function CourseDetail() {
   return (
     <div className="space-y-6 page-enter">
       {/* Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex flex-wrap gap-4 items-start justify-between">
         <div className="flex items-start gap-4 min-w-0 flex-1">
           <button
             aria-label="Back"
@@ -140,7 +141,8 @@ export function CourseDetail() {
           </div>
         </div>
         {isEditable && (
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
+            <OpenInWorkspace kind="course" id={course.id} title={course.title} />
             <Button variant="secondary" onClick={() => navigate(`/courses/${courseId}/edit`)}>
               <Edit className="w-4 h-4 mr-2" />
               Edit

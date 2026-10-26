@@ -254,3 +254,7 @@ app.include_router(admin.router, prefix="/api/v1/admin", tags=["admin"])
 # Flashcard ratings routes
 app.include_router(flashcard_ratings.router, prefix="/api/v1", tags=["flashcard-ratings"])
 app.include_router(flashcard_ratings.feedback_router, prefix="/api/v1", tags=["flashcard-ratings"])
+
+from api.routes import workspaces
+
+app.include_router(workspaces.router, prefix="/api/v1/workspaces", tags=["workspaces"])

@@ -1,3 +1,4 @@
+import { OpenInWorkspace } from '../components/workspace/OpenInWorkspace';
 import { usePathProgress } from '../hooks/useProgress';
 import { SharingPanel } from '../components/courses/SharingPanel';
 import { useFollowPath, useReorderCoursesInPath } from '../hooks/useLearningPaths';
@@ -211,6 +212,7 @@ export function LearningPathDetail() {
           </div>
         </div>
         {isOwner && <div className="flex flex-wrap gap-2">
+          <OpenInWorkspace kind="path" id={path.id} title={path.title} />
           <Button variant="secondary" onClick={() => setAddCourseModalOpen(true)}>
             <Plus className="w-4 h-4 mr-2" />
             Add Course

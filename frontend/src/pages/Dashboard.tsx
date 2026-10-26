@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { useAuthContext } from '../components/common/AuthContext';
 import { StreakDisplay } from '../components/dashboard/StreakDisplay';
 import { ActionCard } from '../components/dashboard/ActionCard';
@@ -41,7 +42,8 @@ export function Dashboard() {
             <h1 className="text-2xl font-bold">
               Welcome back, {user?.name}!
             </h1>
-            <p className="text-indigo-100">Here's your learning progress</p>
+            <p className="text-indigo-100">Turn a goal into a course you can keep improving.</p>
+            <div className="flex flex-wrap gap-3 mt-4"><Link className="bg-white text-indigo-700 px-4 py-2 rounded-lg font-medium" to="/workspaces">Start with a goal</Link><Link className="border border-white px-4 py-2 rounded-lg font-medium" to="/courses">Continue studying</Link></div>
           </div>
           <div className="lg:w-80">
             <StreakDisplay
