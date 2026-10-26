@@ -4,7 +4,7 @@ test('MODULE-01 — edit Markdown, preview, reject empty title and persist learn
   await login(page, world.author);
   const url = `/courses/${world.course.id}/modules/${world.lessons[0].id}`;
   await page.goto(`${url}/edit`);
-  const markdown = '# Authored lesson\n\n- First item\n- Second item\n\n| A | B |\n| --- | --- |\n| 2 | 3 |\n\n[Example](https://example.com)\n\n```javascript\nconsole.log(5);\n```';
+  const markdown = '# Authored lesson\n\n- First item\n- Second item\n\n| A | B |\n| --- | --- |\n| 2 | 3 |\n\n[Example](https://example.com)\n\n```javascript\nconsole.log(5);\n```\n\n```mermaid\nflowchart LR\n  Read --> Practice\n```';
   await page.getByLabel('Module content Markdown').fill(markdown);
   await expect(page.getByRole('heading', { name: 'Authored lesson' })).toBeVisible();
   await page.getByLabel('Module Title').fill('');
@@ -17,6 +17,7 @@ test('MODULE-01 — edit Markdown, preview, reject empty title and persist learn
   await page.reload();
   await expect(page.getByRole('heading', { name: 'Authored lesson' })).toBeVisible();
   await expect(page.getByRole('table')).toContainText('2');
+  await expect(page.locator('svg').filter({ hasText: 'Practice' })).toBeVisible();
   await page.goto(`${url}/edit`);
   await expect(page.getByLabel('Module content Markdown')).toHaveValue(markdown);
 });
