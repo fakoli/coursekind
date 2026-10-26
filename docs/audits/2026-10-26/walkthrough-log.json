@@ -1,0 +1,105 @@
+[
+  {
+    "id": "AUTH-01",
+    "outcome": "completed",
+    "wall_seconds": 70,
+    "notes": "UI registration auto-signs in and shows correct author identity. Observation includes fixture setup pause; not a human benchmark."
+  },
+  {
+    "id": "COURSE-01",
+    "outcome": "completed",
+    "wall_seconds": 44,
+    "notes": "Created manual course with two ordered titled/described modules through wizard; detail shows2modules."
+  },
+  {
+    "id": "SHARE-02",
+    "outcome": "completed",
+    "wall_seconds": null,
+    "notes": "A grants B private course access in UI; B finds Shared with me and opens module with no author controls. A revokes; B reload shows Module not found. Duration interrupted by model changes; clean timing retest pending."
+  },
+  {
+    "id": "PATH-01",
+    "outcome": "completed",
+    "wall_seconds": 50,
+    "notes": "Created goal path with hours, edited description/hours, reloaded and confirmed persistence."
+  },
+  {
+    "id": "PATH-02",
+    "outcome": "completed",
+    "wall_seconds": 58,
+    "notes": "Added own private and another author public course via path picker; original IDs/authors and2module counts shown. Already-added course excluded from picker."
+  },
+  {
+    "id": "PATH-03",
+    "outcome": "partial",
+    "wall_seconds": 26,
+    "notes": "Reorder succeeds without navigation and persists after reload; removal/delete branches pending dedicated fixture."
+  },
+  {
+    "id": "SHARE-03",
+    "outcome": "completed",
+    "wall_seconds": 84,
+    "notes": "Named private path appears in recipient discovery. Recipient can follow but has no author controls; path sharing does not reveal revoked private course title."
+  },
+  {
+    "id": "PATH-04",
+    "outcome": "completed",
+    "wall_seconds": 33,
+    "notes": "Follow persisted across reload, appeared in Following, and unfollow removed it. Source path remained accessible and unchanged."
+  },
+  {
+    "journey": "SHARE-02 media extension",
+    "status": "completed",
+    "elapsed_seconds": 8,
+    "notes": "Owner grant exposes protected lesson image to recipient; revocation then recipient reload denies module. Screenshot06 captures authorized image. Private direct image API checked separately."
+  },
+  {
+    "journey": "PATH-02 discovery add and contribution counts",
+    "status": "completed",
+    "elapsed_seconds": 14,
+    "notes": "Discover→Add to Path→learner path; cards and author detail show2references:1by author,1by other owners."
+  },
+  {
+    "journey": "PATH-03 remove and cancel",
+    "status": "completed",
+    "elapsed_seconds": 15,
+    "notes": "Cancel retained course. Confirm removal persisted empty path; sourcecourse remains2modules; reusecount falls2→1,otherowner1→0. Path deletion not part of this run."
+  },
+  {
+    "journey": "MODULE-02 create and reorder",
+    "status": "completed",
+    "elapsed_seconds": 20,
+    "notes": "Created2cards, reorderedsecondtofirst,saved/reloaded;deckcountandorderpersist. Stableidentity/deletioncreditawaitTask3."
+  },
+  {
+    "journey": "MODULE-03 manual quiz",
+    "status": "partial",
+    "elapsed_seconds": 40,
+    "notes": "Question/options/explanationandBcorrectkeysavedreload. Correctchoicehadonlyvisualclicktarget,noAXradio;Task3fixandkeyboardretestneeded."
+  },
+  {
+    "journey": "MODULE-04 configure practice",
+    "status": "completed",
+    "elapsed_seconds": 21,
+    "notes": "EnabledPythonpractice,instructions/starter/solutionsavedandpersistafterreload. Timeoutandremove/readdvalidationpending."
+  },
+  {
+    "id": "COURSE-02",
+    "outcome": "completed",
+    "wall_seconds": 71,
+    "notes": "Edited existing outline description; added and saved a temporary third module; reopened editor to verify persisted values; removed temporary module and saved. Two original module IDs, order and authored activities preserved. Course description also persisted. Initial harness reload occurred before save completed, so removal was repeated and confirmed on the resulting detail screen before final reload."
+  },
+  {
+    "id": "PATH-03",
+    "subflow": "Delete disposable empty path",
+    "outcome": "completed",
+    "wall_seconds": 17,
+    "notes": "Cancel kept the path. Confirmed deletion returned to My Paths empty state and persisted after reload. Other author path and source courses remain."
+  },
+  {
+    "id": "STATS-03",
+    "outcome": "failed before Task3",
+    "wall_seconds": null,
+    "notes": "Fresh student follows a shared path but Dashboard still shows only start-learning empty state, no selected-path count or recommendation. Saved screenshot07. No lesson/study actions taken by this account."
+  }
+]
