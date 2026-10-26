@@ -1,3 +1,6 @@
+import { PlanPanel } from '../components/workspace/PlanPanel';
+import { BuildPanel } from '../components/workspace/BuildPanel';
+import { useWorkspaceActivity } from '../hooks/useWorkspaceActivity';
 import { ApiError } from '../api/client';
 import { useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
@@ -35,6 +38,7 @@ function WorkspaceDetail({ workspace }: { workspace: WorkspaceData }) {
   const { user } = useAuthContext();
   const preferences = useAIPreferences(user?.id);
   const archive = useUpdateWorkspace(workspace.id);
+  const activity = useWorkspaceActivity(workspace.id);
   const request = useRef<WorkspaceUpdate | null>(null);
   const [archiveError, setArchiveError] = useState('');
   const [confirmedArchive, setConfirmedArchive] = useState<WorkspaceData | null>(null);
@@ -63,7 +67,7 @@ function WorkspaceDetail({ workspace }: { workspace: WorkspaceData }) {
           <h1 className="text-2xl font-bold text-gray-900 break-words">{workspace.brief.goal}</h1>
           <p className="mt-2 text-gray-600">
             {workspace.archived ? 'Archived workspace' : 'Private workspace'} · Current action:{' '}
-            {workspace.archived ? 'View saved material' : 'Edit your learning brief'}
+            {workspace.archived ? 'View saved material' : 'Review a plan or build a lesson'}
           </p>
         </div>
         <Button
@@ -103,6 +107,25 @@ function WorkspaceDetail({ workspace }: { workspace: WorkspaceData }) {
           </p>
         </aside>
       </div>
+      {activity.jobs.error || activity.plans.error ? (
+        <p role="alert">Saved plans and jobs unavailable. Reload to check current source access.</p>
+      ) : (
+        <div className="space-y-6 max-w-4xl mx-auto">
+          <PlanPanel
+            workspace={workspace}
+            plans={activity.plans.data || []}
+            jobs={(activity.jobs.data || []).filter((j) => j.kind === 'plan')}
+            preferences={preferences.data}
+            onChanged={activity.refresh}
+          />
+          <BuildPanel
+            workspace={workspace}
+            jobs={(activity.jobs.data || []).filter((j) => j.kind === 'build')}
+            preferences={preferences.data}
+            onChanged={activity.refresh}
+          />
+        </div>
+      )}
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import time
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
@@ -15,7 +16,26 @@ settings = get_settings()
 setup_logging(debug=settings.debug)
 logger = get_logger(__name__)
 
+
+@asynccontextmanager
+async def lifespan(app):
+    from dependencies import get_storage
+    from services.workspace_runner import WorkspaceRunner
+    from storage import get_storage_backend
+
+    current_settings = get_settings()
+    override = app.dependency_overrides.get(get_storage)
+    storage = override() if override else get_storage_backend(current_settings)
+    runner = WorkspaceRunner(storage, current_settings)
+    await runner.recover_interrupted()
+    try:
+        yield
+    finally:
+        await runner.shutdown()
+
+
 app = FastAPI(
+    lifespan=lifespan,
     title=settings.app_name,
     description="A learning platform for visual learners who learn by doing",
     version="0.1.0",

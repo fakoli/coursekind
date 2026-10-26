@@ -40,6 +40,7 @@ export function installWorkspaceApi(initial = true) {
     const body = init?.body ? JSON.parse(String(init.body)) : {};
     const method = init?.method || 'GET';
     const reply = (data: unknown, status = 200) => new Response(JSON.stringify(data), { status });
+    if (method === 'GET' && /\/(jobs|plans)$/.test(url.pathname)) return reply([]);
     if (method === 'POST') {
       const existing = state.workspaces.find(
         (w) =>

@@ -1,0 +1,72 @@
+import { useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useAuthContext } from '../components/common/AuthContext';
+import { workspacesApi } from '../api/workspaces';
+import type { Workspace } from '../types/workspace';
+import { coursesApi } from '../api/courses';
+import { modulesApi } from '../api/modules';
+
+export function useWorkspaceActivity(id: string) {
+  const { user } = useAuthContext();
+  const client = useQueryClient();
+  const jobs = useQuery({
+    queryKey: ['workspace-jobs', user?.id, id],
+    queryFn: () => workspacesApi.jobs(id),
+    enabled: !!user,
+    refetchInterval: (query) =>
+      query.state.data?.some((j) => ['queued', 'running'].includes(j.state)) ? 2000 : false,
+  });
+  const plans = useQuery({
+    queryKey: ['workspace-plans', user?.id, id],
+    queryFn: () => workspacesApi.plans(id),
+    enabled: !!user,
+  });
+  const outputs = jobs.data
+    ?.flatMap((j) => j.steps.map((s) => s.output_ref))
+    .filter(Boolean)
+    .join(',');
+  useEffect(() => {
+    if (outputs)
+      void client.invalidateQueries({
+        queryKey: ['workspace-plans', user?.id, id],
+      });
+  }, [outputs, client, user?.id, id]);
+  const refresh = async () => {
+    await Promise.all(
+      [
+        'workspace',
+        'workspaces',
+        'workspace-jobs',
+        'workspace-plans',
+        'workspace-build-modules',
+        'course',
+        'courses',
+        'modules',
+        'module',
+        'path',
+        'paths',
+        'user',
+        'auth',
+      ].map((key) => client.invalidateQueries({ queryKey: [key] })),
+    );
+  };
+  return { jobs, plans, refresh };
+}
+
+export function useWorkspaceModules(workspace: Workspace) {
+  const { user } = useAuthContext();
+  return useQuery({
+    queryKey: ['workspace-build-modules', user?.id, workspace.id, workspace.course_ids],
+    enabled: !!user,
+    queryFn: async () => {
+      const courses = await Promise.all(workspace.course_ids.map((id) => coursesApi.get(id)));
+      const owned = courses.filter(
+        (c) => c.course.author_id === user?.id && c.course.source !== 'filesystem',
+      );
+      const modules = await Promise.all(
+        owned.flatMap((c) => c.modules.map((m) => modulesApi.get(c.course.id, m.id))),
+      );
+      return modules;
+    },
+  });
+}

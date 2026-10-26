@@ -16,7 +16,7 @@ from models.ai_generation import (
 )
 from models.module import FlashcardData, QuizData
 from services.access_service import AccessService
-from services.ai_provider import ProviderClient
+from services.ai_provider import ProviderClient, ProviderOutputError
 from services.course_service import CourseService
 from services.generation_operation import GenerationOperation, active_provider
 from services.module_service import ModuleService
@@ -61,9 +61,16 @@ def validate_quiz(data, count):
 
 class AIGenerationService:
     def __init__(
-        self, storage, settings, content_path="./content/courses", uploads_path="./uploads"
+        self,
+        storage,
+        settings,
+        content_path="./content/courses",
+        uploads_path="./uploads",
+        *,
+        repair_provider_output=False,
     ):
         self.storage = storage
+        self.repair_provider_output = repair_provider_output
         self.settings = settings
         self.operations = GenerationOperation(storage, settings)
         self.provider = ProviderClient(settings)
@@ -85,7 +92,17 @@ class AIGenerationService:
             "Use nonempty text and valid zero-based answer indices."
         )
         for attempt in range(2):
-            response = await self._call_llm(prompt, system, max_tokens=max_tokens)
+            try:
+                response = await self._call_llm(prompt, system, max_tokens=max_tokens)
+            except ProviderOutputError as exc:
+                if (
+                    not self.repair_provider_output
+                    or exc.reason not in ("incomplete", "malformed", "empty")
+                    or attempt == 1
+                ):
+                    raise
+                prompt += "\nRegenerate complete valid JSON; the prior output was incomplete."
+                continue
             try:
                 text = response.strip()
                 if text.startswith("```"):
@@ -185,9 +202,9 @@ class AIGenerationService:
             owner=True,
         )
 
-    async def stage_content(self, user_id, request):
+    async def stage_content(self, user_id, request, *, require_enabled=True):
         course, context = await self._context(user_id, request.course_id)
-        if not course.ai_enabled:
+        if require_enabled and not course.ai_enabled:
             raise AIServiceException("AI generation is not enabled for this course")
         prompt = (
             "Create a clear, useful 600–1000 word lesson with examples and headings. "

@@ -59,17 +59,43 @@ class GenerationOperation:
         return balance
 
     async def run(
-        self, user_id, operation, request, cost, response_type, action, access=None, save=None
+        self,
+        user_id,
+        operation,
+        request,
+        cost,
+        response_type,
+        action,
+        access=None,
+        save=None,
+        provider_snapshot: ProviderSnapshot | None = None,
     ):
         request = request.model_copy(update={"request_id": request.request_id or str(uuid4())})
         # Coalesce concurrent retries without holding the storage transaction over inference.
         async with _single_operation(self.storage, user_id, request.request_id):
             return await self._run(
-                user_id, operation, request, cost, response_type, action, access, save
+                user_id,
+                operation,
+                request,
+                cost,
+                response_type,
+                action,
+                access,
+                save,
+                provider_snapshot,
             )
 
     async def _run(
-        self, user_id, operation, request, cost, response_type, action, access=None, save=None
+        self,
+        user_id,
+        operation,
+        request,
+        cost,
+        response_type,
+        action,
+        access=None,
+        save=None,
+        provider_snapshot: ProviderSnapshot | None = None,
     ):
         payload = request.model_dump(mode="json")
         request_id = payload.pop("request_id", None) or str(uuid4())
@@ -93,7 +119,9 @@ class GenerationOperation:
         old = await replay()
         if old is not None:
             return old
-        if cost:
+        if provider_snapshot is not None:
+            snapshot = provider_snapshot
+        elif cost:
             snapshot = await self.preferences.snapshot(user_id)
         else:
             # Applying supplied outlines performs no inference and needs no key.

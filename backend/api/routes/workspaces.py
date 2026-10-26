@@ -5,6 +5,12 @@ from fastapi import APIRouter
 from dependencies import CurrentUser, SettingsDep, StorageDep
 from exceptions import StudyBuddyException
 from models.workspace import Workspace, WorkspaceCreate, WorkspaceUpdate
+from models.workspace_change import ChangeSet
+from models.workspace_job import BuildRequest, MutationRequest, RetryRequest, WorkspaceJob
+from models.workspace_plan import ApplyPlanRequest, PlanProposal, PlanRequest, PlanUpdateRequest
+from services.workspace_change_service import WorkspaceChangeService
+from services.workspace_job_service import WorkspaceJobService
+from services.workspace_plan_service import WorkspacePlanService
 from services.workspace_service import WorkspaceService
 
 router = APIRouter()
@@ -43,3 +49,142 @@ async def update_workspace(
 ):
     require_workspace_writes(settings)
     return await WorkspaceService(storage).update(user.id, workspace_id, data)
+
+
+# Durable inference jobs are admitted before submission; polling performs no inference.
+
+
+@router.post("/{workspace_id}/plans", response_model=WorkspaceJob, status_code=202)
+async def plan_workspace(
+    workspace_id: str,
+    data: PlanRequest,
+    user: CurrentUser,
+    storage: StorageDep,
+    settings: SettingsDep,
+):
+    require_workspace_writes(settings)
+    return await WorkspaceJobService(storage, settings).start(user.id, workspace_id, "plan", data)
+
+
+@router.get("/{workspace_id}/plans", response_model=list[PlanProposal])
+async def list_plans(
+    workspace_id: str, user: CurrentUser, storage: StorageDep, settings: SettingsDep
+):
+    return await WorkspacePlanService(storage, settings).list(user.id, workspace_id)
+
+
+@router.get("/{workspace_id}/plans/{proposal_id}", response_model=PlanProposal)
+async def get_plan(
+    workspace_id: str,
+    proposal_id: str,
+    user: CurrentUser,
+    storage: StorageDep,
+    settings: SettingsDep,
+):
+    return await WorkspacePlanService(storage, settings).get(user.id, workspace_id, proposal_id)
+
+
+@router.put("/{workspace_id}/plans/{proposal_id}", response_model=PlanProposal)
+async def update_plan(
+    workspace_id: str,
+    proposal_id: str,
+    data: PlanUpdateRequest,
+    user: CurrentUser,
+    storage: StorageDep,
+    settings: SettingsDep,
+):
+    require_workspace_writes(settings)
+    return await WorkspacePlanService(storage, settings).update(
+        user.id, workspace_id, proposal_id, data
+    )
+
+
+@router.post("/{workspace_id}/plans/{proposal_id}/apply", response_model=PlanProposal)
+async def apply_plan(
+    workspace_id: str,
+    proposal_id: str,
+    data: ApplyPlanRequest,
+    user: CurrentUser,
+    storage: StorageDep,
+    settings: SettingsDep,
+):
+    require_workspace_writes(settings)
+    return await WorkspacePlanService(storage, settings).apply(
+        user.id, workspace_id, proposal_id, data
+    )
+
+
+@router.post("/{workspace_id}/build", response_model=WorkspaceJob, status_code=202)
+async def build_workspace(
+    workspace_id: str,
+    data: BuildRequest,
+    user: CurrentUser,
+    storage: StorageDep,
+    settings: SettingsDep,
+):
+    require_workspace_writes(settings)
+    return await WorkspaceJobService(storage, settings).start(user.id, workspace_id, "build", data)
+
+
+@router.get("/{workspace_id}/jobs", response_model=list[WorkspaceJob])
+async def list_jobs(
+    workspace_id: str, user: CurrentUser, storage: StorageDep, settings: SettingsDep
+):
+    return await WorkspaceJobService(storage, settings).list(user.id, workspace_id)
+
+
+@router.get("/{workspace_id}/jobs/{job_id}", response_model=WorkspaceJob)
+async def get_job(
+    workspace_id: str, job_id: str, user: CurrentUser, storage: StorageDep, settings: SettingsDep
+):
+    return await WorkspaceJobService(storage, settings).get(user.id, workspace_id, job_id)
+
+
+@router.post("/{workspace_id}/jobs/{job_id}/cancel", response_model=WorkspaceJob)
+async def cancel_job(
+    workspace_id: str,
+    job_id: str,
+    data: MutationRequest,
+    user: CurrentUser,
+    storage: StorageDep,
+    settings: SettingsDep,
+):
+    require_workspace_writes(settings)
+    return await WorkspaceJobService(storage, settings).cancel(
+        user.id, workspace_id, job_id, data.request_id
+    )
+
+
+@router.post("/{workspace_id}/jobs/{job_id}/retry", response_model=WorkspaceJob, status_code=202)
+async def retry_job(
+    workspace_id: str,
+    job_id: str,
+    data: RetryRequest,
+    user: CurrentUser,
+    storage: StorageDep,
+    settings: SettingsDep,
+):
+    require_workspace_writes(settings)
+    return await WorkspaceJobService(storage, settings).retry(
+        user.id, workspace_id, job_id, data.request_id, data.step_ids
+    )
+
+
+@router.get("/{workspace_id}/changes/{change_id}", response_model=ChangeSet)
+async def get_change(workspace_id: str, change_id: str, user: CurrentUser, storage: StorageDep):
+    return await WorkspaceChangeService(storage).get(user.id, workspace_id, change_id)
+
+
+@router.post("/{workspace_id}/changes/{change_id}/apply", response_model=ChangeSet)
+async def apply_change(
+    workspace_id: str,
+    change_id: str,
+    data: MutationRequest,
+    user: CurrentUser,
+    storage: StorageDep,
+    settings: SettingsDep,
+):
+    require_workspace_writes(settings)
+    return await WorkspaceChangeService(storage).apply(
+        user.id, workspace_id, change_id, data.request_id
+    )

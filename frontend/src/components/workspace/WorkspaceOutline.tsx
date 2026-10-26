@@ -17,9 +17,28 @@ function LinkedCourse({ id }: { id: string }) {
           </Link>
         </span>
       ) : (
-        <Link className="text-indigo-700 underline break-words" to={`/courses/${id}`}>
-          {course.data.course.title}
-        </Link>
+        <>
+          <Link className="text-indigo-700 underline break-words" to={`/courses/${id}`}>
+            {course.data.course.title}
+          </Link>
+          {course.data.modules.length > 0 && (
+            <details className="mt-2 text-sm">
+              <summary>Module outline ({course.data.modules.length})</summary>
+              <ol className="space-y-2 mt-2 pl-3">
+                {course.data.modules.map((module) => (
+                  <li key={module.id}>
+                    <Link
+                      className="underline break-words"
+                      to={`/courses/${id}/modules/${module.id}`}
+                    >
+                      {module.title}
+                    </Link>
+                  </li>
+                ))}
+              </ol>
+            </details>
+          )}
+        </>
       )}
     </li>
   );

@@ -55,7 +55,23 @@ def remote(request):
         prompt = body["messages"][-1]["content"]
     match = re.search(r"exactly (\d+)", prompt)
     count = int(match.group(1)) if match else 1
-    if '"content_markdown"' in system:
+    if "Create a workspace learning plan." in prompt:
+        context = json.loads(prompt.split("Context: ", 1)[1].split("\nUser refinement: ", 1)[0])
+        scope = context["workspace"]["brief"]["scope"]
+        new_course = {
+            "kind": "new", "temp_id": "course-new", "title": "Planned addition course",
+            "description": "Learn addition with examples", "difficulty": "beginner",
+            "modules": [
+                {"temp_id": f"module-{i}", "title": f"Planned lesson {i}",
+                 "description": "Practice addition", "objectives": ["Add numbers", "Explain a sum"]}
+                for i in (1, 2)
+            ],
+        }
+        result = {"scope": scope, "title": "Addition learning plan", "description": "A reviewable goal",
+                  "assumptions": ["Beginner learner"], "courses": [new_course] + (
+                      [{"kind": "reuse", "course_id": cid} for cid in context["reuse_course_ids"][:2]]
+                      if scope == "path" else [])}
+    elif '"content_markdown"' in system:
         result = {"content_markdown": "# Generated lesson\n\nA deterministic explanation of addition.", "suggested_visuals": []}
     elif '"front"' in system:
         result = [{"front": f"Generated card {i+1}", "back": f"Generated answer {i+1}"} for i in range(count)]
