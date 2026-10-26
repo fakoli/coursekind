@@ -332,5 +332,13 @@
     "status": "pass",
     "duration_ms": null,
     "notes": "Mocked external HTTP only. Both catalog and generated15card requests use selected adapter; dismiss preserved2savedcards. Claude reload persisted. Balance remains65. Anvilprimary explicitly reselected. Timing not separately measured."
+  },
+  {
+    "journey": "STUDY-01 / STUDY-02 / STUDY-04 / STUDY-05",
+    "scenario": "Optional content-only, card-only, quiz-only, practice-only variants",
+    "status": "partial",
+    "duration_ms": 52061,
+    "evidence": "34-empty-content-tab-before-fix.png",
+    "notes": "Availableactivities: contentread/next; singlecardflip/next; singlequiz100%. Cards/quiz/practice-only default to emptyContenttab with Markcontentread, reportedTask5. First standaloneJSrun storedhistory1 but outputreset to initialinstruction instead of5; also reportedTask5. Fixture APIseeded; actualUI performed activities."
   }
 ]

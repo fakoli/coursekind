@@ -86,6 +86,7 @@
 
 - [ ] Add failing tests for A→logout→B without reload with cached/in-flight private queries, auth expiry and cross-tab logout, structured server errors, non-admin direct navigation, invalid phone preferences, disabled unconfigured delivery, toggle state announcements, and keyboard-only primary study actions/dialogs.
 - [ ] Repair manual activity validation found during rendered tests: incomplete flashcards must retain their draft and show a clear error rather than being silently removed; quizzes require nonempty questions and at least two nonempty options with a valid correct index. Add safe add/remove option controls that preserve/remap the answer key, with frontend and backend agreement and regression tests.
+- [ ] Repair rendered optional-activity integration failures: select the first available activity and omit empty optional tabs/read-credit actions; keep fully empty outlines navigable with truthful guidance. Preserve first-run practice output while initial personal progress is saved, with a regression for a fresh module.
 - [ ] Implement cache isolation and guards, useful recoverable errors, notification input/state validation and honest provider availability. Use native/radio/button semantics and accessible names throughout touched flows. Preserve saved preferences per user and no real delivery in tests.
 - [ ] Run relevant tests, full frontend lint and build; fix touched-flow regressions and commit.
 
