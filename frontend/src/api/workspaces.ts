@@ -9,9 +9,24 @@ import type {
   WorkspacePlan,
   BuildRequest,
   ChangeSet,
+  RevisionRequest,
+  WorkspaceRevision,
+  ResourceSnapshot,
 } from '../types/workspace';
 
 export const workspacesApi = {
+  changes: (id: string) => api.get<ChangeSet[]>(`/workspaces/${id}/changes`),
+  revise: (id: string, data: RevisionRequest) =>
+    api.post<WorkspaceJob>(`/workspaces/${id}/revisions`, data),
+  manualChange: (id: string, data: { request_id: string; patches: ChangeSet['patches'] }) =>
+    api.post<ChangeSet>(`/workspaces/${id}/changes`, data),
+  snapshots: (id: string) => api.get<ResourceSnapshot[]>(`/workspaces/${id}/snapshots`),
+  history: (id: string) => api.get<WorkspaceRevision[]>(`/workspaces/${id}/history`),
+  restore: (
+    id: string,
+    revisionId: string,
+    data: { request_id: string; expected_current_fingerprint: string },
+  ) => api.post<ChangeSet>(`/workspaces/${id}/history/${revisionId}/restore`, data),
   create: (data: WorkspaceCreate) => api.post<Workspace>('/workspaces', data),
   list: (archived = false) => api.get<Workspace[]>(`/workspaces?archived=${archived}`),
   get: (id: string) => api.get<Workspace>(`/workspaces/${id}`),

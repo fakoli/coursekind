@@ -9,7 +9,7 @@ from uuid import uuid4
 from pydantic import BaseModel
 
 from exceptions import ConflictException, NotFoundException
-from models.workspace_change import ResourceTarget
+from models.workspace_change import ResourceTarget, RevisionRequest
 from models.workspace_job import BuildRequest, JobStep, MutationRequest, RetryRequest, WorkspaceJob
 from models.workspace_plan import PlanRequest
 from services.ai_preferences_service import AIPreferencesService
@@ -78,8 +78,23 @@ class WorkspaceJobService:
                     context=context,
                 )
             ]
+        if kind == "revision":
+            from services.workspace_revision_generator import WorkspaceRevisionGenerator
+
+            data = RevisionRequest.model_validate(data.model_dump())
+            context = await WorkspaceRevisionGenerator(self.storage, self.settings).context(
+                user_id, workspace_id, data
+            )
+            return [
+                dict(
+                    target=data.target.model_dump(),
+                    source_snapshots=context["snapshots"],
+                    input=data.model_dump(mode="json"),
+                    context=context,
+                )
+            ]
         if kind != "build":
-            raise ConflictException("Revision execution is not available yet")
+            raise ConflictException("Unsupported job kind")
         data = BuildRequest.model_validate(data.model_dump())
         result = []
         for module_id in data.module_ids:
@@ -238,6 +253,15 @@ class WorkspaceJobService:
                         model=snapshot.model,
                         source_snapshots=[s.model_dump(mode="json") for s in snapshots],
                     )
+                    if job.kind == "revision":
+                        from services.workspace_revision_generator import WorkspaceRevisionGenerator
+
+                        context = await WorkspaceRevisionGenerator(
+                            self.storage, self.settings
+                        ).context(
+                            user_id, workspace_id, RevisionRequest.model_validate(raw["input"])
+                        )
+                        updates.update(context=context, source_snapshots=context["snapshots"])
                     if job.kind == "plan":
                         context = await WorkspacePlanService(self.storage, self.settings).context(
                             user_id, workspace_id, PlanRequest.model_validate(raw["input"])

@@ -10,7 +10,7 @@ from exceptions import ConflictException, NotFoundException
 from models.course import CourseCreate
 from models.learning_path import LearningPathCreate
 from models.module import ModuleCreate
-from models.workspace_change import ResourceSnapshot, ResourceTarget
+from models.workspace_change import ResourceSnapshot, ResourceTarget, Revision
 from models.workspace_plan import (
     ApplyPlanRequest,
     PlanProposal,
@@ -194,6 +194,7 @@ class WorkspacePlanService:
             user = await self.storage.get("users", user_id)
             courses, modules = CourseService(self.storage), ModuleService(self.storage)
             course_ids = []
+            created_targets = []
             for node in p.plan.courses:
                 if node.kind == "reuse":
                     course_ids.append(node.course_id)
@@ -214,6 +215,7 @@ class WorkspacePlanService:
                         ),
                     )
                     course_id = course.id
+                    created_targets.append(ResourceTarget(kind="course", resource_id=course_id))
                 p.applied_ids[node.temp_id] = course_id
                 course_ids.append(course_id)
                 existing = await modules.list_modules(course_id)
@@ -228,6 +230,9 @@ class WorkspacePlanService:
                         ),
                     )
                     p.applied_ids[node_module.temp_id] = module.id
+                    created_targets.append(
+                        ResourceTarget(kind="module", resource_id=module.id, course_id=course_id)
+                    )
             linked = list(dict.fromkeys([*w.course_ids, *course_ids]))
             path_id = w.path_id
             paths = LearningPathService(self.storage, courses)
@@ -243,6 +248,7 @@ class WorkspacePlanService:
                         ),
                     )
                     path_id = path.id
+                    created_targets.append(ResourceTarget(kind="path", resource_id=path_id))
             await self.storage.update(
                 "workspaces",
                 w.id,
@@ -251,6 +257,31 @@ class WorkspacePlanService:
                     path_id=path_id,
                     version=w.version + 1,
                     updated_at=datetime.now(timezone.utc).isoformat(),
+                ),
+            )
+            existing_targets = []
+            if w.path_id and p.plan.scope == "path":
+                existing_targets.append(ResourceTarget(kind="path", resource_id=w.path_id))
+            if w.course_ids and p.plan.scope == "course":
+                existing_targets.append(ResourceTarget(kind="course", resource_id=w.course_ids[0]))
+            created = [
+                await self.ctx.snapshot(user_id, target, editable=False)
+                for target in [*existing_targets, *created_targets]
+            ]
+            history = Revision(
+                id=str(uuid4()),
+                workspace_id=workspace_id,
+                owner_id=user_id,
+                change_id=p.id,
+                before=[s for s in p.base_snapshots if s.target in existing_targets],
+                after=created,
+                kind="creation",
+                created_at=datetime.now(timezone.utc),
+            )
+            await self.storage.create(
+                "workspace_revisions",
+                history.model_dump(
+                    mode="json", exclude={"current_fingerprint", "current_snapshots", "restorable"}
                 ),
             )
             p.status = "applied"

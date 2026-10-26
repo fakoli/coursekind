@@ -62,7 +62,8 @@ function Job({
   return (
     <section className="border rounded p-3 space-y-2 min-w-0">
       <p className="font-medium break-words">
-        {job.kind === 'plan' ? 'Plan' : 'Build'}: {job.state} · {job.provider} / {job.model}
+        {job.kind === 'plan' ? 'Plan' : job.kind === 'revision' ? 'Revision' : 'Build'}: {job.state}{' '}
+        · {job.provider} / {job.model}
       </p>
       <ul className="space-y-2">
         {job.steps.map((step, index) => (

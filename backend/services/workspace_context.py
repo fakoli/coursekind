@@ -64,6 +64,16 @@ class WorkspaceContext:
         if target.kind == "course":
             modules = await ModuleService(self.storage).list_modules(target.resource_id)
             fields["module_ids"] = [m.id for m in modules]
+            fields["outline"] = [
+                dict(
+                    id=m.id,
+                    title=m.title,
+                    description=m.description,
+                    objectives=m.objectives,
+                    order_index=m.order_index,
+                )
+                for m in modules
+            ]
         return ResourceSnapshot(target=target, fields=fields, fingerprint=fingerprint(fields))
 
     async def check(self, user_id, snapshots, *, compare=False, editable=False):

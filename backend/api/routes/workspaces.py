@@ -5,10 +5,19 @@ from fastapi import APIRouter
 from dependencies import CurrentUser, SettingsDep, StorageDep
 from exceptions import StudyBuddyException
 from models.workspace import Workspace, WorkspaceCreate, WorkspaceUpdate
-from models.workspace_change import ChangeSet
+from models.workspace_change import (
+    ChangeSet,
+    ManualChangeRequest,
+    ResourceSnapshot,
+    ResourceTarget,
+    RestoreRequest,
+    Revision,
+    RevisionRequest,
+)
 from models.workspace_job import BuildRequest, MutationRequest, RetryRequest, WorkspaceJob
 from models.workspace_plan import ApplyPlanRequest, PlanProposal, PlanRequest, PlanUpdateRequest
 from services.workspace_change_service import WorkspaceChangeService
+from services.workspace_context import WorkspaceContext
 from services.workspace_job_service import WorkspaceJobService
 from services.workspace_plan_service import WorkspacePlanService
 from services.workspace_service import WorkspaceService
@@ -188,3 +197,64 @@ async def apply_change(
     return await WorkspaceChangeService(storage).apply(
         user.id, workspace_id, change_id, data.request_id
     )
+
+
+@router.post("/{workspace_id}/revisions", response_model=WorkspaceJob, status_code=202)
+async def revise_workspace(
+    workspace_id: str,
+    data: RevisionRequest,
+    user: CurrentUser,
+    storage: StorageDep,
+    settings: SettingsDep,
+):
+    require_workspace_writes(settings)
+    return await WorkspaceJobService(storage, settings).start(
+        user.id, workspace_id, "revision", data
+    )
+
+
+@router.post("/{workspace_id}/changes", response_model=ChangeSet)
+async def manual_change(
+    workspace_id: str,
+    data: ManualChangeRequest,
+    user: CurrentUser,
+    storage: StorageDep,
+    settings: SettingsDep,
+):
+    require_workspace_writes(settings)
+    return await WorkspaceChangeService(storage).manual(user.id, workspace_id, data)
+
+
+@router.get("/{workspace_id}/history", response_model=list[Revision])
+async def workspace_history(workspace_id: str, user: CurrentUser, storage: StorageDep):
+    return await WorkspaceChangeService(storage).history(user.id, workspace_id)
+
+
+@router.post("/{workspace_id}/history/{revision_id}/restore", response_model=ChangeSet)
+async def restore_revision(
+    workspace_id: str,
+    revision_id: str,
+    data: RestoreRequest,
+    user: CurrentUser,
+    storage: StorageDep,
+    settings: SettingsDep,
+):
+    require_workspace_writes(settings)
+    return await WorkspaceChangeService(storage).restore(
+        user.id, workspace_id, revision_id, data.expected_current_fingerprint, data.request_id
+    )
+
+
+@router.get("/{workspace_id}/snapshots", response_model=list[ResourceSnapshot])
+async def workspace_snapshots(workspace_id: str, user: CurrentUser, storage: StorageDep):
+    ctx = WorkspaceContext(storage)
+    workspace = await ctx.workspace(user.id, workspace_id)
+    targets = [ResourceTarget(kind="course", resource_id=cid) for cid in workspace.course_ids]
+    if workspace.path_id:
+        targets.append(ResourceTarget(kind="path", resource_id=workspace.path_id))
+    return [await ctx.snapshot(user.id, target, editable=False) for target in targets]
+
+
+@router.get("/{workspace_id}/changes", response_model=list[ChangeSet])
+async def list_changes(workspace_id: str, user: CurrentUser, storage: StorageDep):
+    return await WorkspaceChangeService(storage).list_changes(user.id, workspace_id)

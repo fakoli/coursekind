@@ -3,7 +3,13 @@
 import asyncio
 
 from models.ai_generation import GeneratedModuleContent, GenerateModuleContentRequest
-from models.workspace_change import ModuleFields, ResourcePatch, ResourceSnapshot, ResourceTarget
+from models.workspace_change import (
+    ModuleFields,
+    ResourcePatch,
+    ResourceSnapshot,
+    ResourceTarget,
+    RevisionRequest,
+)
 from models.workspace_job import JobStep, MutationRequest
 from models.workspace_plan import PlanRequest, WorkspacePlan
 from services.ai_generation_service import AIGenerationService
@@ -13,6 +19,7 @@ from services.workspace_change_service import WorkspaceChangeService
 from services.workspace_context import WorkspaceContext, fingerprint
 from services.workspace_job_service import now
 from services.workspace_plan_service import WorkspacePlanService
+from services.workspace_revision_generator import COSTS, WorkspaceRevisionGenerator
 
 
 class WorkspaceRunner:
@@ -160,7 +167,21 @@ class WorkspaceRunner:
         ctx = WorkspaceContext(self.storage)
         snapshots = [ResourceSnapshot.model_validate(s) for s in step["source_snapshots"]]
         plan_service = WorkspacePlanService(self.storage, self.settings)
-        staged_type = WorkspacePlan if job["kind"] == "plan" else GeneratedModuleContent
+        revision_service = WorkspaceRevisionGenerator(self.storage, self.settings)
+        staged_type = (
+            WorkspacePlan
+            if job["kind"] == "plan"
+            else ResourcePatch
+            if job["kind"] == "revision"
+            else GeneratedModuleContent
+        )
+        cost = (
+            10
+            if job["kind"] == "plan"
+            else COSTS[step["input"]["scope"]]
+            if job["kind"] == "revision"
+            else 25
+        )
         # Finalize-only retries retain the original billing selection; they need no credentials.
         snapshot = (
             ProviderSnapshot(step["provider"], step["model"], "")
@@ -171,6 +192,10 @@ class WorkspaceRunner:
         async def access():
             await ctx.workspace(user_id, workspace_id, writable=True)
             await ctx.check(user_id, snapshots, editable=job["kind"] == "build")
+            if job["kind"] == "revision":
+                await WorkspaceChangeService(self.storage).linked(
+                    user_id, workspace_id, snapshots[0].target
+                )
 
         async def action():
             if step.get("staged_output") is not None:
@@ -182,6 +207,13 @@ class WorkspaceRunner:
                     user_id,
                     workspace_id,
                     PlanRequest.model_validate(step["input"]),
+                    step["context"],
+                )
+            elif job["kind"] == "revision":
+                result = await revision_service.stage(
+                    user_id,
+                    workspace_id,
+                    RevisionRequest.model_validate(step["input"]),
                     step["context"],
                 )
             else:
@@ -224,6 +256,15 @@ class WorkspaceRunner:
                 output = await plan_service.save_proposal(
                     user_id, workspace_id, result, step["context"], job["id"]
                 )
+            elif job["kind"] == "revision":
+                output = await revision_service.save_proposal(
+                    user_id,
+                    workspace_id,
+                    result,
+                    RevisionRequest.model_validate(step["input"]),
+                    step["context"],
+                    job["id"],
+                )
             else:
                 fields = {"content_markdown": result.content_markdown}
                 if step["input"]["generate_flashcards"]:
@@ -236,9 +277,9 @@ class WorkspaceRunner:
                     fields=ModuleFields(**fields),
                 )
                 output = await WorkspaceChangeService(self.storage).prepare(
-                    user_id, workspace_id, [patch], job["id"]
+                    user_id, workspace_id, [patch], job["id"], base_snapshots=snapshots[:1]
                 )
-            charge = (10 if job["kind"] == "plan" else 25) if snapshot.provider == "anvil" else 0
+            charge = cost if snapshot.provider == "anvil" else 0
             doc = await self.storage.update(
                 "workspace_steps",
                 step["id"],
@@ -250,7 +291,7 @@ class WorkspaceRunner:
             user_id,
             f"workspace-{job['kind']}",
             MutationRequest(request_id=step["operation_id"]),
-            10 if job["kind"] == "plan" else 25,
+            cost,
             JobStep,
             action,
             access=access,

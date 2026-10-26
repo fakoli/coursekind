@@ -116,12 +116,13 @@ export function installWorkspaceBuildApi() {
       if (state.fail) return reply({ detail: 'Synthetic failed request' }, 500);
     }
     if (path === '/workspaces/w1') return reply(state.workspace);
+    if (path.endsWith('/history') || path.endsWith('/snapshots') || path.endsWith('/changes')) return reply([]);
     if (path === '/workspaces/w1/jobs') return reply(state.jobs);
     if (path.endsWith('/changes/change-1')) return reply(state.change);
     if (path.endsWith('/changes/change-1/apply')) {
       state.change.status = 'applied';
       state.change.revision_id = 'rev1';
-      journey.modules[0].content_markdown = state.change.patches[0].fields.content_markdown;
+      journey.modules[0].content_markdown = state.change.patches[0].fields.content_markdown || '';
       return reply(state.change);
     }
     if (path.endsWith('/plans/proposal-1/apply')) {

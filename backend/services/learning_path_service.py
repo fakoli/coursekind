@@ -78,6 +78,18 @@ class LearningPathService(BaseService):
                 {"course_ids": list(dict.fromkeys([*path.get("course_ids", []), course_id]))},
             )
 
+    async def replace_course_references(
+        self, path_id: str, user_id: str, course_ids: list[str]
+    ) -> LearningPath:
+        """Atomically replace references only; source courses and learner records survive."""
+        async with self.storage.transaction():
+            await self._get_owned_path(path_id, user_id)
+            if len(course_ids) != len(set(course_ids)):
+                raise StudyBuddyException("Select distinct course references")
+            for course_id in course_ids:
+                await self.access.require_course(course_id, user_id)
+            return await self._update(path_id, {"course_ids": course_ids})
+
     async def remove_course_from_path(
         self, path_id: str, user_id: str, course_id: str
     ) -> LearningPath:

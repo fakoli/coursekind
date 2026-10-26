@@ -141,12 +141,54 @@ export interface ChangeSet {
     target: ResourceTarget;
     expected_fingerprint: string;
     fields: {
-      content_markdown: string;
-      flashcards: import('./index').FlashcardData[] | null;
-      quiz: import('./index').QuizData | null;
+      content_markdown?: string;
+      flashcards?: import('./index').FlashcardData[] | null;
+      quiz?: import('./index').QuizData | null;
+      title?: string;
+      description?: string | null;
+      difficulty?: string;
+      tags?: string[];
+      outline?: {
+        id: string;
+        title: string;
+        description: string;
+        objectives: string[];
+        order_index: number;
+      }[];
+      course_ids?: string[];
     };
   }[];
   base_snapshots: ResourceSnapshot[];
   origin_job_id: string | null;
+  before?: ResourceSnapshot[];
+  after?: ResourceSnapshot[];
+  revision_request?: RevisionRequest | null;
+  parent_revision_id?: string | null;
+  applied_at?: string | null;
+  created_at: string;
+}
+
+export type RevisionScope =
+  'course_metadata' | 'course_outline' | 'lesson' | 'flashcards' | 'quiz' | 'path_references';
+export interface RevisionRequest {
+  request_id: string;
+  target: ResourceTarget;
+  scope: RevisionScope;
+  instruction: string;
+  count?: number | null;
+  reuse_course_ids?: string[];
+}
+export interface WorkspaceRevision {
+  id: string;
+  change_id: string;
+  before: ResourceSnapshot[];
+  after: ResourceSnapshot[];
+  touched_fields: string[][];
+  fingerprint: string;
+  current_fingerprint: string | null;
+  current_snapshots?: ResourceSnapshot[];
+  parent_revision_id: string | null;
+  restorable: boolean;
+  kind: 'editorial' | 'creation';
   created_at: string;
 }

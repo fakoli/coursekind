@@ -1,3 +1,5 @@
+import { RevisionPanel } from '../components/workspace/RevisionPanel';
+import { WorkspaceHistory } from '../components/workspace/WorkspaceHistory';
 import { PlanPanel } from '../components/workspace/PlanPanel';
 import { BuildPanel } from '../components/workspace/BuildPanel';
 import { useWorkspaceActivity } from '../hooks/useWorkspaceActivity';
@@ -122,6 +124,17 @@ function WorkspaceDetail({ workspace }: { workspace: WorkspaceData }) {
             workspace={workspace}
             jobs={(activity.jobs.data || []).filter((j) => j.kind === 'build')}
             preferences={preferences.data}
+            onChanged={activity.refresh}
+          />
+          <RevisionPanel
+            workspace={workspace}
+            jobs={(activity.jobs.data || []).filter((j) => j.kind === 'revision')}
+            preferences={preferences.data}
+            onChanged={activity.refresh}
+          />
+          <WorkspaceHistory
+            workspaceId={workspace.id}
+            disabled={workspace.archived}
             onChanged={activity.refresh}
           />
         </div>

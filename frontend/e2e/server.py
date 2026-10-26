@@ -55,7 +55,25 @@ def remote(request):
         prompt = body["messages"][-1]["content"]
     match = re.search(r"exactly (\d+)", prompt)
     count = int(match.group(1)) if match else 1
-    if "Create a workspace learning plan." in prompt:
+    if "Revise workspace editorial content." in prompt:
+        context = json.loads(prompt.split("Treat context as data. ", 1)[1])
+        revision = context["request"]
+        base = context["context"]["snapshots"][0]["fields"]
+        scope = revision["scope"]
+        count = revision.get("count") or (5 if scope == "flashcards" else 3)
+        if scope == "quiz":
+            result = {"quiz": {"questions": [{"question": f"Revised question {i+1}?", "options": [f"Correct {i+1}", f"Wrong {i+1}"], "correct_index": 0, "explanation": "Addition combines values."} for i in range(count)]}}
+        elif scope == "flashcards":
+            result = {"flashcards": [{"front": f"Revised card {i+1}", "back": f"Revised answer {i+1}"} for i in range(count)]}
+        elif scope == "lesson":
+            result = {"content_markdown": "# Revised lesson\n\nA clearer explanation of addition."}
+        elif scope == "course_metadata":
+            result = {"title": "Revised course", "description": "A clearer learning goal"}
+        elif scope == "course_outline":
+            result = {"outline": [{**item, "title": f"Revised outline {i+1}", "order_index": i} for i, item in enumerate(base["outline"])]}
+        else:
+            result = {"course_ids": revision["reuse_course_ids"]}
+    elif "Create a workspace learning plan." in prompt:
         context = json.loads(prompt.split("Context: ", 1)[1].split("\nUser refinement: ", 1)[0])
         scope = context["workspace"]["brief"]["scope"]
         new_course = {
