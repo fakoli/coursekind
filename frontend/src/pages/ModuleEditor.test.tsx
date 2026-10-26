@@ -44,6 +44,7 @@ it('preserves a sandbox draft during background module refreshes', async () => {
   await act(async () => { await queryClient.invalidateQueries({ queryKey: ['module', 'c1', 'm1'] }); });
   await waitFor(() => expect(queryClient.getQueryData<Module>(['module', 'c1', 'm1'])?.sandbox?.starter_code).toBe('print(99)'));
   expect(screen.getByDisplayValue('print(7)')).toBeInTheDocument();
+  fireEvent.click(await screen.findByRole('button', {name:'Keep my draft'}));
   fireEvent.click(screen.getByRole('button', { name: 'Save' }));
   await screen.findByText('Module updated successfully');
   expect(state.modules[0].sandbox?.starter_code).toBe('print(7)');
@@ -79,4 +80,26 @@ it('preserves an incomplete flashcard draft and gives a useful error on Save', a
   await screen.findByText(/Flashcard 3: enter both/);
   expect(screen.getByDisplayValue('Keep this draft')).toBeInTheDocument();
   expect(state.modules[0].flashcards).toHaveLength(2);
+});
+
+it('preserves dirty title, lesson, cards and quiz when a changed response arrives', async () => {
+  const state = installJourneyApi([makeModule()]);
+  const client = renderJourney(<ModuleEditor />, '/courses/c1/modules/m1/edit', '/courses/:courseId/modules/:moduleId/edit');
+  fireEvent.change(await screen.findByDisplayValue('Lesson m1'), {target:{value:'My draft title'}});
+  fireEvent.change(screen.getByDisplayValue('Existing lesson content'), {target:{value:'Unsaved local lesson'}});
+  fireEvent.click(screen.getByRole('button', {name:/^Flashcards/}));
+  fireEvent.change(screen.getByDisplayValue('First question'), {target:{value:'My draft card'}});
+  fireEvent.click(screen.getByRole('button', {name:/^Quiz/}));
+  fireEvent.change(screen.getByDisplayValue('Two plus three?'), {target:{value:'My draft quiz'}});
+  state.modules[0] = {...state.modules[0], title:'Remote title', updated_at:'2026-10-26T20:00:00Z'};
+  await act(async()=>{await client.invalidateQueries({queryKey:['module','c1','m1']});});
+  expect(screen.getByDisplayValue('My draft title')).toBeInTheDocument();
+  expect(screen.getByDisplayValue('My draft quiz')).toBeInTheDocument();
+  expect(await screen.findByText(/changed on the server/)).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', {name:/Keep my draft/}));
+  fireEvent.click(screen.getByRole('button', {name:'Save'}));
+  await screen.findByText('Module updated successfully');
+  expect(state.modules[0].content_markdown).toBe('Unsaved local lesson');
+  expect(state.modules[0].flashcards[0].front).toBe('My draft card');
+  expect(state.modules[0].quiz?.questions[0].question).toBe('My draft quiz');
 });

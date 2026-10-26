@@ -20,15 +20,21 @@ import { useQuizEditor } from '../hooks/useQuizEditor';
 import { useMarkdownEditor } from '../hooks/useMarkdownEditor';
 import { useModuleGeneration } from '../hooks/useModuleGeneration';
 import { useToast } from '../hooks/useToast';
-import type { FlashcardData, SandboxData } from '../types';
+import type { Module, FlashcardData, SandboxData } from '../types';
 
 export function ModuleEditor() {
+  const { courseId, moduleId } = useParams();
+  return <ModuleEditorDraft key={`${courseId}/${moduleId || 'new'}`} />;
+}
+
+function ModuleEditorDraft() {
   const { user, isLoading: authLoading } = useAuthContext();
   const { courseId, moduleId } = useParams<{ courseId: string; moduleId: string }>();
   const navigate = useNavigate();
   const { success, error: showError } = useToast();
 
   const isEditing = moduleId !== 'new' && !!moduleId;
+  const [acceptedModule, setAcceptedModule] = useState<Module | null>(null);
 
   // Data fetching
   const { data: courseData, isLoading: loadingCourse } = useCourse(courseId || '');
@@ -57,7 +63,7 @@ export function ModuleEditor() {
   } | null>(null);
   const sandbox = sandboxDraft?.editorKey === editorKey
     ? sandboxDraft.value
-    : existingModule?.sandbox ?? null;
+    : acceptedModule?.sandbox ?? null;
 
   // Confirm modal for flashcard replacement
   const [showReplaceConfirm, setShowReplaceConfirm] = useState(false);
@@ -74,12 +80,24 @@ export function ModuleEditor() {
 
   // Populate form when editing
   useEffect(() => {
-    if (existingModule && isEditing) {
+    if (existingModule && isEditing && !acceptedModule) {
+      setAcceptedModule(existingModule);
       populateFromModule(existingModule);
       setFlashcards(existingModule.flashcards || []);
       setQuizQuestions(existingModule.quiz?.questions || []);
     }
-  }, [existingModule, isEditing, populateFromModule, setFlashcards, setQuizQuestions]);
+  }, [existingModule, isEditing, acceptedModule, populateFromModule, setFlashcards, setQuizQuestions]);
+
+  const serverChanged = !!(acceptedModule && existingModule
+    && JSON.stringify(acceptedModule) !== JSON.stringify(existingModule));
+  const reloadServer = () => {
+    if (!existingModule) return;
+    populateFromModule(existingModule);
+    setFlashcards(existingModule.flashcards || []);
+    setQuizQuestions(existingModule.quiz?.questions || []);
+    setSandboxDraft(null);
+    setAcceptedModule(existingModule);
+  };
 
   const isAiEnabled = courseData?.course.ai_enabled ?? false;
   const isSaving = createModule.isPending || updateModule.isPending;
@@ -146,7 +164,7 @@ export function ModuleEditor() {
 
     try {
       if (isEditing && moduleId) {
-        await updateModule.mutateAsync({
+        const saved = await updateModule.mutateAsync({
           courseId,
           moduleId,
           data: {
@@ -154,6 +172,7 @@ export function ModuleEditor() {
             sandbox,
           },
         });
+        setAcceptedModule(saved);
         success('Module updated successfully');
         form.markAsSaved();
       } else {
@@ -227,12 +246,17 @@ export function ModuleEditor() {
             </h1>
           </div>
         </div>
-        <Button onClick={handleSave} isLoading={isSaving} className="flex-shrink-0">
+        <Button onClick={handleSave} disabled={serverChanged} isLoading={isSaving} className="flex-shrink-0">
           <Save className="w-4 h-4 mr-2" />
           Save
         </Button>
       </div>
 
+      {serverChanged && <div role="alert" className="rounded border p-3 space-y-2">
+        <p>This module changed on the server. Your local draft has been kept. Reload to discard it, or keep your draft to save over the server version.</p>
+        <Button variant="secondary" onClick={reloadServer}>Reload server version</Button>{' '}
+        <Button variant="secondary" onClick={() => setAcceptedModule(existingModule!)}>Keep my draft</Button>
+      </div>}
       {/* Module Title */}
       <Input
         id="module-title"

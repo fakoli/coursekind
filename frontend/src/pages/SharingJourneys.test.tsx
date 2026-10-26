@@ -182,3 +182,18 @@ it('persists path collections in a validated URL across reload and return naviga
   renderJourney(<LearningPaths />, '/paths?tab=invalid', '/paths');
   expect(await screen.findByRole('button', { name: 'My Paths' })).toHaveAttribute('aria-pressed', 'true');
 });
+
+it('lets an owner explicitly follow and unfollow their own plan independently of author controls', async () => {
+  const state = fixture();
+  renderJourney(<LearningPathDetail />, '/paths/p1', '/paths/:pathId');
+  fireEvent.click(await screen.findByRole('button', {name:'Follow path'}));
+  await screen.findByRole('button', {name:'Unfollow'});
+  expect(screen.getByRole('button', {name:'Edit'})).toBeInTheDocument();
+  expect(state.path.owner_id).toBe('u1');
+  cleanup();
+  renderJourney(<LearningPathDetail />, '/paths/p1', '/paths/:pathId');
+  fireEvent.click(await screen.findByRole('button', {name:'Unfollow'}));
+  await screen.findByRole('button', {name:'Follow path'});
+  expect(state.following).toBe(false);
+  expect(state.path.course_ids).toEqual(['c1','missing']);
+});

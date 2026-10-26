@@ -224,7 +224,7 @@ export function LearningPathDetail() {
             Delete
           </Button>
         </div>}
-        {!isOwner && user && <Button disabled={follow.isPending} onClick={async () => {
+        {user && <Button disabled={follow.isPending} onClick={async () => {
           try { await follow.mutateAsync({ pathId: path.id, following: !data.is_following }); }
           catch { showError('Could not update following. Please try again.'); }
         }}>{data.is_following ? 'Unfollow' : 'Follow path'}</Button>}

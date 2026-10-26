@@ -65,7 +65,10 @@ function StudyModule() {
   const [flashcardFilter, setFlashcardFilter] = useState<FilterType>('all');
   const [localExtraQuestions, setExtraQuizQuestions] = useState<QuizQuestionData[] | null>(null);
   const [localPracticeCode, setLocalPracticeCode] = useState<string | null>(null);
-  const [failedStudyAction, setFailedStudyAction] = useState<{key: string; data: UpdateModuleProgressRequest} | null>(null);
+  const [failedStudyActions, setFailedStudyActions] = useState(new Map<string, UpdateModuleProgressRequest>());
+  const unsavedStudyActions = useRef(new Map<string, UpdateModuleProgressRequest>());
+  const firstFailed = failedStudyActions.entries().next().value;
+  const failedStudyAction = firstFailed ? { key: firstFailed[0], data: firstFailed[1] } : null;
   const [personalSaveError, setPersonalSaveError] = useState(false);
   const personalDraft = useRef<UpdateModuleProgressRequest>({ action: 'save_state' });
   const eventRequests = useRef(new Map<string, UpdateModuleProgressRequest>());
@@ -84,12 +87,14 @@ function StudyModule() {
       request = { ...data, event_id: crypto.randomUUID(), time_spent_seconds: takeStudyTime() };
       eventRequests.current.set(key, request);
     }
+    unsavedStudyActions.current.set(key, request);
     try {
       const result = await mutateProgress({ courseId: courseId!, moduleId: moduleId!, data: request });
-      setFailedStudyAction(previous => previous?.key === key ? null : previous);
+      unsavedStudyActions.current.delete(key);
+      setFailedStudyActions(previous => { const next = new Map(previous); next.delete(key); return next; });
       return result;
     } catch (error) {
-      setFailedStudyAction({ key, data: request });
+      setFailedStudyActions(previous => new Map(previous).set(key, request));
       throw error;
     }
   }, [courseId, moduleId, mutateProgress, takeStudyTime]);
@@ -299,7 +304,7 @@ function StudyModule() {
   const handleQuizAnswer = (questionIndex: number, answerIndex: number) => {
     if (!quizSubmitted && !quizSubmissionPending) {
       eventRequests.current.delete('quiz');
-      setFailedStudyAction(previous => previous?.key === 'quiz' ? null : previous);
+      // Keep failed attempts and their original answers available until acknowledged.
       setQuizAnswers({ ...quizAnswers, [questionIndex]: answerIndex });
     }
   };
@@ -348,6 +353,9 @@ function StudyModule() {
     try {
       if (activeTab === 'flashcards') await trackFlashcardReview();
       await Promise.all(pendingFlashcardReviews.current.values());
+      for (const [key, request] of [...unsavedStudyActions.current]) {
+        if (key !== 'complete') await saveAction(key, request);
+      }
       await saveAction('complete', { action: 'complete' });
       navigate(nextModule
         ? `/courses/${courseId}/modules/${nextModule.id}`
@@ -387,7 +395,7 @@ function StudyModule() {
         )}
       </div>
 
-      {failedStudyAction && <div role="alert">A study action has not been saved. <Button disabled={updateProgress.isPending || quizSubmissionPending} onClick={() => { void retryFailedStudySave(); }}>Retry study save</Button></div>}
+      {failedStudyAction && <div role="alert">{failedStudyActions.size} study action(s) have not been saved. <Button disabled={updateProgress.isPending || quizSubmissionPending} onClick={() => { void retryFailedStudySave(); }}>Retry study save</Button></div>}
       {personalSaveError && <div role="alert">Could not save your personal changes. <Button onClick={() => savePersonal(personalDraft.current)}>Retry save</Button></div>}
       {personalError && <p role="alert">Could not load saved study state. Reload before editing your personal practice.</p>}
       {personal?.quiz_attempts ? <p>Saved quiz attempts: {personal.quiz_attempts} · Latest score: {personal.quiz_score}%</p> : null}

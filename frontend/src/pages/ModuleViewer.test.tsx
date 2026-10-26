@@ -201,3 +201,36 @@ it('opens cards-only lessons on cards and never offers empty-content credit', as
   expect(screen.queryByRole('button', { name: 'Mark content read' })).not.toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Flip flashcard' })).toBeInTheDocument();
 });
+
+it('retains earlier failed encounters after a later success and retries original event IDs before Finish', async () => {
+  const module = makeModule();
+  module.flashcards[0].id = 'first'; module.flashcards[1].id = 'second';
+  const state = installJourneyApi([module]);
+  const original = fetch;
+  let denyFirst = true;
+  const attempts: Record<string, unknown>[] = [];
+  vi.stubGlobal('fetch', (input: string, init?: RequestInit) => {
+    const body = init?.body ? JSON.parse(String(init.body)) : {};
+    if (body.action === 'review_flashcard') {
+      attempts.push(body);
+      if (body.flashcard_id === 'first' && denyFirst) return Promise.resolve(new Response(JSON.stringify({detail:'Retry later'}), {status:503}));
+    }
+    return original(input, init);
+  });
+  renderJourney(<ModuleViewer />, '/courses/c1/modules/m1', '/courses/:courseId/modules/:moduleId');
+  fireEvent.click(await screen.findByRole('button', { name: 'Flashcards (2)' }));
+  fireEvent.click(screen.getByText('First question'));
+  await screen.findByRole('button', {name:'Retry study save'});
+  fireEvent.click(screen.getByRole('button', { name: 'Next flashcard' }));
+  await waitFor(() => expect(attempts.filter(a=>a.flashcard_id === 'first')).toHaveLength(2));
+  fireEvent.click(screen.getByText('Last question'));
+  await waitFor(() => expect(state.progress.get('m1')?.reviews).toBe(1));
+  fireEvent.click(screen.getByRole('button', {name:'Finish'}));
+  await screen.findByText('Could not save your progress. Please try again.');
+  expect(state.progress.get('m1')?.completed).not.toBe(true);
+  denyFirst = false;
+  fireEvent.click(screen.getByRole('button', {name:'Finish'}));
+  await screen.findByText('Course saved');
+  expect(state.progress.get('m1')?.reviews).toBe(2);
+  expect(new Set(attempts.filter(a=>a.flashcard_id === 'first').map(a=>a.event_id)).size).toBe(1);
+});
