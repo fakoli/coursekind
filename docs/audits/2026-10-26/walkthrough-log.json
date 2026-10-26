@@ -425,5 +425,27 @@
     "duration_ms": 19114,
     "evidence": "43-session-outage-retry-gate.png",
     "notes": "StoppeddisposableAPI,reloadedSettings: onlyverificationerror/Retry/Signout visible,noprivatecontent. RestartAPI→Retry restoresAuthorSettings withoutreenteringcredentials. ExpiredJWT/401coveredfocusedtests."
+  },
+  {
+    "journey": "AUTH-01",
+    "scenario": "Account-created recovery after failed automatic sign-in",
+    "status": "pass",
+    "duration_ms": 16858,
+    "evidence": "45-registration-recovery-fixed.png",
+    "notes": "Successfulregistration+injectedloginautomaticfailure showsaccountcreatedmessage andonlySigninlink(noresubmit). SigninwithsamecredentialopenscorrectfreshRecoveryVerifieddashboard, zeroactivities/paths/privatecontent. DuplicateemailseparatelyshowedEmailalreadyregistered."
+  },
+  {
+    "journey": "COURSE-03",
+    "status": "pass-subflow",
+    "elapsed_seconds": 28.859,
+    "steps": "Edited disposable unreferenced course title/description/difficulty, saved and reloaded; Delete→Cancel retained it; Delete→confirm removed list card; old direct URL recovers gracefully.",
+    "notes": "Synthetic AAA discovery fixture intentionally deleted after prior sorting checks. Timing includes tool inspection."
+  },
+  {
+    "journey": "SUPPORT-02",
+    "status": "pass-subflow",
+    "elapsed_seconds": 23.676,
+    "steps": "390 CSSpx viewport retest: course cards, pathdetailactions, moduleactivitytabs and editortabs now have documentwidth390/scrollWidth390. Practice click opens exercise; keyboardTab fromQuiz thenSpace opensSandbox. Creation,discovery,pathlist,coursedetail,settings also fit.",
+    "notes": "DOM-backed actual browser geometry and real interactions. IAB screenshot compositor does not reliably reflect device override; not claiming screenshot-based phone visual audit."
   }
 ]
