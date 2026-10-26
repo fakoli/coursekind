@@ -101,5 +101,109 @@
     "outcome": "failed before Task3",
     "wall_seconds": null,
     "notes": "Fresh student follows a shared path but Dashboard still shows only start-learning empty state, no selected-path count or recommendation. Saved screenshot07. No lesson/study actions taken by this account."
+  },
+  {
+    "id": "SHARE-04",
+    "subflow": "Source edit and deletion",
+    "outcome": "completed",
+    "wall_seconds": 34,
+    "notes": "API-created disposable public course/path fixture. UI title edit reflected in student path after reload; cancel deletion retained source; confirmed deletion removed source and left generic unavailable-course placeholder. Student has no author controls."
+  },
+  {
+    "id": "STUDY-05",
+    "subflow": "Real Python worker timeout and recovery",
+    "outcome": "completed",
+    "wall_seconds": null,
+    "execution_times_ms": {
+      "infinite_loop": 5485,
+      "recovery": 483,
+      "isolated_name_error": 487,
+      "changed_output": 484,
+      "syntax_error": 500,
+      "runtime_error": 484
+    },
+    "notes": "Actual browser Pyodide worker: infinite loop stopped at5s execution limit plus startup; fresh run printed5; next run could not see previous_value; changed output only7; syntax/runtime errors visible; reset restored starter; solution reveal/hide worked; starter printedHello afterward. Personal draft/time persistence remains pending Task3 viewer integration."
+  },
+  {
+    "id": "STATS-01",
+    "subflow": "Passive versus meaningful activity",
+    "outcome": "completed",
+    "wall_seconds": 49,
+    "notes": "Fresh student following1path had0sessions/0startedcourses. Content open+reload did not change totals. Mark content read created1session,1in-progresscourse,current/longeststreak1,RecentActivity,0completedmodules. Session/time-boundaryhistoricalcases covered by controlled-clock tests."
+  },
+  {
+    "id": "STUDY-02",
+    "subflow": "Distinct reviews and final card",
+    "outcome": "completed",
+    "wall_seconds": 117,
+    "notes": "Enter and Space flip cards. Re-reviewing first card across reload kept1/2 progress; reviewing final card then leaving without Next card yields2/2. Ratings Hard→Medium→Unhelpful and Easy persisted; filters and empty states behaved correctly."
+  },
+  {
+    "id": "STUDY-03",
+    "subflow": "Ratings and stable card identity",
+    "outcome": "completed",
+    "wall_seconds": null,
+    "notes": "All four ratings and empty filters exercised. Author reordered the deck: ratings followed the same card. Author replaced the rated print card with a new concatenation card: learner had Unrated1/Easy1/Unhelpful0 and distinct review count1/2. Historical events remained separate from current deck completion."
+  },
+  {
+    "id": "STUDY-05",
+    "subflow": "Personal draft and run persistence",
+    "outcome": "completed",
+    "wall_seconds": 40,
+    "notes": "Changed draft without running, immediately switched toContent and reloaded; personal code restored. Run printedSavedstudentdraft and showed1savedrun. Reset restoredstarter afterreload while runhistoryremained1."
+  },
+  {
+    "id": "STUDY-01",
+    "subflow": "Editable embedded JavaScript and recovery",
+    "outcome": "completed",
+    "wall_seconds": null,
+    "execution_times_ms": {
+      "original": 15,
+      "edited": 5,
+      "timeout": 5010,
+      "syntax_error": 10,
+      "runtime_error": 11
+    },
+    "notes": "Original2+3→5; local Editcode2+7→9; infinitewhileloopstopped5s;syntax/runtimeerrorsshown;Resetoriginalcode→5. Sourceauthorcontentunchanged. First browserwaittoolhititsownshorterdeadlinebefore5stimeout; subsequentstateconfirmedcorrectappresult."
+  },
+  {
+    "id": "STUDY-04",
+    "subflow": "Scoring, retry, and saved history",
+    "outcome": "completed",
+    "wall_seconds": 28,
+    "notes": "Submit disabled with an unanswered question. Firstattempt1correct/1wrong→50%with explanations; Retry clearedanswers; keyboardchosen2correct→100%; reloadretained2attemptsandlatestscore100. ExtraAIquestionsvalidatedinTask4cycle separately."
+  },
+  {
+    "id": "STUDY-06",
+    "subflow": "Completion and path summaries",
+    "outcome": "completed",
+    "wall_seconds": 140,
+    "notes": "Next completedfirstmodule andopenedsecond;course50%,followedpathcard/detail25%;Finishcompletedcourse100%. ResumedothercoursefromDashboardandfinishedbothmodules. Reloadretainedselected1/active0/completed1,coursesinprogress0,4modulesweek,1session. EmptyContinueLearningcopyincorrectlysaidneverstarted; fixrequested."
+  },
+  {
+    "id": "STATS-02",
+    "subflow": "Timezone preference validation",
+    "outcome": "completed",
+    "wall_seconds": null,
+    "notes": "OpeningSettingskeptUTCdefault;invalidMars/OlympusrejectedwithIANAexample;America/Los_AngelespersistedreloadandDashboardusedit;restoredUTC. Historicaldayboundaries/longeststreaktestedwithcontrolledclock,notrealelapsedmultidaywaiting."
+  },
+  {
+    "id": "PATH-05",
+    "subflow": "Revocation and retained personal history",
+    "outcome": "completed",
+    "wall_seconds": null,
+    "notes": "Afterfourmodulecompletion,path100%. OwnerchangedAcoursepublic→privatewithoutstudentgrant: Dashboardkept4weeklycompletions/1session/streak1/time2.5m,redactedprivatetitles,andselectedpathbecameactive. Pathdetail50%,1unavailable,genericplaceholderwithoutprivatecounts/title. Namedcoursegrantrestoredpath100%andpersonalprogress."
+  },
+  {
+    "journey": "STATS-03",
+    "status": "pass-subflow",
+    "elapsed_seconds": null,
+    "notes": "Latest Task3 commit: completed selected path shows 1 selected, 0 active, 1 completed, no unfinished courses guidance. No false never-started claim."
+  },
+  {
+    "journey": "MODULE-04",
+    "status": "pass-subflow",
+    "elapsed_seconds": 12.449,
+    "notes": "Remove Sandbox → Save → reload → No Code Sandbox persisted."
   }
 ]

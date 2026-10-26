@@ -18,6 +18,8 @@
 - Keep the current manual authoring and explicit Next/Finish completion semantics.
 - Use disposable storage and synthetic accounts for tests. Never send real notification messages during validation.
 - Default AI is Anvil `llm.primary`; offer other hosted models only when actually available. External provider calls require the current user's key and explicit provider selection.
+- Owner clarification (26 October): Anvil credits are application accounting units for locally hosted AI, intended for future chargebacks and usage limits. They are not money spent on an external inference service. Label units and limits accordingly; distinguish external-provider billing from application accounting.
+- Working BYOK policy: record successful usage without deducting Anvil application credits; the external provider bills the user’s key. Anvil requests retain application-credit limits and success-only exact-once accounting.
 - Working policies D1–D8 are adopted for this baseline as described below, with concrete tests. Whole-course live references; study/reuse permission for recipients, owner-only editing; follow separate from authorship; distinct active path-course reuse; events grouped into sessions after 30 minutes inactivity; rolling seven days; user IANA timezone (UTC default); streak yesterday remains current until today ends; explicit module completion; progress remains tied to stable module IDs.
 - OpenAI/Codex means models available through the OpenAI API with the user's API key. A ChatGPT/Codex subscription is not an API credential. No subscription OAuth integration is implied.
 
