@@ -8,12 +8,13 @@ independent review, final push/PR status and user delivery.
 
 ## Status
 
-**DONE_WITH_CONCERNS for implementation and local verification; overall Task6 is
-not complete while CI browser execution and whole-branch review are pending.**
-No browser was launched locally by this worker. Forty named browser tests were
-collected/typechecked; this is not a browser pass. Initial CI discovered a Node22
-fixture issue, which was repaired and tested on Node22. Browser CI feedback is
-still being collected by the coordinator; subsequent repairs must append here.
+**DONE for Task6 implementation and baseline validation.** All40 browser journeys
+passed without retries on874d00b in CI run40310163615; backend and Node22/24
+frontend test/lint/build jobs also passed. Task6 implementation/specification and
+quality review are approved after round1 fixes, as confirmed by the coordinator.
+Independent whole-branch review and the newly requested Task7 optional subscription
+provider remain pending; this does not mark the full branch released. No browser
+was launched locally by this worker. Earlier checkpoints below are historical.
 
 ## Implementation
 
@@ -223,3 +224,32 @@ Self-review: no production logic changed in this repair wave, no outcome was
 removed or replaced by status-only coverage, and no case skipped/retried. Current
 head still requires browser CI rerun and independent review. Task7 optional
 subscription provider remains outside this task.
+
+
+### Final Task6 baseline verification
+
+Coordinator confirmed CI run40310163615 allgreen on exact implementation head
+`874d00b2533e8e50928f99d109182d38fdb86022`. The downloaded timing artifact,
+measured2026-10-26T10:54:28.008Z, independently contains40 distinct IDs, allpassed,
+retry0 and positive durations. Browser suite execution was6.0minutes; individual
+fixture-plus-test durations total355.220seconds. Backend and both Node22/24
+frontend test/lint/build jobs passed in the same run. Task6 implementation/spec
+and quality reviews are approved after round1 fixes (coordinator confirmation).
+
+Copied `ci-40310163615-timings.json` verbatim into the audit and updated all40
+matrix rows with Passed plus a separate automated-seconds column. Manual70record
+raw/normalized evidence,17null intervals and prior failed-run40307745119 timings
+remain unchanged. These deterministic mocked-provider tests do not certify live
+provider uptime, real notification delivery, physical-device behavior or elapsed
+multi-day use. Existing Ruff/dependency/build warnings remain disclosed.
+
+This final change is documentation-only. No tests were rerun. Validation:
+- Parsed downloaded artifact:40unique IDs,40passed,0retries,allpositive durations.
+- Compared retained JSON bytes with artifact source:identical.
+- Matched all40 table durations/statuses to artifact rows; manual columns retained.
+- `git diff --check`:passed.
+
+Task6 baseline gate is complete. Independent whole-branch review and new Task7
+subscription-provider implementation/verification remain pending before full
+release. Self-review: the green claim is scoped to874d00b, preserves failed-run
+history and separates automated timings from manual subflow observations.
