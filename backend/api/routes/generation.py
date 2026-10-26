@@ -15,14 +15,12 @@ from models.ai_generation import (
     GenerateQuizRequest,
     GenerateQuizResponse,
     GenerateVisualRequest,
-    ModuleGenerationStatus,
     SuggestModulesRequest,
     SuggestModulesResponse,
 )
 from services.ai_generation_service import AIGenerationService
 from services.course_orchestrator import (
     CourseOrchestrator,
-    GenerationOptions,
     get_course_orchestrator,
 )
 
@@ -56,7 +54,7 @@ async def suggest_modules(
     Uses the course's instructions (purpose, audience, objectives) to suggest
     a logical module structure.
 
-    Token cost: 10
+    Anvil application-credit cost (BYOK: 0): 10
     """
     return await service.suggest_modules(user.id, request)
 
@@ -72,7 +70,7 @@ async def generate_module_content(
     Uses the course's instructions and the provided module prompt to generate
     comprehensive learning content.
 
-    Token cost: 25
+    Anvil application-credit cost (BYOK: 0): 25
     """
     return await service.generate_module_content(user.id, request)
 
@@ -88,7 +86,7 @@ async def generate_flashcards(
     Creates flashcards based on the module's markdown content and the
     course's instructions.
 
-    Token cost: 8
+    Anvil application-credit cost (BYOK: 0): 8
     """
     return await service.generate_flashcards(user.id, request)
 
@@ -104,7 +102,7 @@ async def generate_quiz(
     Creates multiple-choice questions based on the module's content
     and existing flashcards.
 
-    Token cost: 10
+    Anvil application-credit cost (BYOK: 0): 10
     """
     return await service.generate_quiz(user.id, request)
 
@@ -115,13 +113,7 @@ async def generate_visual(
     user: CurrentUser,
     service: AIGenerationService = Depends(get_generation_service),
 ) -> GeneratedVisual:
-    """Generate an educational visual using AI image generation.
-
-    Uses nano-banana-pro (Gemini) to create diagrams, illustrations,
-    and other educational visuals.
-
-    Token cost: 5
-    """
+    """Image generation is unavailable until an image output adapter is configured."""
     return await service.generate_visual(user.id, request)
 
 
@@ -131,70 +123,10 @@ async def generate_full_course(
     user: CurrentUser,
     orchestrator: CourseOrchestrator = Depends(get_orchestrator),
 ) -> GenerateFullCourseResponse:
-    """Generate complete course content with parallel execution.
+    """Stage all modules, then atomically save with one debit and replayable result.
 
-    Uses a multi-phase pipeline to generate:
-    1. Module structure (planning phase)
-    2. Module content in parallel (content phase)
-    3. Flashcards and quizzes (enrichment phase)
-    4. Educational visuals (optional, visuals phase)
-    5. Save all content to database (finalization phase)
-
-    Token cost: Variable (depends on module count and options)
-    - Planning: ~10 tokens
-    - Content: ~25 tokens per module
-    - Visuals: ~5 tokens per visual (if enabled)
-
-    Example estimated cost for 8 modules with visuals:
-    10 + (8 × 25) + (8 × 2 × 5) = 290 tokens
-
-    Expected latency reduction: 60-70% compared to sequential generation.
+    Anvil credits: planning 10 when requested, content 25 per module.
+    BYOK records successful usage with zero application-credit debit.
+    Any staging or finalization failure preserves the previous modules and balance.
     """
-    # Build options from request
-    options = GenerationOptions(
-        suggest_modules=request.suggest_modules,
-        module_count=request.module_count,
-        generate_content=request.generate_content,
-        max_concurrent_modules=request.max_concurrent_modules,
-        generate_flashcards=request.generate_flashcards,
-        flashcard_count_per_module=request.flashcard_count_per_module,
-        generate_quiz=request.generate_quiz,
-        quiz_questions_per_module=request.quiz_questions_per_module,
-        generate_visuals=request.generate_visuals,
-        max_visuals_per_module=request.max_visuals_per_module,
-    )
-
-    # Run generation pipeline
-    result = await orchestrator.generate_full_course(
-        user_id=user.id,
-        course_id=request.course_id,
-        options=options,
-        module_suggestions=request.module_suggestions,
-    )
-
-    # Convert to response model
-    module_statuses = [
-        ModuleGenerationStatus(
-            module_id=mr.module_id,
-            title=mr.title,
-            success=mr.success,
-            tokens_used=mr.tokens_used,
-            error=mr.error,
-            flashcard_count=len(mr.flashcards),
-            has_quiz=mr.quiz is not None,
-        )
-        for mr in result.module_results
-    ]
-
-    return GenerateFullCourseResponse(
-        course_id=result.course_id,
-        phase=result.phase.value,
-        modules_generated=result.modules_generated,
-        modules_failed=result.modules_failed,
-        total_tokens_used=result.total_tokens_used,
-        visuals_generated=result.visuals_generated,
-        visuals_failed=result.visuals_failed,
-        module_statuses=module_statuses,
-        error=result.error,
-        duration_seconds=result.duration_seconds,
-    )
+    return await orchestrator.generate_request(user.id, request)

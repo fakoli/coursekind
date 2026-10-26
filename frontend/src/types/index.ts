@@ -549,6 +549,7 @@ export interface Module {
 }
 
 export interface ModuleSummary {
+  objectives?: string[];
   id: string;
   title: string;
   description?: string;
@@ -558,6 +559,7 @@ export interface ModuleSummary {
 }
 
 export interface ModuleCreate {
+  objectives?: string[];
   title: string;
   description?: string;
   order_index: number;

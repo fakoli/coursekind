@@ -73,10 +73,21 @@ export function installJourneyApi(modules: Module[] = []) {
         visibility: 'private', created_at: state.course.created_at, updated_at: state.course.updated_at },
       courses: [{ ...state.course, module_count: state.modules.length }],
     });
+    if (path === '/generate/flashcards') return reply({flashcards:[{front:'Generated question',back:'Generated answer'}],tokens_used:8});
     if (path === '/generate/quiz') return reply({ quiz: { questions: [{ question: 'Extra question?', options: ['Yes', 'No'], correct_index: 0 }] }, tokens_used: 1 });
     if (path === '/generate/suggest-modules') return reply({ suggestions: [{
       title: 'Suggested lesson', description: 'Generated outline', objectives: ['Learn addition'], suggested: true,
     }], tokens_used: 10 });
+    if (path === '/auth/ai-preferences') return reply({provider:'anvil',model:'llm.primary',is_configured:true,credentials:{},accounting:'application_credits',automatic_fallback:false});
+    if (path === '/generate/full-course' && method === 'POST') {
+      const created = body.module_suggestions.map((data: {title:string;description:string;objectives:string[]}, index:number) => ({
+        ...makeModule(`generated-${state.modules.length + index + 1}`), ...data,
+        order_index: (body.replace_existing ? 0 : state.modules.length) + index,
+      }));
+      state.modules = body.replace_existing ? created : [...state.modules, ...created];
+      return reply({total_tokens_used:body.generate_content ? created.length * 25 : 0,
+        module_statuses:created.map((m:Module)=>({module_id:m.id,title:m.title,success:true}))});
+    }
     if (path === '/generate/module-content') return reply({
       content_markdown: '# Generated lesson', flashcards: [], quiz: null,
       suggested_visuals: [], tokens_used: 25,

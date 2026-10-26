@@ -12,6 +12,29 @@ import type {
   SuggestModulesResponse,
 } from '../types';
 
+// Keep an operation ID across a failed network attempt; successful repeats are new work.
+const pending = new Map<string, string>();
+export async function generate<T>(path: string, data: object): Promise<T> {
+  const signature = JSON.stringify([path, data]);
+  const request_id = pending.get(signature) || crypto.randomUUID();
+  if (pending.size > 100) pending.clear();
+  pending.set(signature, request_id);
+  const result = await api.post<T>(path, {...data, request_id});
+  pending.delete(signature);
+  return result;
+}
+
+export interface FullCourseInput {
+  course_id: string; module_suggestions: import('../types').ModuleSuggestion[];
+  suggest_modules: boolean; generate_content: boolean; generate_flashcards: boolean;
+  flashcard_count_per_module: number; generate_quiz: boolean; quiz_questions_per_module: number;
+  replace_existing: boolean; expected_module_ids: string[];
+}
+export interface FullCourseResult {
+  total_tokens_used: number;
+  module_statuses: {module_id: string; title: string; success: boolean}[];
+}
+
 /**
  * API client for AI-powered content generation.
  *
@@ -23,6 +46,7 @@ import type {
  * - generateVisual: 5 tokens
  */
 export const generationApi = {
+  generateFullCourse: (request: FullCourseInput) => generate<FullCourseResult>("/generate/full-course", request),
   /**
    * Generate suggested module structure for an AI-enabled course.
    * Uses the course's instructions (purpose, audience, objectives) to suggest
@@ -31,7 +55,7 @@ export const generationApi = {
    * Token cost: 10
    */
   suggestModules: (request: SuggestModulesRequest) =>
-    api.post<SuggestModulesResponse>('/generate/suggest-modules', request),
+    generate<SuggestModulesResponse>('/generate/suggest-modules', request),
 
   /**
    * Generate full module content including markdown, flashcards, and quiz.
@@ -41,7 +65,7 @@ export const generationApi = {
    * Token cost: 25
    */
   generateModuleContent: (request: GenerateModuleContentRequest) =>
-    api.post<GeneratedModuleContent>('/generate/module-content', request),
+    generate<GeneratedModuleContent>('/generate/module-content', request),
 
   /**
    * Generate flashcards from existing module content.
@@ -51,7 +75,7 @@ export const generationApi = {
    * Token cost: 8
    */
   generateFlashcards: (request: GenerateFlashcardsRequest) =>
-    api.post<GenerateFlashcardsResponse>('/generate/flashcards', request),
+    generate<GenerateFlashcardsResponse>('/generate/flashcards', request),
 
   /**
    * Generate a quiz from existing module content.
@@ -61,7 +85,7 @@ export const generationApi = {
    * Token cost: 10
    */
   generateQuiz: (request: GenerateQuizRequest) =>
-    api.post<GenerateQuizResponse>('/generate/quiz', request),
+    generate<GenerateQuizResponse>('/generate/quiz', request),
 
   /**
    * Generate an educational visual using AI image generation.
@@ -71,5 +95,5 @@ export const generationApi = {
    * Token cost: 5
    */
   generateVisual: (request: GenerateVisualRequest) =>
-    api.post<GeneratedVisual>('/generate/visual', request),
+    generate<GeneratedVisual>('/generate/visual', request),
 };

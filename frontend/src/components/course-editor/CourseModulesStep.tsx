@@ -1,3 +1,4 @@
+import { GenerationCost } from '../common/GenerationCost';
 import {
   Plus,
   Trash2,
@@ -134,7 +135,7 @@ export function CourseModulesStep({
                   Generate Suggestions
                 </Button>
               )}
-              <p className="text-xs text-amber-600 mt-2">Cost: ~10 tokens</p>
+              <p className="text-xs text-amber-600 mt-2"><GenerationCost amount={10} /></p>
             </div>
           </div>
         </div>

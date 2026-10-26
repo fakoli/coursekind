@@ -1,3 +1,4 @@
+import { GenerationCost } from '../common/GenerationCost';
 import { Plus, Trash2, Loader2 } from 'lucide-react';
 import { Modal } from '../common/Modal';
 import { Button } from '../common/Button';
@@ -41,7 +42,7 @@ export function ModuleSuggestionModal({
   onConfirm,
 }: ModuleSuggestionModalProps) {
   const hasExistingModules = existingModules && existingModules.length > 0;
-  const estimatedTokens = selectedIndices.size * GENERATION_COSTS.MODULE_CONTENT;
+  const estimatedTokens = options.generateContent ? selectedIndices.size * GENERATION_COSTS.MODULE_CONTENT : 0;
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="AI Module Suggestions" size="lg">
@@ -144,7 +145,7 @@ export function ModuleSuggestionModal({
                     Generate content for modules
                   </span>
                 </label>
-                <span className="text-xs text-gray-500">~{estimatedTokens} tokens</span>
+                <span className="text-xs text-gray-500"><GenerationCost amount={estimatedTokens} /></span>
               </div>
 
               {options.generateContent && (
@@ -217,7 +218,7 @@ export function ModuleSuggestionModal({
                       <Plus className="w-4 h-4 mr-1" />
                       Create {selectedIndices.size} Module
                       {selectedIndices.size !== 1 ? 's' : ''}
-                      {options.generateContent && ` (~${estimatedTokens} tokens)`}
+                      {options.generateContent && <> (<GenerationCost amount={estimatedTokens} />)</>}
                     </>
                   )}
                 </Button>

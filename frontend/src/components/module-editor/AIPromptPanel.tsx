@@ -1,3 +1,4 @@
+import { GenerationCost } from '../common/GenerationCost';
 import { useState } from 'react';
 import { Sparkles, ChevronDown, ChevronUp } from 'lucide-react';
 import { Card, CardContent } from '../common/Card';
@@ -130,7 +131,7 @@ export function AIPromptPanel({
                 </Button>
               </div>
               <p className="text-xs text-amber-600">
-                Cost: ~25 tokens. This will generate content, flashcards, and quiz.
+                <GenerationCost amount={25} />. Generates content, flashcards, and quiz.
               </p>
             </div>
           </div>

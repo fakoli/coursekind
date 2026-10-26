@@ -314,11 +314,13 @@ export function ModuleEditor() {
       <ConfirmModal
         isOpen={showReplaceConfirm}
         onClose={() => {
-          handleAppendFlashcards();
+          setPendingFlashcards([]);
+          setShowReplaceConfirm(false);
         }}
         onConfirm={handleConfirmReplaceFlashcards}
+        onSecondaryAction={handleAppendFlashcards}
         title="Replace Flashcards?"
-        message="Do you want to replace existing flashcards with the newly generated ones? Click Cancel to append them instead."
+        message="Choose Append to keep existing cards or Replace to use only the generated cards. Close this dialog to discard the generated cards."
         confirmLabel="Replace"
         cancelLabel="Append"
         variant="default"

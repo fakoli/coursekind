@@ -1,142 +1,59 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
+import { vi, it, expect, beforeEach } from 'vitest';
 import { useModuleSuggestions } from './useModuleSuggestions';
-import { useSuggestModules, useGenerateModuleContent } from './useGeneration';
-import { useBatchCreateModules } from './useModules';
-import { modulesApi } from '../api/modules';
-import { ToastContext, type ToastContextValue } from '../components/common/ToastProvider';
-
-vi.mock('../api/modules', () => ({
-  modulesApi: { create: vi.fn(), batchCreate: vi.fn(), delete: vi.fn() },
-}));
-vi.mock('../hooks/useGeneration', () => ({
-  useSuggestModules: vi.fn(),
-  useGenerateModuleContent: vi.fn(),
-}));
-vi.mock('../hooks/useModules', () => ({
-  useBatchCreateModules: vi.fn(),
-  useDeleteModule: vi.fn(() => ({ mutateAsync: vi.fn() })),
-}));
-vi.mock('../utils/errors', () => ({
-  isInsufficientTokensError: vi.fn(() => false),
-}));
-
-const mockModulesApi = vi.mocked(modulesApi);
-
-function makeToast(): ToastContextValue & { errorSpy: ReturnType<typeof vi.fn>; successSpy: ReturnType<typeof vi.fn> } {
-  const errorSpy = vi.fn();
-  const successSpy = vi.fn();
-  return { toast: vi.fn(), success: successSpy, error: errorSpy, info: vi.fn(), errorSpy, successSpy };
+import { generationApi } from '../api/generation';
+const mocks = vi.hoisted(()=>({success:vi.fn(),error:vi.fn(),suggest:vi.fn()}));
+vi.mock('./useToast',()=>({useToast:()=>mocks}));
+vi.mock('./useGeneration',()=>({useSuggestModules:()=>({isPending:false,mutateAsync:mocks.suggest})}));
+vi.mock('../api/generation',()=>({generationApi:{generateFullCourse:vi.fn()}}));
+const suggestion = {title:'New',description:'Retained description',objectives:['Retained objective']};
+function setup() {
+  const client = new QueryClient({defaultOptions:{queries:{retry:false}}});
+  return renderHook(()=>useModuleSuggestions(),{wrapper:({children}:{children:ReactNode})=><QueryClientProvider client={client}>{children}</QueryClientProvider>});
 }
+beforeEach(()=>{
+  vi.clearAllMocks();
+  mocks.suggest.mockResolvedValue({tokens_used:10,suggestions:[suggestion]});
+});
 
-function makeWrapper(toastValue: ToastContextValue) {
-  const qc = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
-  return {
-    qc,
-    wrapper: ({ children }: { children: ReactNode }) => (
-      <QueryClientProvider client={qc}>
-        <ToastContext.Provider value={toastValue}>{children}</ToastContext.Provider>
-      </QueryClientProvider>
-    ),
-  };
-}
+it('keeps prior modules and drafts on replacement failure; retry sends metadata atomically',async()=>{
+  const {result} = setup();
+  await act(async()=>result.current.fetchSuggestions('course',true));
+  act(()=>result.current.setMode('replace'));
+  const saved = [{id:'old',title:'Old',order_index:0,flashcard_count:0,has_quiz:false}];
+  const drafts = [{id:'draft',title:'Unsaved',description:'Keep this'}];
+  const done = vi.fn();
+  vi.mocked(generationApi.generateFullCourse).mockRejectedValueOnce(new Error('Provider unavailable'));
+  await act(async()=>result.current.confirmSuggestions('course',saved,drafts,done));
+  expect(done).not.toHaveBeenCalled();
+  expect(result.current.isOpen).toBe(true);
+  expect(drafts[0].description).toBe('Keep this');
+  expect(mocks.error).toHaveBeenCalledWith('Provider unavailable');
+  expect(generationApi.generateFullCourse).toHaveBeenCalledWith(expect.objectContaining({replace_existing:true,expected_module_ids:['old'],module_suggestions:[suggestion]}));
+  vi.mocked(generationApi.generateFullCourse).mockResolvedValueOnce({total_tokens_used:25,module_statuses:[{module_id:'new',title:'New',success:true}]});
+  await act(async()=>result.current.confirmSuggestions('course',saved,drafts,done));
+  expect(done).toHaveBeenCalledWith([{id:'new',title:'New',description:'Retained description'}],true);
+  expect(result.current.isOpen).toBe(false);
+});
 
-describe('useModuleSuggestions error paths', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    // Default: suggestions succeed with one module suggestion.
-    vi.mocked(useSuggestModules).mockReturnValue({
-      mutateAsync: vi
-        .fn()
-        .mockResolvedValue({
-          suggestions: [{ title: 'M1', description: 'd', objectives: ['o'] }],
-          tokens_used: 10,
-        }),
-      isPending: false,
-      data: undefined,
-    } as never);
-    vi.mocked(useGenerateModuleContent).mockReturnValue({
-      mutateAsync: vi.fn().mockResolvedValue({
-        content_markdown: '# M1',
-        flashcards: [],
-        quiz: undefined,
-      }),
-    } as never);
-    // Per-module create used by the generateContent path.
-    mockModulesApi.create.mockResolvedValue({ id: 'm1', title: 'M1' } as never);
-  });
+it('shows sanitized outline failure and leaves dialog closed',async()=>{
+  mocks.suggest.mockRejectedValueOnce(new Error('anvil request failed (HTTP 503)'));
+  const {result} = setup();
+  await act(async()=>result.current.fetchSuggestions('course',false));
+  expect(mocks.error).toHaveBeenCalledWith('anvil request failed (HTTP 503)');
+  expect(result.current.isOpen).toBe(false);
+});
 
-  it('fetchSuggestions shows an error toast when suggestModules fails', async () => {
-    const toast = makeToast();
-    const { wrapper } = makeWrapper(toast);
-    vi.mocked(useSuggestModules).mockReturnValue({
-      mutateAsync: vi.fn().mockRejectedValue(new Error('backend down')),
-      isPending: false,
-      data: undefined,
-    } as never);
-
-    const { result } = renderHook(() => useModuleSuggestions(), { wrapper });
-    await act(async () => {
-      await result.current.fetchSuggestions('c1', false);
-    });
-
-    expect(toast.errorSpy).toHaveBeenCalledWith(
-      'Failed to generate module suggestions. Please try again.',
-    );
-    expect(result.current.isOpen).toBe(false); // no suggestions -> modal stays closed
-  });
-
-  it('confirmSuggestions with generateContent=false creates modules via batch and shows success toast', async () => {
-    const toast = makeToast();
-    const { wrapper } = makeWrapper(toast);
-    vi.mocked(useBatchCreateModules).mockReturnValue({
-      mutateAsync: vi.fn().mockResolvedValue({ created: [{ id: 'm1', title: 'M1' }], count: 1 }),
-    } as never);
-
-    const { result } = renderHook(() => useModuleSuggestions(), { wrapper });
-    // openModal is internal; fetchSuggestions (which calls it) populates the
-    // modal with suggestions.
-    vi.mocked(useSuggestModules).mockReturnValue({
-      mutateAsync: vi.fn().mockResolvedValue({ suggestions: [{ title: 'M1', description: 'd', objectives: ['o'] }], tokens_used: 10 }),
-      isPending: false,
-      data: undefined,
-    } as never);
-    await act(async () => {
-      await result.current.fetchSuggestions('c1', false);
-    });
-    expect(result.current.isOpen).toBe(true); // modal opened with the suggestion
-    expect(result.current.suggestions.length).toBe(1);
-    // generateContent defaults to true — flip it to exercise the batch path.
-    await act(async () => {
-      result.current.updateOptions({ generateContent: false });
-    });
-    await act(async () => {
-      await result.current.confirmSuggestions('c1', [], [], () => {});
-    });
-
-    // The hook routes through useBatchCreateModules' mutateAsync (mocked),
-    // not modulesApi.batchCreate directly, so assert on the success toast.
-    expect(mockModulesApi.batchCreate).not.toHaveBeenCalled();
-    expect(toast.successSpy).toHaveBeenCalledWith('Created 1 modules!');
-  });
-
-  it('confirmSuggestions shows the generic failure toast when no modules can be created', async () => {
-    const toast = makeToast();
-    const { wrapper } = makeWrapper(toast);
-    vi.mocked(useGenerateModuleContent).mockReturnValue({
-      mutateAsync: vi.fn().mockRejectedValue(new Error('gen failed')),
-    } as never);
-
-    const { result } = renderHook(() => useModuleSuggestions(), { wrapper });
-    await act(async () => {
-      await result.current.fetchSuggestions('c1', false); // uses beforeEach default
-    });
-    await act(async () => {
-      await result.current.confirmSuggestions('c1', [], [], () => {});
-    });
-
-    expect(toast.errorSpy).toHaveBeenCalledWith('Failed to create any modules. Please try again.');
-  });
+it('creates outline-only suggestions atomically with metadata and zero credits',async()=>{
+  const {result} = setup();
+  await act(async()=>result.current.fetchSuggestions('course',false));
+  act(()=>result.current.updateOptions({generateContent:false}));
+  vi.mocked(generationApi.generateFullCourse).mockResolvedValueOnce({total_tokens_used:0,module_statuses:[{module_id:'new',title:'New',success:true}]});
+  const done = vi.fn();
+  await act(async()=>result.current.confirmSuggestions('course',[],[],done));
+  expect(generationApi.generateFullCourse).toHaveBeenCalledWith(expect.objectContaining({generate_content:false,replace_existing:false,module_suggestions:[suggestion]}));
+  expect(mocks.success).toHaveBeenCalledWith('Created 1 modules. Used 0 application credits.');
+  expect(done).toHaveBeenCalledWith([{id:'new',title:'New',description:'Retained description'}],false);
 });

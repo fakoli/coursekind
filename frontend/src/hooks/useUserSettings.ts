@@ -11,3 +11,7 @@ export function useAIConnection() {
 }
 
 export type { AIConnectionStatus };
+
+export function useAIPreferences(userId?: string) {
+  return useQuery({queryKey:['ai-preferences',userId],queryFn:userSettingsApi.getPreferences,retry:false});
+}

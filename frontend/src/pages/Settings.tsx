@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader } from '../components/common/Card';
 import { Button } from '../components/common/Button';
 import { Input } from '../components/common/Input';
 import { useNotificationPreferences, useUpdateNotificationPreferences, useTestEmail, useTestSms } from '../hooks/useNotifications';
-import { useAIConnection } from '../hooks/useUserSettings';
+import { AIPreferences } from '../components/common/AIPreferences';
 
 export function Settings() {
   const { user, logout } = useAuthContext();
@@ -14,12 +14,10 @@ export function Settings() {
   const testEmail = useTestEmail();
   const testSms = useTestSms();
 
-  // Anvil AI connection status (server-side router)
-  const { data: aiConnection, isLoading: aiLoading } = useAIConnection();
 
   const [phoneNumber, setPhoneNumber] = useState('');
 
-  const isLoading = prefsLoading || aiLoading;
+  const isLoading = prefsLoading;
 
   if (isLoading) {
     return (
@@ -28,12 +26,6 @@ export function Settings() {
       </div>
     );
   }
-
-  const aiStatus = aiConnection
-    ? aiConnection.is_configured && aiConnection.is_reachable
-      ? { label: 'Connected', ok: true }
-      : { label: aiConnection.is_configured ? 'Unreachable' : 'Not configured', ok: false }
-    : { label: 'Unknown', ok: false };
 
   return (
     <div className="space-y-6">
@@ -53,44 +45,15 @@ export function Settings() {
             <p className="mt-1 text-gray-900">{user?.email}</p>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Token Balance</label>
-            <p className="mt-1 text-gray-900">{user?.token_balance} tokens</p>
+            <label className="block text-sm font-medium text-gray-700">Application Credits</label>
+            <p className="mt-1 text-gray-900">{user?.token_balance} credits</p>
           </div>
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <h3 className="font-medium text-gray-900">AI Assistant</h3>
-          <p className="text-sm text-gray-600 mt-1">
-            AI features run on a shared self-hosted router. No API keys required.
-          </p>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-            <div>
-              <p className="font-semibold text-gray-900">Anvil Router</p>
-              <p className="text-sm text-gray-600">
-                {aiConnection?.model ? `Model: ${aiConnection.model}` : 'AI content generation'}
-              </p>
-            </div>
-            <span
-              className={`text-xs font-medium px-2.5 py-1 rounded-full ${
-                aiStatus.ok ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-              }`}
-            >
-              {aiStatus.label}
-            </span>
-          </div>
-          {!aiStatus.ok && aiConnection?.message && (
-            <div className="p-3 rounded-lg text-sm bg-red-50 text-red-800">
-              {aiConnection.message}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <AIPreferences key={`ai-${user?.id}`} userId={user?.id} />
 
-      <TimezoneSettings key={user?.id} />
+      <TimezoneSettings key={`timezone-${user?.id}`} />
       <Card>
         <CardHeader>
           <h3 className="font-medium text-gray-900">Notifications</h3>

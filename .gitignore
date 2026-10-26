@@ -99,3 +99,6 @@ backend/.pytest_cache/
 */CLAUDE.md
 !CLAUDE.md
 graphify-out/
+
+# Protected local credential encryption key
+.ai-credentials.key

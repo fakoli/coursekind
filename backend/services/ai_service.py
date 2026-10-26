@@ -1,29 +1,36 @@
-from pydantic import BaseModel
+from functools import wraps
+
+from pydantic import BaseModel, Field
 
 from config import Settings
-from exceptions import InsufficientTokensException
-from services.anvil_client import get_anvil_client
+from exceptions import AIServiceException
+from services.ai_provider import ProviderClient
 from services.auth_service import AuthService
+from services.generation_operation import GenerationOperation, active_provider
 from storage.base import StorageBackend
 
 
-class ExplainRequest(BaseModel):
+class CoachingRequest(BaseModel):
+    request_id: str | None = Field(default=None, min_length=1, max_length=128)
+
+
+class ExplainRequest(CoachingRequest):
     concept: str
     context: str | None = None
 
 
-class HintRequest(BaseModel):
+class HintRequest(CoachingRequest):
     question: str
     current_answer: str | None = None
     hint_level: int = 1
 
 
-class ExamplesRequest(BaseModel):
+class ExamplesRequest(CoachingRequest):
     concept: str
     num_examples: int = 3
 
 
-class SimplifyRequest(BaseModel):
+class SimplifyRequest(CoachingRequest):
     content: str
 
 
@@ -32,47 +39,45 @@ class AIResponse(BaseModel):
     tokens_used: int
 
 
+def accounted(operation, cost):
+    def decorate(method):
+        @wraps(method)
+        async def wrapped(self, user_id, request):
+            return await GenerationOperation(self.storage, self.settings).run(
+                user_id,
+                operation,
+                request,
+                cost,
+                AIResponse,
+                lambda: method(self, user_id, request),
+            )
+
+        return wrapped
+
+    return decorate
+
+
 class AIService:
     def __init__(self, storage: StorageBackend, settings: Settings):
         self.storage = storage
         self.settings = settings
         self.auth_service = AuthService(storage, settings)
 
-    async def _check_token_balance(self, user_id: str, amount: int) -> None:
-        """Check if user has sufficient tokens (does not consume).
-
-        Raises:
-            InsufficientTokensException: If user doesn't have enough tokens.
-        """
-        balance = await self.auth_service.get_token_balance(user_id)
-        if balance < amount:
-            raise InsufficientTokensException(
-                f"Insufficient tokens. Required: {amount}, Available: {balance}"
-            )
-
-    async def _consume_tokens(self, user_id: str, amount: int) -> None:
-        """Consume tokens after successful AI operation."""
-        await self.auth_service.consume_tokens(user_id, amount)
-
     async def _call_ai(self, prompt: str, system_prompt: str | None = None) -> str:
-        """Call the Anvil router for text generation.
-
-        Raises:
-            AIServiceException: If the router is not configured or the call fails.
-        """
-        client = get_anvil_client(self.settings)
-        return await client.complete(
-            prompt,
-            system_prompt=system_prompt
-            or "You are a helpful study assistant. Be concise and educational.",
-            # Leave room for reasoning as well as the learner-facing answer.
-            max_tokens=4096,
+        provider = ProviderClient(self.settings)
+        snapshot = active_provider.get()
+        if snapshot.model not in await provider.models(snapshot):
+            raise AIServiceException(
+                "Selected model is unavailable. Choose another model in Settings."
+            )
+        return await provider.complete(
+            snapshot, prompt, system_prompt or "You are a helpful study assistant.", 4096
         )
 
+    @accounted("explain", 5)
     async def explain(self, user_id: str, request: ExplainRequest) -> AIResponse:
         """Explain a concept."""
         tokens_cost = 5
-        await self._check_token_balance(user_id, tokens_cost)
 
         prompt = f"Explain the following concept clearly and concisely:\n\n{request.concept}"
         if request.context:
@@ -86,19 +91,20 @@ class AIService:
 
         # Call AI first - only consume tokens on success
         content = await self._call_ai(prompt, system)
-        await self._consume_tokens(user_id, tokens_cost)
+        if not isinstance(content, str) or not content.strip():
+            raise AIServiceException("Provider returned empty output")
 
         return AIResponse(content=content, tokens_used=tokens_cost)
 
+    @accounted("hint", 3)
     async def hint(self, user_id: str, request: HintRequest) -> AIResponse:
         """Provide a progressive hint."""
         tokens_cost = 3
-        await self._check_token_balance(user_id, tokens_cost)
 
         hint_instructions = {
-            1: "Give a very subtle hint without revealing the answer. Just point in the right direction.",
-            2: "Give a moderate hint that narrows down the possibilities but doesn't give away the answer.",
-            3: "Give a strong hint that almost reveals the answer but still requires some thinking.",
+            1: "Give a subtle hint without revealing the answer.",
+            2: "Give a moderate hint that narrows down the possibilities.",
+            3: "Give a strong hint that still requires some thinking.",
         }
 
         level = min(max(request.hint_level, 1), 3)
@@ -114,14 +120,15 @@ class AIService:
 
         # Call AI first - only consume tokens on success
         content = await self._call_ai(prompt, system)
-        await self._consume_tokens(user_id, tokens_cost)
+        if not isinstance(content, str) or not content.strip():
+            raise AIServiceException("Provider returned empty output")
 
         return AIResponse(content=content, tokens_used=tokens_cost)
 
+    @accounted("examples", 5)
     async def examples(self, user_id: str, request: ExamplesRequest) -> AIResponse:
         """Generate examples for a concept."""
         tokens_cost = 5
-        await self._check_token_balance(user_id, tokens_cost)
 
         prompt = (
             f"Generate {request.num_examples} clear, practical examples "
@@ -136,14 +143,15 @@ class AIService:
 
         # Call AI first - only consume tokens on success
         content = await self._call_ai(prompt, system)
-        await self._consume_tokens(user_id, tokens_cost)
+        if not isinstance(content, str) or not content.strip():
+            raise AIServiceException("Provider returned empty output")
 
         return AIResponse(content=content, tokens_used=tokens_cost)
 
+    @accounted("simplify", 4)
     async def simplify(self, user_id: str, request: SimplifyRequest) -> AIResponse:
         """Simplify complex content."""
         tokens_cost = 4
-        await self._check_token_balance(user_id, tokens_cost)
 
         prompt = (
             f"Simplify the following content for a beginner learner:\n\n{request.content}\n\n"
@@ -157,6 +165,7 @@ class AIService:
 
         # Call AI first - only consume tokens on success
         content = await self._call_ai(prompt, system)
-        await self._consume_tokens(user_id, tokens_cost)
+        if not isinstance(content, str) or not content.strip():
+            raise AIServiceException("Provider returned empty output")
 
         return AIResponse(content=content, tokens_used=tokens_cost)

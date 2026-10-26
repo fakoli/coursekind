@@ -484,6 +484,7 @@ class CourseService(BaseService):
                     id=module_data["id"],
                     title=module_data["title"],
                     description=module_data.get("description", ""),
+                    objectives=module_data.get("objectives", []),
                     order_index=module_data.get("order_index", 0),
                     flashcard_count=len(flashcards) if flashcards else 0,
                     has_quiz=quiz is not None and len(quiz.get("questions", [])) > 0,
