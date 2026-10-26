@@ -3,6 +3,7 @@ import { useEffect, useRef, useState, useMemo } from 'react';
 import ReactMarkdown, { type Components } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
+import rehypeSanitize from 'rehype-sanitize';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import mermaid from 'mermaid';
@@ -21,7 +22,11 @@ interface MarkdownRendererProps {
 mermaid.initialize({
   startOnLoad: false,
   theme: 'default',
-  securityLevel: 'loose',
+  // Shared authored diagrams must not enable callbacks, raw HTML or unsafe URLs.
+  securityLevel: 'strict',
+  htmlLabels: false,
+  secure: ['secure', 'securityLevel', 'startOnLoad', 'maxTextSize', 'maxEdges',
+    'suppressErrorRendering', 'dompurifyConfig', 'themeCSS', 'htmlLabels'],
   fontFamily: 'inherit',
 });
 
@@ -209,7 +214,7 @@ export function MarkdownRenderer({ content, className = '', enableRunnable = fal
     <div className={`prose prose-indigo max-w-none ${className}`}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
-        rehypePlugins={[rehypeRaw]}
+        rehypePlugins={[rehypeRaw, rehypeSanitize]}
         components={components}
       >
         {content}

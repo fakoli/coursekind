@@ -29,7 +29,10 @@ export async function signOut(page: Page) {
 export async function readLesson(page: Page, course: Course, lesson: Lesson) {
   await page.goto(`/courses/${course.id}/modules/${lesson.id}`);
   await expect(page.getByRole('heading', { name: lesson.title, exact: true })).toBeVisible();
+  const saved = page.waitForResponse(response => response.url().includes('/progress/modules/')
+    && response.request().method() === 'POST' && response.request().postData()?.includes('read_content') === true);
   await page.getByRole('button', { name: /Mark content read|Content read — study again/ }).click();
+  expect((await saved).ok()).toBeTruthy();
   await expect(page.getByRole('button', { name: 'Content read — study again' })).toBeVisible();
 }
 export async function saveModule(page: Page) {

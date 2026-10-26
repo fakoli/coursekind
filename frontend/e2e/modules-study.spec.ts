@@ -4,7 +4,7 @@ test('MODULE-01 — edit Markdown, preview, reject empty title and persist learn
   await login(page, world.author);
   const url = `/courses/${world.course.id}/modules/${world.lessons[0].id}`;
   await page.goto(`${url}/edit`);
-  const markdown = '# Authored lesson\n\n- First item\n- Second item\n\n| A | B |\n| --- | --- |\n| 2 | 3 |\n\n[Example](https://example.com)\n\n```javascript\nconsole.log(5);\n```\n\n```mermaid\nflowchart LR\n  Read --> Practice\n```';
+  const markdown = "# Authored lesson\n\n- First item\n- Second item\n\n| A | B |\n| --- | --- |\n| 2 | 3 |\n\n[Example](https://example.com)\n\n<a href=\"javascript:alert(1)\" onclick=\"alert(1)\">Unsafe link</a>\n<iframe srcdoc=\"<script>alert(1)</script>\"></iframe>\n\n```javascript\nconsole.log(5);\n```\n\n```mermaid\n%%{init: {\"securityLevel\":\"loose\",\"secure\":[]}}%%\nflowchart LR\n  Read --> Practice\n  click Read \"javascript:alert(1)\"\n```";
   await page.getByLabel('Module content Markdown').fill(markdown);
   await expect(page.getByRole('heading', { name: 'Authored lesson' })).toBeVisible();
   await page.getByLabel('Module Title').fill('');
@@ -18,6 +18,8 @@ test('MODULE-01 — edit Markdown, preview, reject empty title and persist learn
   await expect(page.getByRole('heading', { name: 'Authored lesson' })).toBeVisible();
   await expect(page.getByRole('table')).toContainText('2');
   await expect(page.locator('svg').filter({ hasText: 'Practice' })).toBeVisible();
+  await expect(page.getByText('Unsafe link', { exact: true })).not.toHaveAttribute('href');
+  await expect(page.locator('main iframe, main script, main [onclick], main svg a[href^="javascript:"]')).toHaveCount(0);
   await page.goto(`${url}/edit`);
   await expect(page.getByLabel('Module content Markdown')).toHaveValue(markdown);
 });
@@ -30,18 +32,18 @@ test('MODULE-02 — add, edit, reorder and remove flashcards with saved learner 
   await page.getByRole('button', { name: 'Add Flashcard', exact: true }).click();
   await page.getByPlaceholder('What is the question?').last().fill('Disposable question');
   await page.getByPlaceholder('What is the answer?').last().fill('Disposable answer');
-  await page.getByRole('button', { name: 'Remove flashcard 3' }).click();
+  await page.getByRole('button', { name: 'Remove flashcard 2' }).click();
   await page.getByPlaceholder('What is the question?').first().fill('Edited first question');
   await page.getByRole('button', { name: 'Move flashcard 2 up' }).click();
   await saveModule(page);
   await page.reload();
   await page.getByRole('button', { name: /^Flashcards/ }).click();
-  await expect(page.getByPlaceholder('What is the question?').first()).toHaveValue('Last question');
+  await expect(page.getByPlaceholder('What is the question?').first()).toHaveValue('Disposable question');
   const saved = await api<Lesson>(request, world.author, `/courses/${world.course.id}/modules/${world.lessons[0].id}`);
-  expect(saved.flashcards.map(c => c.front)).toEqual(['Last question', 'Edited first question']);
+  expect(saved.flashcards.map(c => c.front)).toEqual(['Disposable question', 'Edited first question']);
   await page.goto(url);
   await page.getByRole('button', { name: /^Flashcards/ }).click();
-  await expect(page.getByRole('button', { name: 'Flip flashcard' })).toContainText('Last question');
+  await expect(page.getByRole('button', { name: 'Flip flashcard' })).toContainText('Disposable question');
 });
 
 test('MODULE-03 — edit quiz options and answer key then verify learner scoring', async ({ page, world }) => {

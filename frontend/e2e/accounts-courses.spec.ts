@@ -83,16 +83,19 @@ test('COURSE-02 — rename, reorder, remove and add outlines without losing acti
   await page.getByRole('button', { name: 'Next', exact: true }).click();
   await page.getByPlaceholder('Module title').first().fill('Renamed Variables');
   await page.getByRole('button', { name: 'Move module 2 up' }).click();
+  await page.getByRole('button', { name: 'Remove module 1' }).click();
   await page.getByRole('button', { name: 'Add Module', exact: true }).click();
-  await page.getByRole('button', { name: 'Remove module 3' }).click();
+  await page.getByPlaceholder('Module title').last().fill('Added outline');
   await page.getByRole('button', { name: 'Save Changes' }).click();
   await expect(page.getByRole('heading', { name: world.course.title })).toBeVisible();
   await page.reload();
-  await expect(page.getByRole('button', { name: 'Move Functions up' })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Move Renamed Variables up' })).toBeDisabled();
   const saved = await api<Lesson>(request, world.author, `/courses/${world.course.id}/modules/${world.lessons[0].id}`);
   expect(saved.title).toBe('Renamed Variables');
   expect(saved.flashcards).toHaveLength(2);
   expect(saved.content_markdown).toBe(world.lessons[0].content_markdown);
+  const outlines = await api<{modules: Lesson[]}>(request, world.author, `/courses/${world.course.id}`);
+  expect(outlines.modules.map(module => module.title)).toEqual(['Renamed Variables', 'Added outline']);
 });
 
 test('COURSE-03 — edit metadata, cancel deletion, then delete and reopen old URL', async ({ page, world }) => {

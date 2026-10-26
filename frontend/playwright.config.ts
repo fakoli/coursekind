@@ -11,6 +11,7 @@ export default defineConfig({
   reporter: [['list'], ['html', { open: 'never' }], ['./e2e/timing-reporter.ts']],
   use: {
     baseURL: 'http://127.0.0.1:4178',
+    actionTimeout: 10_000, navigationTimeout: 15_000,
     trace: 'retain-on-failure', screenshot: 'only-on-failure',
     ...devices['Desktop Chrome'],
   },

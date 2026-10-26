@@ -30,3 +30,10 @@ as the seven-day `browser-journey-evidence` CI artifact. Credentials/tokens in
 these artifacts are synthetic only. Passing the named main scenarios does not
 certify every acceptance branch; see the audit's coverage matrix for companion
 unit/integration regressions and remaining manual/environment limits.
+
+Authored HTML uses a safe allowlist. Script/iframe elements, event handlers,
+inline CSS and unsafe link protocols are removed from rendered output; standard
+Markdown, tables, code and protected images remain supported. Mermaid is fixed
+to strict mode with HTML labels/callbacks disabled and protected security keys;
+diagram directives cannot downgrade it. MODULE-01 checks benign diagram output
+alongside hostile HTML/directive input after save/reload.
