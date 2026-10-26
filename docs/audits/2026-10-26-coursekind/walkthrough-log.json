@@ -98,7 +98,7 @@
     "duration_ms": 6553,
     "provider": "mock OpenAI/gpt-test",
     "commit": "a1e6f33",
-    "notes": "Attempt 3 is ready, updated provider provenance, zero application credits, plan editable; prior Anvil failures retained."
+    "notes": "Attempt3 ready with updated provider provenance, zero application credits, editable plan. Earlier Anvil failures retained in this audit, not a claim of per-attempt history in the current job UI."
   },
   {
     "journey": "WORKSPACE-01",
@@ -128,12 +128,21 @@
     "notes": "Private two-course path has reused original course995b47b1 first and new course second, two modules each, original Baseline Learner attribution; workspace Build only offers owned new modules."
   },
   {
-    "journey": "WORKSPACE-06",
+    "journey": "WORKSPACE-03",
     "scenario": "Partial two-module batch and selected-step recovery",
     "result": "pass",
     "duration_ms": 31166,
     "provider": "mock OpenAI/gpt-test",
     "commit": "a1e6f33",
     "notes": "Injected fourth provider POST failure: first draft remains ready at attempt1; second fails. Explicit Retry step2 preserves first, produces second at attempt2; both review buttons available, no auto-apply."
+  },
+  {
+    "journey": "WORKSPACE-01",
+    "scenario": "Generated content study continuity before revisions",
+    "result": "pass",
+    "duration_ms": 95423,
+    "provider": "mock OpenAI/gpt-test",
+    "commit": "a1e6f33",
+    "notes": "Five cards reviewed/rated (Easy3/Medium1/Hard1), next-module completion saves one of two complete, course50%, quiz100%, five-of-five cards. Second unbuilt module honestly shows no activities. Helper Playwright AX-role mismatch used native accessible control, not an app failure."
   }
 ]

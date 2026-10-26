@@ -59,3 +59,31 @@ Workspace foundation regression CI40328449765 at `c2b09c8`:40/40 browser journey
 Final workspace lifecycle acceptance: CI40330344648 at4c9690e passed40/40 browser journeys with zero retries, backend and both Node22/24 checks green. ActualUI archive-draft fix and independent review also passed. Task2 structured plans/durable builds underway; new generation journeys are not yet claimed complete.
 
 Synthetic validation preparation: the disposable Author fixture received200 starting application credits (previous65), after a private backup with its API stopped, to cover the planned small course/path/revision qualification calls. This is test setup, not a user grant or billable payment; the normal account was untouched. Each actual generation will separately record its debit and outcome.
+
+
+## Planning and build checkpoint — approximately 07:25 Pacific
+
+The new workspace can plan one course or a bounded learning path, explicitly reuse existing accessible courses, edit the proposed plan, apply it privately, and build up to three modules sequentially. Generation produces durable drafts; review and application are separate. Local Anvil credits are recorded only when validated output is successfully saved, while BYOK operations record zero Anvil debit.
+
+Independent review caught a cancellation race: a queued step could be marked cancelled and then overwritten as running by a runner that had read stale state. Commit `a1e6f33` moves admission and queued-step claims into short same-task transactions, with inference outside. A deterministic barrier regression proves that cancellation before claim prevents a provider call and debit on both JSON and SQLite. Cancellation during an already active successful call still preserves its validated draft and accounting. Scoped review approved the repair; 57 covering tests passed.
+
+CI then exposed a compatibility issue that local Python 3.14 had hidden. On Python 3.12, a class method named `list` shadowed a later `list[str]` annotation and prevented application import. Commit `81bb7d2` defers annotations in the affected services and adds actual type-hint resolution coverage. An isolated Python 3.12 environment passes all 383 backend tests, without replacing the normal runtime environment. The compatibility review is clean. CI40337912952 has green backend and both frontend matrices; browser installation is still running, so the browser gate remains open.
+
+Two explicitly initiated live plan attempts with Anvil `llm.primary` returned upstream HTTP503 during the owner's local model maintenance. Neither saved a draft nor deducted application credits. A temporary diagnostic in the disposable validation launcher recorded only exception type/status and stack locations, never provider response contents or credentials. The normal app retained Anvil as its selected default. Validation explicitly switched the synthetic account to its existing mock OpenAI provider; no automatic fallback was introduced.
+
+Actual UI evidence with that mock provider:
+
+- Retried the saved failed plan, edited its first module title, saved, reloaded and applied a private two-module course.
+- Built the first module with the default five cards and three questions; reloaded, dismissed and reopened review, applied the draft, then opened its study view.
+- Submitted the generated quiz at100%, reviewed and rated all five cards, and completed the first module. The overview shows one of two modules complete, 50% course progress and the saved quiz result.
+- Planned a path with one new course and an explicitly selected course owned by another author, reordered them, and applied. The reused course keeps its original ID, two modules and author attribution; the new path is private. Only owned modules are offered for building.
+- Injected a failure into the second module of a two-module batch. The first draft remained ready at attempt1; retrying only step2 completed it at attempt2. Neither was auto-applied.
+
+Measured UI intervals (including observation overhead) are in the raw walkthrough log: explicit provider retry6.6s, plan save/reload/apply15.0s, first build/review/apply/study36.0s, mixed-reuse path36.0s and partial recovery31.2s. These are application-flow observations, not model performance claims.
+
+The next task is scoped revisions and conflict-safe restore. Its actual UI fixture already has saved quiz attempts, card identities/ratings and completion progress, so preservation can be checked after revising and restoring content. Final polish will address long mobile workspace pages, disabled activity-count normalization, safe provider failure categories, locked backend dependencies and remaining visible notification branding. No live notifications have been sent.
+
+
+## Planning and build accepted
+
+CI40337912952 at `81bb7d2` completed successfully: all42 browser cases passed in5.6minutes, including both new workspace loops, plus383 backend tests and169 frontend tests with Node22/24 lint/build. Independent initial/fix reviews and actual UI evidence are recorded in the product audit. Task2 is accepted; scoped revisions are now in final local verification before their independent review.

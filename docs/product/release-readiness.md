@@ -16,7 +16,7 @@ Coursekind turns a learning goal into a course or path that its author can revie
 | Personal activity, streaks, in-progress courses and followed paths | Baseline account-scoped activity and timezone semantics validated | Final regression; no generation event should count as study |
 | Choose models, default to local Anvil, optionally bring API keys | Anvil plus OpenAI/Gemini/Anthropic BYOK; explicit selection and no automatic fallback | External BYOK contract tests are mocked; subscription login remains deferred |
 | Start with a goal or existing content in one workspace | Private brief, idempotent existing-material entry, reload/archive/restore, mobile creation | Passed Task1 UI/review/CI; final polish remains |
-| AI plans courses/modules with less manual entry | Structured plans, manual edits, refinement, private apply, explicit course reuse | Actual first-course and mixed-reuse UI passed; corrected Task2 CI pending |
+| AI plans courses/modules with less manual entry | Structured plans, manual edits, refinement, private apply, explicit course reuse | Actual first-course and mixed-reuse UI passed; corrected Task2 CI passes all42 browser cases |
 | Build study-ready material from the plan | Default one module, maximum three per batch, lesson plus requested cards/quiz, explicit review/apply | Actual build/reload/dismiss/apply/study and partial retry passed with mock provider |
 | Safely revise what AI creates | Typed scoped revisions, before/after review and conflict-safe apply | Task3 in progress |
 | Recover earlier content without erasing learning history | Immutable history and compensating restore | Task3 in progress |
@@ -25,7 +25,7 @@ Coursekind turns a learning goal into a course or path that its author can revie
 
 ## Evidence boundaries
 
-The original baseline gate passed 40 browser journeys with no retries, 306 backend tests and 145 frontend tests. Task1 then passed the same 40 browser journeys, 330 backend tests and 163 frontend tests. Task2's corrected Python 3.12 backend suite passes 383 tests. Exact commits, CI links, screenshots and observed UI timings live in the [baseline audit](../audits/2026-10-26/README.md) and [product audit](../audits/2026-10-26-coursekind/README.md).
+The original baseline gate passed 40 browser journeys with no retries, 306 backend tests and 145 frontend tests. Task1 then passed the same 40 browser journeys, 330 backend tests and 163 frontend tests. Task2's corrected Python 3.12 backend suite passes 383 tests; CI40337912952 also passes all42 browser cases and169 frontend tests on Node22/24 with lint/build. Exact commits, CI links, screenshots and observed UI timings live in the [baseline audit](../audits/2026-10-26/README.md) and [product audit](../audits/2026-10-26-coursekind/README.md).
 
 Actual UI walkthrough timings include human/agent observation and tool overhead. They are not inference benchmarks or server latency percentiles. Deterministic provider fixtures validate application behavior, count/schema handling, retries and preservation; they do not establish live model quality.
 
