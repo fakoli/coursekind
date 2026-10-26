@@ -44,3 +44,7 @@ Workspace cases cover goal-to-study, explicit reuse, partial failure/reload/retr
 Install backend dependencies with `uv sync --locked --dev --python 3.12`; CI and the isolated browser server use that explicit Python version and lock. On the author's Mac, prefix every frontend command with `export PATH="/opt/homebrew/opt/node@24/bin:$PATH"` and verify Node v24. Workers may run only `test:e2e:types` and `test:e2e:list`; root owns actual UI through CUA and browser execution in GitHub CI. No local browser execution is claimed for Task 5.
 
 The WORKSPACE-06 text-resizing assertion complements root's actual 200% browser zoom check. Root also checks modal focus return, visible focus and live status announcements; automated listing is not an accessibility certification. The feature-off browser fixture rejects workspace writes without modifying runtime configuration; backend gate tests and the root gate-off walkthrough establish the real switch behavior.
+
+## Course-card touch regression
+
+`COURSE-06` runs on Chromium and on the mobile WebKit project (iPhone 13 device profile). It uses physical touch coordinates on the title, thumbnail, description and card padding, verifies detail navigation and browser Back, and checks that Add to Path opens its modal without navigating. CI installs both engines. Run it alone with `npm run test:e2e -- course-card-navigation.spec.ts`. This complements actual rendered checks; it does not claim testing on a physical iPhone.

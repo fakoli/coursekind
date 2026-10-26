@@ -15,6 +15,11 @@ export default defineConfig({
     trace: 'retain-on-failure', screenshot: 'only-on-failure',
     ...devices['Desktop Chrome'],
   },
+  projects: [
+    { name: 'chromium' },
+    { name: 'mobile-webkit', testMatch: 'course-card-navigation.spec.ts',
+      use: { ...devices['iPhone 13'] } },
+  ],
   webServer: [
     { command: 'cd ../backend && uv run --locked --python 3.12 python ../frontend/e2e/server.py',
       url: 'http://127.0.0.1:8018/health', reuseExistingServer: false, timeout: 60_000 },
