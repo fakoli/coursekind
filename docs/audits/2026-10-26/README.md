@@ -1,6 +1,6 @@
 # Baseline repair validation — 26 October 2026
 
-The repaired baseline has 40 named durable browser scenarios and 70 recorded real rendered subflows. This checkpoint **does not certify all 40 journeys as fully passed**: local unit/integration suites passed; the new Chromium suite is undergoing its first CI execution. Final CI results and independent whole-branch review remain release gates. The [25 October audit](../2026-10-25/README.md) remains unchanged.
+The repaired baseline has 40 named durable browser scenarios and 70 recorded real rendered subflows. This checkpoint **does not certify all 40 journeys as fully passed**: local unit/integration suites passed; the latest completed Chromium run passed32 and failed8; repairs await another CI run. Final CI results and independent whole-branch review remain release gates. The [25 October audit](../2026-10-25/README.md) remains unchanged.
 
 ## Evidence and timing method
 
@@ -13,7 +13,7 @@ The repaired baseline has 40 named durable browser scenarios and 70 recorded rea
 
 ## Per-journey coverage and evidence
 
-Every row has a named executable UI scenario, not a status-only assertion. “CI pending” describes execution at this documentation checkpoint, not missing implementation. Raw record references identify completed portions and their limits; full acceptance includes the companion failure/access regressions below. Timings list individual measured subflows in seconds; unmeasured runs remain visible in the normalized log.
+Every row has a named executable UI scenario, not a status-only assertion. “CI pending” describes current-head revalidation, not missing implementation. The prior run on5dd788a is preserved in the timing snapshot below. Raw record references identify completed portions and their limits; full acceptance includes the companion failure/access regressions below. Timings list individual measured subflows in seconds; unmeasured runs remain visible in the normalized log.
 
 | ID | Durable browser scenario | Real UI record indices | Measured subflow seconds | Browser result |
 | --- | --- | --- | --- | --- |
@@ -58,7 +58,7 @@ Every row has a named executable UI scenario, not a status-only assertion. “CI
 | SUPPORT-01 | [persist notification preferences, validate phone and report unavailable transport](../../../frontend/e2e/stats-ai-settings.spec.ts) | 59, 60 | 59: 48.414 | CI pending |
 | SUPPORT-02 | [mobile navigation, keyboard tabs/dialogs and missing-route recovery](../../../frontend/e2e/stats-ai-settings.spec.ts) | 61, 64 | 61: 19.114, 64: 23.676 | CI pending |
 
-The initial CI run was canceled after 14 cases timed out at required form labels, before their main UI flows. Its trace showed that exact label matching included a visual asterisk; anchored labels now allow that marker. No initial case is counted as passed. The corrected run remains pending.
+The initial CI run was canceled after 14 cases timed out at required form labels, before their main UI flows. Its trace showed that exact label matching included a visual asterisk; anchored labels now allow that marker. No initial case is counted as passed. The corrected run [40307745119](https://github.com/fakoli/my-ai-study-buddy/actions/runs/40307745119), on5dd788a, completed32passed/8failed in7.0minutes. Its [40-row timing snapshot](ci-40307745119-timings.json) is preserved verbatim. Failed IDs: COURSE04, COURSE05, MODULE03, STUDY04, STUDY05, PATH02, SHARE01, STATS04. Seven failures arose from mismatched selectors or an unscoped debounced-search action; COURSE05 exposed an invalid synthetic suggestion with one objective where the real validator requires2–4. The fixture and selectors are repaired; the current-head acceptance rerun remains pending.
 
 ## Negative branches and persistence contracts
 

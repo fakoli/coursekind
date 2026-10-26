@@ -153,11 +153,13 @@ test('COURSE-05 — generate selected AI outlines, append and persist editable l
   await page.goto(`/courses/${world.course.id}/edit`);
   await page.getByRole('button', { name: 'Next', exact: true }).click();
   await page.getByRole('button', { name: 'Next', exact: true }).click();
+  const generated = page.waitForResponse(r => r.url().endsWith('/generate/suggest-modules') && r.request().method() === 'POST');
   await page.getByRole('button', { name: 'Generate Suggestions' }).click();
+  expect((await generated).ok()).toBeTruthy();
   const dialog = page.getByRole('dialog', { name: 'AI Module Suggestions' });
   await dialog.getByRole('button', { name: 'Add to Existing' }).click();
   await dialog.getByRole('button', { name: 'Select None' }).click();
-  await dialog.getByRole('checkbox').filter({ hasNotText: 'Generate content' }).first().check();
+  await dialog.getByRole('checkbox', { name: /^Generated module 1 / }).check();
   await dialog.getByLabel('Generate content for modules').uncheck();
   await dialog.getByRole('button', { name: /^Create 1 Module/ }).click();
   await expect(dialog).not.toBeVisible();

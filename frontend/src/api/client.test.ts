@@ -6,8 +6,7 @@ const fetchMock = vi.fn();
 
 beforeEach(() => {
   localStorage.clear();
-  // @ts-expect-error assign fetch stub
-  global.fetch = fetchMock;
+  globalThis.fetch = fetchMock;
   fetchMock.mockReset();
 });
 

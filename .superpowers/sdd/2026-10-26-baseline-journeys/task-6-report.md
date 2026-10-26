@@ -177,3 +177,49 @@ excludes developer env while ordinary mode still accepts its configured proxy.
 Temporary test env files contain synthetic invalid destinations and are removed.
 No broad code/test/dependency changes or Task7 provider implementation included.
 Existing Ruff/build/dependency debt remains explicitly disclosed (review Minor3).
+
+
+### CI run40307745119 failure repairs and typing correction
+
+Run40307745119 on5dd788a completed32passed/8failed in7.0minutes. Saved
+error-context and network traces were inspected directly from the downloaded
+artifact, without launching a local browser. All40 statuses and wall times are
+preserved verbatim in `docs/audits/2026-10-26/ci-40307745119-timings.json`.
+
+- COURSE04: real byline is `by Learner · 1 module`; already corrected in fb82dbc
+  alongside the three-course sort discrimination requested by review.
+- COURSE05: suggestion endpoint returned503, with validation failure after two
+  attempts. Mock output supplied one objective; production requires2–4. Fixture
+  now supplies two; expanded smoke validates suggestion counts/objectives for all
+  four adapters. Browser test explicitly awaits successful suggestion response
+  and chooses the generated module by its checkbox name, preserving append and
+  editable persisted lesson assertions.
+- MODULE03/STUDY04/STATS04: actual visible score text includes `Score: `;
+  assertions still require exact50%/100% results and persisted attempts/history.
+- STUDY05: actual buttons are `Run Code` and `Solution Show`; solution syntax
+  renders a code element inside a div, not pre. Output/error/timeout/reset/saved
+  code assertions remain intact.
+- PATH02: debounced search briefly retained20 Add to Path buttons. Scope the
+  action to the card containing the exact unique course heading; membership,
+  duplicate exclusion and source navigation assertions remain.
+- SHARE01: role-based combobox name is Visibility; label text also contains
+  nested options. Use the exact accessible combobox name.
+
+Correction to the preceding round1 validation entry: final `npx tsc -b` initially
+failed on optional config fields in the new test and an old unused expect-error
+for global.fetch. The earlier reported pass was premature. Optional chaining in
+the proof and globalThis.fetch without an obsolete suppression resolve these.
+Final verified commands on Node24.18.0 (loginfalse, explicitPATH):
+- `npx tsc -b`:passed.
+- `npm run test -- src/test/e2eConfig.test.ts src/api/client.test.ts`:13passed,
+  2files,0.598s. Existing full129 suite was not unnecessarily repeated.
+- `npm run test:e2e:types`:passed; `npm run lint`:passed.
+- `npm run test:e2e -- --list`:40tests in4files (listing only).
+- `ANVIL_MODEL=ambient-must-not-escape` isolated fixture smoke:passed auth,
+  storage and all four adapters for both flashcards and valid module suggestions.
+- `git diff --check`:passed.
+
+Self-review: no production logic changed in this repair wave, no outcome was
+removed or replaced by status-only coverage, and no case skipped/retried. Current
+head still requires browser CI rerun and independent review. Task7 optional
+subscription provider remains outside this task.

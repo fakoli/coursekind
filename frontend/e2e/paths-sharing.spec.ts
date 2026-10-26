@@ -34,7 +34,9 @@ test('PATH-02 — add owned and discovered courses as references, reject duplica
   await addCourse(page, world.course.title);
   await page.goto('/courses?tab=discover');
   await page.getByLabel('Search courses').fill(world.otherCourse.title);
-  await page.getByRole('button', { name: 'Add to Path', exact: true }).click();
+  // Search is debounced; bind the action to the intended course throughout.
+  const discovered = page.locator('div.group').filter({ has: page.getByRole('heading', { name: world.otherCourse.title, exact: true }) });
+  await discovered.getByRole('button', { name: 'Add to Path', exact: true }).click();
   await page.getByRole('dialog').getByRole('button', { name: /New composite goal/ }).click();
   await expect(page.getByRole('dialog')).not.toBeVisible();
   await page.goto(`/paths/${empty.id}`);

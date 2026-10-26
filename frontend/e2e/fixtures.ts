@@ -45,7 +45,7 @@ export async function share(page: Page, email: string) {
   await expect(page.getByRole('button', { name: `Revoke access for ${email}` })).toBeVisible();
 }
 export async function visibility(page: Page, value: string) {
-  await page.getByLabel('Visibility', { exact: true }).selectOption(value);
+  await page.getByRole('combobox', { name: 'Visibility', exact: true }).selectOption(value);
   const saved = page.waitForResponse(r => /\/api\/v1\/(courses|paths)\/[^/]+$/.test(r.url()) && r.request().method() === 'PUT');
   await page.getByRole('button', { name: 'Save visibility' }).click();
   expect((await saved).ok()).toBeTruthy();

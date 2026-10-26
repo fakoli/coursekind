@@ -62,7 +62,7 @@ def remote(request):
     elif '"questions"' in system:
         result = {"questions": [{"question": f"Generated question {i+1}?", "options": [f"Correct {i+1}", f"Wrong {i+1}"], "correct_index": 0, "explanation": "Addition combines values."} for i in range(count)]}
     elif '"objectives"' in system:
-        result = [{"title": f"Generated module {i+1}", "description": "Learn deterministic addition", "objectives": ["Add numbers"]} for i in range(count)]
+        result = [{"title": f"Generated module {i+1}", "description": "Learn deterministic addition", "objectives": ["Add numbers", "Explain the sum"]} for i in range(count)]
     else:
         result = "A useful coaching response"
     text = "malformed" if state["fault"] == "malformed" else json.dumps(result)

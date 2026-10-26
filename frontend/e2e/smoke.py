@@ -22,8 +22,11 @@ async def main():
             await call("PUT", "/auth/ai-preferences", {"provider": provider, "model": model, **({"api_key": "synthetic-key"} if provider != "anvil" else {})}, token)
             result = await call("POST", "/generate/flashcards", {"course_id": course["id"], "module_id": module["id"], "count": 2}, token)
             assert len(result["flashcards"]) == 2
-        assert len(state["calls"]) == 4
-        print("Acceptance server smoke: auth, storage, and all four mocked provider adapters PASS")
+            suggestions = await call("POST", "/generate/suggest-modules", {"course_id": course["id"], "module_count": 3}, token)
+            assert len(suggestions["suggestions"]) == 3
+            assert all(len(item["objectives"]) == 2 for item in suggestions["suggestions"])
+        assert len(state["calls"]) == 8
+        print("Acceptance server smoke: auth, storage, and all four mocked provider adapters (flashcards + suggestions) PASS")
 
 try:
     asyncio.run(main())

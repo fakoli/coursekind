@@ -26,7 +26,7 @@ it('isolates browser API routing from ambient variables and every Vite env file'
   expect(config.envDir).toBe(false);
   expect(config.env.VITE_LEAK_PROBE).toBeUndefined();
   expect(config.env.VITE_API_URL).toBeUndefined();
-  expect(config.define['import.meta.env.VITE_API_URL']).toBe('"/api/v1"');
+  expect(config.define?.['import.meta.env.VITE_API_URL']).toBe('"/api/v1"');
   expect(config.server.proxy?.['/api']).toBe('http://127.0.0.1:8018');
 });
 
@@ -36,5 +36,5 @@ it('preserves ordinary development environment and proxy configuration', () => {
   expect(config.envDir).toBeUndefined();
   expect(config.envPrefix).toBeUndefined();
   expect(config.define).toBeUndefined();
-  expect(config.server.proxy['/api']).toBe('http://localhost:8010');
+  expect(config.server?.proxy?.['/api']).toBe('http://localhost:8010');
 });

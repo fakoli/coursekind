@@ -93,7 +93,7 @@ test('STATS-04 — activity and scores survive navigation, login and account iso
   await page.getByRole('button', { name: 'Five', exact: true }).click();
   await page.getByRole('button', { name: 'Eight', exact: true }).click();
   await page.getByRole('button', { name: 'Submit Quiz' }).click();
-  await expect(page.getByText('100%', { exact: true })).toBeVisible();
+  await expect(page.getByText('Score: 100%', { exact: true })).toBeVisible();
   await page.goto('/');
   await expect(page.getByRole('heading', { name: 'Recent Activity' })).toBeVisible();
   await stat(page, 'Quiz Average', 100);
