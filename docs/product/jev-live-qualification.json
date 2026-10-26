@@ -1,0 +1,21 @@
+{
+  "date": "2026-10-26",
+  "scope": "One synthetic typed-decision API call; not accuracy or end-user UI certification",
+  "result": {
+    "model": "jev-1.14.0",
+    "answers": {
+      "answer_supported": {
+        "type": "noul",
+        "noul": 0.98
+      },
+      "answer_ambiguous": {
+        "type": "noul",
+        "noul": 0.04
+      }
+    },
+    "usage": {
+      "input_tokens": 381,
+      "output_tokens": 41
+    }
+  }
+}

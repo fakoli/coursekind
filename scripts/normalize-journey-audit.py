@@ -14,7 +14,7 @@ AUDIT = ROOT / "docs/audits/2026-10-26"
 raw = json.loads((AUDIT / "walkthrough-log.json").read_text())
 # Explicit later checks, not an inference that every branch now passes.
 retests = {5: [10, 15, 67], 12: [56], 16: [19, 25, 28], 30: [52, 53],
-           34: [55], 35: [56], 39: [44, 45], 42: [46], 50: [57, 58]}
+           34: [55], 35: [56], 39: [44, 45], 42: [46], 50: [57, 58], 77: [81], 78: [79]}
 normalized = []
 for index, source in enumerate(raw):
     label = source.get("journey", source.get("id", ""))

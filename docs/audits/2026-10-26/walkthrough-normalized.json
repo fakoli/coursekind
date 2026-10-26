@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "source": "walkthrough-log.json",
-  "record_count": 79,
+  "record_count": 86,
   "note": "Historical outcomes and source notes are preserved, not promoted into final journey passes. Record indices are zero-based.",
   "records": [
     {
@@ -1528,7 +1528,9 @@
       "elapsed_seconds": 17.001,
       "timing_source": "duration_ms",
       "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
-      "later_retest_records": [],
+      "later_retest_records": [
+        81
+      ],
       "source": {
         "journey": "COURSE-02",
         "scenario": "Older course editor save must preserve a module added in another tab",
@@ -1547,13 +1549,148 @@
       "elapsed_seconds": 28.388,
       "timing_source": "duration_ms",
       "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
-      "later_retest_records": [],
+      "later_retest_records": [
+        79
+      ],
       "source": {
         "journey": "STUDY-02",
         "scenario": "Finish must not discard a failed earlier flashcard review",
         "status": "fail",
         "duration_ms": 28388,
         "notes": "Actual UI withdisposablemiddleware2targeted503reviewevents: flipcardAfailed;NextretriedAfailedbutadvanced;flipcardBsaved;Finishnavigatedcourseandmarked100%completewith1/2cards, earlierAunsaved. Screenshot57. Syntheticmodule4f8f nowAuthorcompleted; requestfailurecounter0. Pendingfinalreviewfix."
+      }
+    },
+    {
+      "record": 79,
+      "journey_ids": [
+        "STUDY-02"
+      ],
+      "scenario": "Retain earlier failed flashcard reviews through Finish and recover",
+      "observed_status": "pass",
+      "elapsed_seconds": 352.099,
+      "timing_source": "duration_ms",
+      "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
+      "later_retest_records": [],
+      "source": {
+        "journey": "STUDY-02",
+        "scenario": "Retain earlier failed flashcard reviews through Finish and recover",
+        "status": "pass",
+        "duration_ms": 352099,
+        "notes": "Post-fix fe99812 actual UI: targeted card-A 503 persisted through Next; card B saved; Finish stayed on module with unsaved-action error. Restored disposable service; Retry study save showed 2/2; Finish returned to course with 2/2. Re-study of already-completed synthetic module; timing includes compaction/coordination pause, not human benchmark. Screenshots58/59."
+      }
+    },
+    {
+      "record": 80,
+      "journey_ids": [
+        "PATH-04"
+      ],
+      "scenario": "Owner explicitly follows and unfollows own path with dashboard count",
+      "observed_status": "pass",
+      "elapsed_seconds": 21.911,
+      "timing_source": "duration_ms",
+      "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
+      "later_retest_records": [],
+      "source": {
+        "journey": "PATH-04",
+        "scenario": "Owner explicitly follows and unfollows own path with dashboard count",
+        "status": "pass",
+        "duration_ms": 21911,
+        "notes": "fe99812 actual UI: owner Follow path -> Unfollow; Dashboard Selected Paths 1 and Active 1; Unfollow -> Dashboard Selected Paths 0 and Active 0. Ownership preserved. Screenshot60."
+      }
+    },
+    {
+      "record": 81,
+      "journey_ids": [
+        "COURSE-02"
+      ],
+      "scenario": "Stale course outline preserves concurrently added module",
+      "observed_status": "pass",
+      "elapsed_seconds": 21.709,
+      "timing_source": "duration_ms",
+      "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
+      "later_retest_records": [],
+      "source": {
+        "journey": "COURSE-02",
+        "scenario": "Stale course outline preserves concurrently added module",
+        "status": "pass",
+        "duration_ms": 21709,
+        "notes": "5c1cf7a actual two-tab UI: original editor held one module; second tab created4278bbb8 with lesson content. Old Save Changes returns explicit conflict and retains draft; new module remains readable after reload; My Courses shows2. Screenshot61."
+      }
+    },
+    {
+      "record": 82,
+      "journey_ids": [
+        "SHARE-01"
+      ],
+      "scenario": "Signed-in public course and protected raster remain usable",
+      "observed_status": "pass",
+      "elapsed_seconds": 21.371,
+      "timing_source": "duration_ms",
+      "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
+      "later_retest_records": [],
+      "source": {
+        "journey": "SHARE-01",
+        "scenario": "Signed-in public course and protected raster remain usable",
+        "status": "pass",
+        "duration_ms": 21371,
+        "notes": "5c1cf7a actual UI: Student logout/direct public course -> Login; sign in -> public course readable with own progress. Author private module retains protected PNG and rich content. Backend anonymous/media/import negative boundaries independently covered by regression tests. Screenshot62."
+      }
+    },
+    {
+      "record": 83,
+      "journey_ids": [
+        "COURSE-03"
+      ],
+      "scenario": "Warmed course card count immediately updates after module deletion",
+      "observed_status": "pass",
+      "elapsed_seconds": 24.083,
+      "timing_source": "duration_ms",
+      "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
+      "later_retest_records": [],
+      "source": {
+        "journey": "COURSE-03",
+        "scenario": "Warmed course card count immediately updates after module deletion",
+        "status": "pass",
+        "duration_ms": 24083,
+        "notes": "d304db6 actual UI: My Courses warmed3modules; open course/delete disposable Fresh count module; return My Courses without reload ->2modules. Preserved original generated lesson and concurrent-outline regression lesson. Screenshot63. Earlier creation3 observed; final backend warmed-cache/create/batch/generation coverage automated."
+      }
+    },
+    {
+      "record": 84,
+      "journey_ids": [
+        "STUDY-04"
+      ],
+      "scenario": "Lost committed quiz response, answer edit, immutable retry then distinct submission",
+      "observed_status": "pass",
+      "elapsed_seconds": 14.876,
+      "timing_source": "duration_ms",
+      "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
+      "later_retest_records": [],
+      "source": {
+        "journey": "STUDY-04",
+        "scenario": "Lost committed quiz response, answer edit, immutable retry then distinct submission",
+        "status": "pass",
+        "duration_ms": 14876,
+        "notes": "cfe5b21 actualUI with disposable middleware commit-then-503: initial0% saved but responsefailed; edited answer toHello; Retry preserved exacteventID/answers/studytime and showed1savedattempt0% while draftHello retained; explicitSubmit then2attempts latest100%. No duplicate originalattempt. Screen64. Further resolve-first gating for precommitfail/newsubmit pending followup."
+      }
+    },
+    {
+      "record": 85,
+      "journey_ids": [
+        "STUDY-04"
+      ],
+      "scenario": "Resolve failed older quiz before allowing newer edited submission",
+      "observed_status": "pass",
+      "elapsed_seconds": 21.628,
+      "timing_source": "duration_ms",
+      "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
+      "later_retest_records": [],
+      "source": {
+        "journey": "STUDY-04",
+        "scenario": "Resolve failed older quiz before allowing newer edited submission",
+        "status": "pass",
+        "duration_ms": 21628,
+        "notes": "af5d483 actualUI: failbeforecommit on0% attempt; editHello retained butSubmitdisabled with Retry guidance; recoveroriginal ->count3/latest0%;newSubmit ->count4/latest100%; reloadpersists. Priorcount2fromseparatelostresponsecase; exactly2newattempts. Screenshot65blockedstate."
       }
     }
   ]

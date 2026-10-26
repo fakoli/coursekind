@@ -76,5 +76,12 @@ record,journey_ids,scenario,observed_status,elapsed_seconds,later_retest_records
 74,AI-06; COURSE-05,Generate eight valid outlines through live Codex subscription,pass,45.316,
 75,AI-06; COURSE-05; MODULE-05,"Generate lesson, two cards and two quiz questions; refine, save and reopen",pass,127.285,
 76,AI-06,Return explicitly to Anvil and verify zero subscription debit,pass,16.885,
-77,COURSE-02,Older course editor save must preserve a module added in another tab,fail,17.001,
-78,STUDY-02,Finish must not discard a failed earlier flashcard review,fail,28.388,
+77,COURSE-02,Older course editor save must preserve a module added in another tab,fail,17.001,81
+78,STUDY-02,Finish must not discard a failed earlier flashcard review,fail,28.388,79
+79,STUDY-02,Retain earlier failed flashcard reviews through Finish and recover,pass,352.099,
+80,PATH-04,Owner explicitly follows and unfollows own path with dashboard count,pass,21.911,
+81,COURSE-02,Stale course outline preserves concurrently added module,pass,21.709,
+82,SHARE-01,Signed-in public course and protected raster remain usable,pass,21.371,
+83,COURSE-03,Warmed course card count immediately updates after module deletion,pass,24.083,
+84,STUDY-04,"Lost committed quiz response, answer edit, immutable retry then distinct submission",pass,14.876,
+85,STUDY-04,Resolve failed older quiz before allowing newer edited submission,pass,21.628,

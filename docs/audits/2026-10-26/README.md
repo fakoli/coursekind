@@ -1,65 +1,67 @@
 # Baseline repair validation — 26 October 2026
 
-**Review hold:** the local Codex option is temporarily disabled in the validation and owner runtimes. Exact-CLI hostile-configuration qualification found that the initial flags still included global instructions and advertised tools. Working generation and passing mocked CI do not resolve that isolation gap; a supported-control repair and retest are required before this option is ready.
+**Current status:** all ten whole-branch findings have repairs. The scoped review identified a quiz retry regression; immutable retry identity and the submission-order guard now pass the [final scoped verification](quiz-retry-final-verification.md). All40 baseline browser journeys passed without retries in [final run40324667864](https://github.com/fakoli/my-ai-study-buddy/actions/runs/40324667864) on `af5d48318eab8e6de2761207d5c931b734e83f67`; backend306, frontend145 and both Node22/24 lint/build jobs passed. The Codex CLI prototype has been removed from executable product code because isolation qualification failed; AI-06 is deferred. Anvil remains the default.
 
-The repaired baseline has 40 baseline browser scenarios plus the new AI-06 subscription scenario and 77 recorded real rendered subflows. All **40 baseline browser journeys passed**, without retries, in [CI run40310163615](https://github.com/fakoli/my-ai-study-buddy/actions/runs/40310163615) on `874d00b2533e8e50928f99d109182d38fdb86022` (6.0 minutes). Backend and both Node22/24 test, lint and build jobs also passed. Task6 implementation/specification and quality review are approved after round1 fixes. Independent Task7/whole-branch review and final 41-case CI remain pending; this is baseline verification, not a full release approval. The [25 October audit](../2026-10-25/README.md) remains unchanged.
+The audit preserves **86 real rendered subflow records**, including failed attempts and subsequent repairs. The original 40-case baseline passed in run40310163615; the subscription experiment later passed 41 mocked cases but failed isolation qualification. [Final repair run40322751754](https://github.com/fakoli/my-ai-study-buddy/actions/runs/40322751754) ([timings](ci-40322751754-timings.json)) passed 39/40 browser cases and all backend/Node22/24 checks; MODULE-01 failed because its synthetic visibility event was dispatched to the wrong browser event target, so no refetch occurred. That fixture was corrected to await a real HTTP refetch without weakening the draft-preservation assertions. These are distinct checkpoints, not one aggregate pass.
+
+The [25 October audit](../2026-10-25/README.md) remains unchanged. [Whole-branch findings](review-findings.md), [scoped repair review](repair-review.md), [quiz retry verification](quiz-retry-review.md), and [implementation decisions](implementation-decisions.md) preserve the review history and limits. The owner has now authorized the separate Coursekind product build, tracked in [the product log](../../product/autonomous-build-log.md).
 
 ## Evidence and timing method
 
-- [Original walkthrough log](walkthrough-log.json): all 77 source records preserved, including early failures and interrupted/unmeasured intervals. Existing first 65 records are unchanged; later records append the coordinator's actual UI evidence, including seven subscription subflows.
+- [Original walkthrough log](walkthrough-log.json): all 86 source records preserved, including early failures and interrupted/unmeasured intervals. Existing first 65 records are unchanged; later records append the coordinator's actual UI evidence, including the historical subscription experiment and final repair retests.
 - [Normalized evidence](walkthrough-normalized.json) and [subflow timings CSV](subflow-timings.csv): stable zero-based record indices, journey IDs, observed outcome, duration in seconds and explicit later retests. Each normalized record embeds its original source object. Seventeen intervals remain null; they are never treated as zero or pass. Rebuild with `python3 scripts/normalize-journey-audit.py`.
 - Manual checks used separate synthetic author/learner identities on an isolated backend/front end, ports 8011/5174. Times include orchestration, diagnosis, inspection and fixture interruptions; they are neither human benchmarks nor whole-journey completion times. Do not add overlapping subflow times together.
 - [Browser acceptance implementation](../../../frontend/e2e/README.md): real routes, authentication, storage and UI interactions; isolated temporary storage on 8018/4178, unique synthetic accounts, no normal-instance data or secrets. Each test gets a fresh browser context. A serial worker controls deterministic backend clock/failures.
-- Browser provider traffic uses actual adapters with protocol-shaped **mocked HTTP** or an unconditional **fake Codex process boundary**. Notification sends are captured; the browser preference test checks unconfigured availability. The actual Python worker is separately exercised by the manual evidence. CI executes real JavaScript workers.
+- Current browser provider traffic uses actual adapters with protocol-shaped **mocked HTTP**. Historical subscription runs used an unconditional fake Codex process boundary; that path is now removed. Notification sends are captured; the browser preference test checks unconfigured availability. The actual Python worker is separately exercised by the manual evidence. CI executes real JavaScript workers.
 - `test-results/journey-timings.json` is emitted by CI with every ID, status and measured automated wall time; unstarted tests retain null time and Not run. Failure screenshots/traces plus HTML report are uploaded as `browser-journey-evidence` for seven days. Test listing/typechecking is not a browser pass.
 
 ## Per-journey coverage and evidence
 
-Every row has a named executable UI scenario, not a status-only assertion. Browser results and automated seconds come from the [passing run40310163615 timing snapshot](ci-40310163615-timings.json), preserved verbatim. Automated times include fixture setup and assertions and are separate from individual manual subflows; neither is a human usability benchmark. Raw record references retain completed portions and their limits; unmeasured manual intervals remain visible in the normalized log. AI-06 was added after that run and awaits final browser CI. Acceptance also includes the companion failure/access regressions below.
+Every row has a named executable UI scenario, not a status-only assertion. Browser results and automated seconds below come from the [final passing run40324667864 timing snapshot](ci-40324667864-timings.json), preserved verbatim; prior snapshots remain historical evidence. Automated times include fixture setup and assertions and are separate from individual manual subflows; neither is a human usability benchmark. Raw record references retain completed portions and their limits; unmeasured manual intervals remain visible in the normalized log. AI-06 was subsequently experimented with and is now deferred after failed CLI isolation qualification. Acceptance also includes the companion failure/access regressions below.
 
 | ID | Durable browser scenario | Real UI record indices | Manual subflow seconds | Browser result | Automated seconds |
 | --- | --- | --- | --- | --- | --- |
-| AUTH-01 | [register, inspect identity, sign out and sign in](../../../frontend/e2e/accounts-courses.spec.ts) | 0, 62 | 0: 70, 62: 16.858 | Passed | 7.410 |
-| AUTH-02 | [reject bad login, reload session, sign out and isolate the next user](../../../frontend/e2e/accounts-courses.spec.ts) | 30, 52, 53, 61 | 52: 8.11, 61: 19.114 | Passed | 8.521 |
-| AUTH-03 | [deny private deep links and author actions across accounts](../../../frontend/e2e/accounts-courses.spec.ts) | 54, 66 | 54: 16.146, 66: 41.911 | Passed | 10.767 |
-| COURSE-01 | [create metadata and two manual outlines then reopen each](../../../frontend/e2e/accounts-courses.spec.ts) | 1 | 1: 44 | Passed | 6.930 |
-| COURSE-02 | [rename, reorder, remove and add outlines without losing activities](../../../frontend/e2e/accounts-courses.spec.ts) | 14, 36 | 14: 71, 36: 27.226 | Passed | 5.939 |
-| COURSE-03 | [edit metadata, cancel deletion, then delete and reopen old URL](../../../frontend/e2e/accounts-courses.spec.ts) | 63 | 63: 28.859 | Passed | 8.572 |
-| COURSE-04 | [discover by search, difficulty and sort, recover empty results](../../../frontend/e2e/accounts-courses.spec.ts) | 37, 51 | 37: 51.292, 51: 19.61 | Passed | 5.780 |
-| COURSE-05 | [generate selected AI outlines, append and persist editable lessons](../../../frontend/e2e/accounts-courses.spec.ts) | 39, 41, 44, 45, 47 | 39: 252.595, 41: 51.336, 44: 63.422, 45: 191.273, 47: 30.269 | Passed | 6.316 |
-| MODULE-01 | [edit Markdown, preview, reject empty title and persist learner rendering](../../../frontend/e2e/modules-study.spec.ts) | 58, 65, 69 | 65: 39.998, 69: 34.467 | Passed | 7.046 |
-| MODULE-02 | [add, edit, reorder and remove flashcards with saved learner order](../../../frontend/e2e/modules-study.spec.ts) | 11, 34, 55 | 11: 20, 34: 25.422, 55: 17.915 | Passed | 7.444 |
-| MODULE-03 | [edit quiz options and answer key then verify learner scoring](../../../frontend/e2e/modules-study.spec.ts) | 12, 35, 56 | 12: 40, 56: 61.858 | Passed | 7.026 |
-| MODULE-04 | [configure practice, execute, reload and explicitly remove it](../../../frontend/e2e/modules-study.spec.ts) | 13, 29 | 13: 21, 29: 12.449 | Passed | 6.058 |
-| MODULE-05 | [generate activities, cancel then append, refine and save](../../../frontend/e2e/modules-study.spec.ts) | 41, 42, 45, 46, 48 | 41: 51.336, 45: 191.273, 46: 31.168, 48: 9.691 | Passed | 12.705 |
-| STUDY-01 | [read content, run embedded code and rerun changed code](../../../frontend/e2e/modules-study.spec.ts) | 23, 50, 58, 65, 69 | 50: 52.061, 65: 39.998, 69: 34.467 | Passed | 5.440 |
-| STUDY-02 | [flip and persist every card including the final card](../../../frontend/e2e/modules-study.spec.ts) | 20, 33, 50 | 20: 117, 33: 45.97, 50: 52.061 | Passed | 5.296 |
-| STUDY-03 | [rate cards, filter and retain personal ratings](../../../frontend/e2e/modules-study.spec.ts) | 21, 33 | 33: 45.97 | Passed | 6.366 |
-| STUDY-04 | [incomplete quiz is blocked, score 50%, retry and persist 100%](../../../frontend/e2e/modules-study.spec.ts) | 24, 48, 50, 68 | 24: 28, 48: 9.691, 50: 52.061, 68: 48.517 | Passed | 6.253 |
-| STUDY-05 | [practice output, errors, timeout, reset, solution and saved code](../../../frontend/e2e/modules-study.spec.ts) | 18, 22, 50, 57 | 22: 40, 50: 52.061, 57: 8.419 | Passed | 11.751 |
-| STUDY-06 | [complete first module, resume, finish and reload 100% course](../../../frontend/e2e/modules-study.spec.ts) | 25, 32 | 25: 140 | Passed | 6.865 |
-| PATH-01 | [create a goal, edit its details and reload the empty path](../../../frontend/e2e/paths-sharing.spec.ts) | 3 | 3: 50 | Passed | 6.707 |
-| PATH-02 | [add owned and discovered courses as references, reject duplicate membership](../../../frontend/e2e/paths-sharing.spec.ts) | 4, 9, 67 | 4: 58, 9: 14, 67: 42.562 | Passed | 8.566 |
-| PATH-03 | [reorder references, cancel/remove course and cancel/delete path](../../../frontend/e2e/paths-sharing.spec.ts) | 5, 10, 15, 67 | 5: 26, 10: 15, 15: 17, 67: 42.562 | Passed | 6.264 |
-| PATH-04 | [discover, follow, reload selected list then unfollow without deleting](../../../frontend/e2e/paths-sharing.spec.ts) | 7 | 7: 33 | Passed | 7.485 |
-| PATH-05 | [study a selected multi-course path and retain weighted personal progress](../../../frontend/e2e/paths-sharing.spec.ts) | 27 | Not measured | Passed | 9.464 |
-| SHARE-01 | [publish, discover and study, unlist then restore private access](../../../frontend/e2e/paths-sharing.spec.ts) | 66 | 66: 41.911 | Passed | 17.964 |
-| SHARE-02 | [grant a named learner, deny outsider, revoke and deny bookmarked access](../../../frontend/e2e/paths-sharing.spec.ts) | 2, 8 | 8: 8 | Passed | 15.043 |
-| SHARE-03 | [share a path without implicitly granting its private course](../../../frontend/e2e/paths-sharing.spec.ts) | 6 | 6: 84 | Passed | 14.218 |
-| SHARE-04 | [source changes reach reused paths and deletion leaves unavailable reference](../../../frontend/e2e/paths-sharing.spec.ts) | 17 | 17: 34 | Passed | 11.437 |
-| SHARE-05 | [reuse counters reflect distinct active references and deletion decrements](../../../frontend/e2e/paths-sharing.spec.ts) | 67 | 67: 42.562 | Passed | 12.293 |
-| STATS-01 | [real reading sessions group by inactivity and leave rolling week](../../../frontend/e2e/stats-ai-settings.spec.ts) | 19, 31, 68 | 19: 49, 68: 48.517 | Passed | 9.543 |
-| STATS-02 | [same-day repeats, consecutive dates, gap and historical longest streak](../../../frontend/e2e/stats-ai-settings.spec.ts) | 26, 31 | Not measured | Passed | 9.974 |
-| STATS-03 | [started course and selected paths differ from ownership and completion](../../../frontend/e2e/stats-ai-settings.spec.ts) | 16, 28, 32, 68 | 68: 48.517 | Passed | 9.454 |
-| STATS-04 | [activity and scores survive navigation, login and account isolation](../../../frontend/e2e/stats-ai-settings.spec.ts) | 68 | 68: 48.517 | Passed | 9.691 |
-| AI-01 | [default Anvil needs no personal key and generated content persists](../../../frontend/e2e/stats-ai-settings.spec.ts) | 39, 44, 45 | 39: 252.595, 44: 63.422, 45: 191.273 | Passed | 6.726 |
-| AI-02 | [save secondary Anvil model and use it after reload without changing other users](../../../frontend/e2e/stats-ai-settings.spec.ts) | 38 | 38: 22.789 | Passed | 8.674 |
-| AI-03 | [validate each external provider, persist choice and generate with zero app debit](../../../frontend/e2e/stats-ai-settings.spec.ts) | 40, 41, 49 | 40: 34.866, 41: 51.336 | Passed | 14.072 |
-| AI-04 | [replace and remove credential, explicitly return to Anvil and generate](../../../frontend/e2e/stats-ai-settings.spec.ts) | 43, 49 | 43: 119.499 | Passed | 8.573 |
-| AI-05 | [unavailable and malformed generation retain draft, retry once with one debit](../../../frontend/e2e/stats-ai-settings.spec.ts) | 39, 45, 47 | 39: 252.595, 45: 191.273, 47: 30.269 | Passed | 10.577 |
-| AI-06 | [account-bound local subscription checks, generates, refines and returns to Anvil](../../../frontend/e2e/stats-ai-settings.spec.ts) | 70–76 | 71: 22.812, 73: 15.753, 74: 45.316, 75: 127.285, 76: 16.885 | Pending final CI | Not run |
-| SUPPORT-01 | [persist notification preferences, validate phone and report unavailable transport](../../../frontend/e2e/stats-ai-settings.spec.ts) | 59, 60 | 59: 48.414 | Passed | 6.653 |
-| SUPPORT-02 | [mobile navigation, keyboard tabs/dialogs and missing-route recovery](../../../frontend/e2e/stats-ai-settings.spec.ts) | 61, 64 | 61: 19.114, 64: 23.676 | Passed | 9.357 |
+| AUTH-01 | [register, inspect identity, sign out and sign in](../../../frontend/e2e/accounts-courses.spec.ts) | 0, 62 | 0: 70, 62: 16.858 | Passed | 8.596 |
+| AUTH-02 | [reject bad login, reload session, sign out and isolate the next user](../../../frontend/e2e/accounts-courses.spec.ts) | 30, 52, 53, 61 | 52: 8.11, 61: 19.114 | Passed | 9.388 |
+| AUTH-03 | [deny private deep links and author actions across accounts](../../../frontend/e2e/accounts-courses.spec.ts) | 54, 66 | 54: 16.146, 66: 41.911 | Passed | 11.742 |
+| COURSE-01 | [create metadata and two manual outlines then reopen each](../../../frontend/e2e/accounts-courses.spec.ts) | 1 | 1: 44 | Passed | 7.335 |
+| COURSE-02 | [rename, reorder, remove and add outlines without losing activities](../../../frontend/e2e/accounts-courses.spec.ts) | 14, 36 | 14: 71, 36: 27.226 | Passed | 6.910 |
+| COURSE-03 | [edit metadata, cancel deletion, then delete and reopen old URL](../../../frontend/e2e/accounts-courses.spec.ts) | 63 | 63: 28.859 | Passed | 8.454 |
+| COURSE-04 | [discover by search, difficulty and sort, recover empty results](../../../frontend/e2e/accounts-courses.spec.ts) | 37, 51 | 37: 51.292, 51: 19.61 | Passed | 5.961 |
+| COURSE-05 | [generate selected AI outlines, append and persist editable lessons](../../../frontend/e2e/accounts-courses.spec.ts) | 39, 41, 44, 45, 47 | 39: 252.595, 41: 51.336, 44: 63.422, 45: 191.273, 47: 30.269 | Passed | 6.734 |
+| MODULE-01 | [edit Markdown, preview, reject empty title and persist learner rendering](../../../frontend/e2e/modules-study.spec.ts) | 58, 65, 69 | 65: 39.998, 69: 34.467 | Passed | 8.716 |
+| MODULE-02 | [add, edit, reorder and remove flashcards with saved learner order](../../../frontend/e2e/modules-study.spec.ts) | 11, 34, 55 | 11: 20, 34: 25.422, 55: 17.915 | Passed | 7.435 |
+| MODULE-03 | [edit quiz options and answer key then verify learner scoring](../../../frontend/e2e/modules-study.spec.ts) | 12, 35, 56 | 12: 40, 56: 61.858 | Passed | 7.356 |
+| MODULE-04 | [configure practice, execute, reload and explicitly remove it](../../../frontend/e2e/modules-study.spec.ts) | 13, 29 | 13: 21, 29: 12.449 | Passed | 6.539 |
+| MODULE-05 | [generate activities, cancel then append, refine and save](../../../frontend/e2e/modules-study.spec.ts) | 41, 42, 45, 46, 48 | 41: 51.336, 45: 191.273, 46: 31.168, 48: 9.691 | Passed | 12.716 |
+| STUDY-01 | [read content, run embedded code and rerun changed code](../../../frontend/e2e/modules-study.spec.ts) | 23, 50, 58, 65, 69 | 50: 52.061, 65: 39.998, 69: 34.467 | Passed | 5.721 |
+| STUDY-02 | [flip and persist every card including the final card](../../../frontend/e2e/modules-study.spec.ts) | 20, 33, 50 | 20: 117, 33: 45.97, 50: 52.061 | Passed | 6.376 |
+| STUDY-03 | [rate cards, filter and retain personal ratings](../../../frontend/e2e/modules-study.spec.ts) | 21, 33 | 33: 45.97 | Passed | 6.336 |
+| STUDY-04 | [incomplete quiz is blocked, score 50%, retry and persist 100%](../../../frontend/e2e/modules-study.spec.ts) | 24, 48, 50, 68 | 24: 28, 48: 9.691, 50: 52.061, 68: 48.517 | Passed | 7.189 |
+| STUDY-05 | [practice output, errors, timeout, reset, solution and saved code](../../../frontend/e2e/modules-study.spec.ts) | 18, 22, 50, 57 | 22: 40, 50: 52.061, 57: 8.419 | Passed | 12.094 |
+| STUDY-06 | [complete first module, resume, finish and reload 100% course](../../../frontend/e2e/modules-study.spec.ts) | 25, 32 | 25: 140 | Passed | 7.329 |
+| PATH-01 | [create a goal, edit its details and reload the empty path](../../../frontend/e2e/paths-sharing.spec.ts) | 3 | 3: 50 | Passed | 11.206 |
+| PATH-02 | [add owned and discovered courses as references, reject duplicate membership](../../../frontend/e2e/paths-sharing.spec.ts) | 4, 9, 67 | 4: 58, 9: 14, 67: 42.562 | Passed | 9.180 |
+| PATH-03 | [reorder references, cancel/remove course and cancel/delete path](../../../frontend/e2e/paths-sharing.spec.ts) | 5, 10, 15, 67 | 5: 26, 10: 15, 15: 17, 67: 42.562 | Passed | 6.025 |
+| PATH-04 | [discover, follow, reload selected list then unfollow without deleting](../../../frontend/e2e/paths-sharing.spec.ts) | 7 | 7: 33 | Passed | 7.468 |
+| PATH-05 | [study a selected multi-course path and retain weighted personal progress](../../../frontend/e2e/paths-sharing.spec.ts) | 27 | Not measured | Passed | 9.864 |
+| SHARE-01 | [publish, discover and study, unlist then restore private access](../../../frontend/e2e/paths-sharing.spec.ts) | 66 | 66: 41.911 | Passed | 18.872 |
+| SHARE-02 | [grant a named learner, deny outsider, revoke and deny bookmarked access](../../../frontend/e2e/paths-sharing.spec.ts) | 2, 8 | 8: 8 | Passed | 15.349 |
+| SHARE-03 | [share a path without implicitly granting its private course](../../../frontend/e2e/paths-sharing.spec.ts) | 6 | 6: 84 | Passed | 14.320 |
+| SHARE-04 | [source changes reach reused paths and deletion leaves unavailable reference](../../../frontend/e2e/paths-sharing.spec.ts) | 17 | 17: 34 | Passed | 12.186 |
+| SHARE-05 | [reuse counters reflect distinct active references and deletion decrements](../../../frontend/e2e/paths-sharing.spec.ts) | 67 | 67: 42.562 | Passed | 11.814 |
+| STATS-01 | [real reading sessions group by inactivity and leave rolling week](../../../frontend/e2e/stats-ai-settings.spec.ts) | 19, 31, 68 | 19: 49, 68: 48.517 | Passed | 10.118 |
+| STATS-02 | [same-day repeats, consecutive dates, gap and historical longest streak](../../../frontend/e2e/stats-ai-settings.spec.ts) | 26, 31 | Not measured | Passed | 10.654 |
+| STATS-03 | [started course and selected paths differ from ownership and completion](../../../frontend/e2e/stats-ai-settings.spec.ts) | 16, 28, 32, 68 | 68: 48.517 | Passed | 10.347 |
+| STATS-04 | [activity and scores survive navigation, login and account isolation](../../../frontend/e2e/stats-ai-settings.spec.ts) | 68 | 68: 48.517 | Passed | 9.448 |
+| AI-01 | [default Anvil needs no personal key and generated content persists](../../../frontend/e2e/stats-ai-settings.spec.ts) | 39, 44, 45 | 39: 252.595, 44: 63.422, 45: 191.273 | Passed | 6.745 |
+| AI-02 | [save secondary Anvil model and use it after reload without changing other users](../../../frontend/e2e/stats-ai-settings.spec.ts) | 38 | 38: 22.789 | Passed | 9.150 |
+| AI-03 | [validate each external provider, persist choice and generate with zero app debit](../../../frontend/e2e/stats-ai-settings.spec.ts) | 40, 41, 49 | 40: 34.866, 41: 51.336 | Passed | 15.159 |
+| AI-04 | [replace and remove credential, explicitly return to Anvil and generate](../../../frontend/e2e/stats-ai-settings.spec.ts) | 43, 49 | 43: 119.499 | Passed | 9.371 |
+| AI-05 | [unavailable and malformed generation retain draft, retry once with one debit](../../../frontend/e2e/stats-ai-settings.spec.ts) | 39, 45, 47 | 39: 252.595, 45: 191.273, 47: 30.269 | Passed | 10.835 |
+| AI-06 | Historical local subscription experiment; executable integration removed | 70–76 | 71: 22.812, 73: 15.753, 74: 45.316, 75: 127.285, 76: 16.885 | Deferred: isolation failed | Historical only |
+| SUPPORT-01 | [persist notification preferences, validate phone and report unavailable transport](../../../frontend/e2e/stats-ai-settings.spec.ts) | 59, 60 | 59: 48.414 | Passed | 7.160 |
+| SUPPORT-02 | [mobile navigation, keyboard tabs/dialogs and missing-route recovery](../../../frontend/e2e/stats-ai-settings.spec.ts) | 61, 64 | 61: 19.114, 64: 23.676 | Passed | 10.126 |
 
 The initial CI run was canceled after 14 cases timed out at required form labels, before their main UI flows. Its trace showed that exact label matching included a visual asterisk; anchored labels now allow that marker. No initial case is counted as passed. The corrected run [40307745119](https://github.com/fakoli/my-ai-study-buddy/actions/runs/40307745119), on5dd788a, completed32passed/8failed in7.0minutes. Its [40-row timing snapshot](ci-40307745119-timings.json) is preserved verbatim. Failed IDs: COURSE04, COURSE05, MODULE03, STUDY04, STUDY05, PATH02, SHARE01, STATS04. Seven failures arose from mismatched selectors or an unscoped debounced-search action; COURSE05 exposed an invalid synthetic suggestion with one objective where the real validator requires2–4. The fixture and selectors were repaired, then all40 scenarios passed on874d00b in run40310163615. Both run snapshots remain available; earlier failures have not been erased.
 
@@ -107,7 +109,7 @@ Notifications: records 59–60 show unavailable transports, valid saved toggles/
 
 Python/Pyodide: real UI infinite loop timed out at 5.485s including worker startup, with subsequent fresh execution at 0.483s ([09](screenshots/09-python-worker-timeout.png), [10](screenshots/10-python-worker-recovered.png)). Embedded JavaScript also exercised changed output, syntax/runtime error and 5.010s timeout. Workers prevent UI hangs and terminate runs; they are not a network/filesystem sandbox guarantee.
 
-## Validation checkpoint and limits
+## Earlier baseline validation checkpoint and limits
 
 - Full backend: **272 passed**, 38.84s, Python 3.14.6 in the isolated test environment; CI also runs Python 3.12. Includes JSON/SQLite rollback/concurrency, permission boundaries and AI failure cases.
 - Full frontend: **129 passed**, 30 files, 3.61s on Node 24.18.0 and 3.60s on Node 22.16.0 after dependency/security fixes. Frontend lint and production build passed. Vite still warns about chunks over 500kB.
@@ -117,9 +119,11 @@ Python/Pyodide: real UI infinite loop timed out at 5.485s including worker start
 - Compatible dependency remediation reduced production advisory metadata from 14 (4 high) to 4 (0 high). [Exact versions and remaining constraints](dependency-review.md) are recorded separately; no blanket force upgrade. Shared raw HTML is now allowlist-sanitized and Mermaid is strict with protected configuration, preserving ordinary Markdown/tables/code/protected images. Malicious HTML and directive-downgrade regressions pass.
 - The40 baseline scenarios are verified on874d00b; independent Task7/whole-branch review and final 41-case CI remain pending. External provider uptime, real delivery, real multi-day elapsed activity, a physical mobile device and production multi-process JSON writes are not certified by these local/deterministic tests. JSON transaction isolation is one process; use SQLite for concurrent processes.
 
-The [current catalog](../../user-journeys.md) records adopted policies D1–D8. The naming/AI workspace redesign and relaunch remain deferred follow-on work.
+The [current catalog](../../user-journeys.md) records adopted policies D1–D8. The owner subsequently authorized naming and the AI workspace as separate follow-on product work; they are outside this baseline checkpoint.
 
-## Task 7 addition: local subscription
+## Historical Task 7 experiment: local subscription (removed)
+
+The following records describe the prototype at its historical commits. It is not an available product feature. See [failed isolation qualification](codex-cli-qualification.md) and the current removal disposition above.
 
 AI-06 adds a 41st deterministic browser scenario without renumbering the original 40 baseline IDs: authorized local Codex selection and inference check, outline/full-module generation with cards and quiz, manual refinement/save/reopen, zero Anvil debit, account isolation and explicit return to Anvil. This addition does not retroactively extend run40310163615's 40-case result. Its final browser execution remains pending; the coordinator completed the real subscription UI flow on disposable content.
 
@@ -135,3 +139,20 @@ Task7 local verification: **294 backend tests passed** (38.45s); **133 frontend 
 ### Subscription CI checkpoint
 
 All **41 browser scenarios passed without retries** in [run40314773513](https://github.com/fakoli/my-ai-study-buddy/actions/runs/40314773513) on `d45aea3b64712076e196425241d6efc521fbf0be`; backend and Node22/24 tests, lint and builds also passed. The [verbatim timing snapshot](ci-40314773513-timings.json) preserves every result. Independent review then identified a descendant-process cleanup edge case; its repair and final whole-branch review remain pending. This checkpoint does not certify later commits.
+
+## Final repair rendered evidence
+
+| Case | Observation | Evidence | Tool-assisted time |
+| --- | --- | --- | --- |
+| Failed earlier flashcard save | Finish blocked until every failed encounter is acknowledged; retry then showed2/2 | records78→79, screenshots57→58/59 | 352.099s, includes compaction pause |
+| Owner path selection | Follow own path gives selected/active1; Unfollow returns0, ownership retained | record80, screenshot60 | 21.911s |
+| Concurrent course outline | Old editor Save conflicts; concurrently created lesson survives reload | records77→81, screenshots56→61 | 21.709s |
+| Signed-in public access/media | Anonymous public URL gates to Login; signed-in read and protected raster remain usable | record82, screenshot62 | See raw record |
+| Warmed course-card counts | Delete disposable module; My Courses updates3→2 without reload | record83, screenshot63 | 24.083s |
+| Quiz lost response | Committed0% response lost; answer edited; retry uses same full payload and counts once; explicit new attempt then100% | record84, screenshot64 | 14.876s |
+
+Backend negative tests additionally cover stale concurrent add/delete/edit, atomic rollback/replay, active/mislabeled/oversized images, disabled URL fetching, signed-out nested/media access, retired provider migration, and objectives. The coordinator does not label those tests as manual UI evidence.
+
+Final guard retest (record85, screenshot65): a precommit-failed quiz keeps edited answers but blocks a newer submission until Retry acknowledges the previous attempt. Recovery records the old score once; the new submission then persists100% through reload (21.628s). The prior lost-response test and all original card repairs remain covered. Final code review at `af5d483` has no remaining findings and required CI passed.
+
+Final automated per-journey elapsed sum: 378.324seconds. This sum is automated setup/assertion wall time, not human completion time. All40 results have retry0. Baseline gate complete; Coursekind expansion remains a separate implementation/review gate on the same unmerged PR.
