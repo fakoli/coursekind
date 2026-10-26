@@ -2,7 +2,7 @@
 
 Original40 browser journeys passed at `af5d483` in [baselineCI](https://github.com/fakoli/my-ai-study-buddy/actions/runs/40324667864). New product work remains in progress.
 
-Workspace lifecycle code reviewed and actualUI retested through `d92da47`.330 backend tests and163 frontend tests pass with lint/build; inherited Vite large-chunk warning remains. Current remote browser acceptance is still pending. Planning/build/revision/Jev UI not yet implemented.
+Workspace lifecycle code reviewed and actualUI retested through `d92da47`.330 backend tests and163 frontend tests pass with lint/build; inherited Vite large-chunk warning remains. Remote CI40330344648 at `4c9690e` passed all40 browser journeys with retry0 plus backend/Node22/24 checks. Planning/build/revision/Jev UI not yet implemented.
 
 Synthetic disposable UI records below include observation overhead; these are not server latency benchmarks. Historical failures remain after successful fixes.
 

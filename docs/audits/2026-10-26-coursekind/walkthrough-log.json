@@ -62,5 +62,13 @@
     "duration_ms": 14814,
     "commit": "d92da47",
     "notes": "Regression CK-T1-01: edited audience, archived without saving, restored in same tab, draft retained, Save succeeded and reload retained it. Earlier failed reproduction kept in log."
+  },
+  {
+    "journey": "WORKSPACE-06",
+    "scenario": "360px workspace navigation and path brief creation",
+    "status": "pass",
+    "duration_ms": 32168,
+    "commit": "d92da47",
+    "notes": "Verified DOM clientWidth=scrollWidth=360 and full-page screenshot. All five mobile destinations visible; Workspaces navigation works. Goal+Learning path scope created private workspace78f19fb2 with defaults5/3. Playwright label helper failed to locate Scope; native AX selection worked. AI panels pending."
   }
 ]
