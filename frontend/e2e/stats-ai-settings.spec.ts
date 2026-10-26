@@ -248,7 +248,7 @@ test('SUPPORT-02 — mobile navigation, keyboard tabs/dialogs and missing-route 
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await page.goto('/courses/does-not-exist');
   await expect(page.getByText('Course not found')).toBeVisible();
-  await page.getByRole('navigation', { name: 'Mobile navigation' }).getByRole('link', { name: 'Dashboard' }).click();
+  await page.getByRole('navigation', { name: 'Mobile navigation' }).getByRole('link', { name: 'Home' }).click();
   await expect(page.getByRole('heading', { name: /Welcome back/ })).toBeVisible();
   expect(errors).toEqual([]);
 });

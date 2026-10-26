@@ -33,6 +33,13 @@ export interface WorkspaceUpdate {
   archived?: boolean;
 }
 export const emptyBrief: WorkspaceBrief = {
-  goal: '', scope: 'course', prior_knowledge: '', audience: '', weekly_hours: null,
-  generate_flashcards: true, flashcard_count: 5, generate_quiz: true, quiz_question_count: 3,
+  goal: '',
+  scope: 'course',
+  prior_knowledge: '',
+  audience: '',
+  weekly_hours: null,
+  generate_flashcards: true,
+  flashcard_count: 5,
+  generate_quiz: true,
+  quiz_question_count: 3,
 };

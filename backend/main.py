@@ -232,7 +232,7 @@ async def force_500():
 # Import and register routers
 from api.routes import auth, progress, references, ai, notifications
 from api.routes import courses, learning_paths, modules, uploads, generation
-from api.routes import user_settings, admin, flashcard_ratings
+from api.routes import user_settings, admin, flashcard_ratings, workspaces
 
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
 app.include_router(user_settings.router, prefix="/api/v1/auth", tags=["auth"])
@@ -254,7 +254,5 @@ app.include_router(admin.router, prefix="/api/v1/admin", tags=["admin"])
 # Flashcard ratings routes
 app.include_router(flashcard_ratings.router, prefix="/api/v1", tags=["flashcard-ratings"])
 app.include_router(flashcard_ratings.feedback_router, prefix="/api/v1", tags=["flashcard-ratings"])
-
-from api.routes import workspaces
 
 app.include_router(workspaces.router, prefix="/api/v1/workspaces", tags=["workspaces"])
