@@ -74,3 +74,53 @@ Caught optional activity default-null serialization replacing unrequested cards;
 ## Limits / remaining gates
 
 Only single-process JSON and SQLite transactional guarantees; no distributed or multi-file power-loss atomicity claim. No live-provider qualification. Existing bundle-size warning persists. Browser scenarios are written/typechecked/listed but **not executed locally**; remote CI and root CUA required. Task3 adds wider revisions/history UI/restore; Task2 already persists immutable first-build history and performs explicit apply. No request for permission is needed for remaining coordinator work.
+
+## Review fix round 1 — T2-R1 cancellation admission race
+
+Read `/tmp/coursekind-task2-review.md`. Fixed Important T2-R1 only. T2-R2 disabled-activity count normalization and T2-R3 existing Vite warning remain assigned to Task 5/coordinator; no frontend/runtime/provider changes in this round.
+
+Changed `backend/services/workspace_runner.py`: both the initial job queued→running admission and each step admission now use a short concrete-store transaction. Inside the step transaction the runner rereads the live job cancellation flag and step state, exits/skips if cancelled or no longer queued, and claims running atomically. `_execute` (including provider awaits) begins only after the transaction exits. This defines cancellation before claim as stopped and cancellation after claim as an already admitted operation whose valid result may be retained/charged.
+
+Added `test_cancel_before_step_claim_prevents_inference_and_debit` in `backend/tests/test_workspace_jobs.py`, parametrized over the existing JSON/SQLite fixture. A deterministic barrier pauses the runner outside its second outer transaction (the step claim), lets cancellation commit, then releases execution. Per-task test depth excludes SQLite nested mutation savepoints from the barrier count. The test asserts cancelled job/step, zero model calls, no generation receipt or token transaction, and unchanged balance100. Existing `test_cancel_during_valid_result_stops_next_step` remains green and proves the already active valid result is retained/charged once while later steps stop.
+
+RED (before production fix):
+`uv run --directory backend pytest tests/test_workspace_jobs.py -k cancel_before_step_claim -q --show-capture=no --tb=short`
+→ **2 failed, 35 deselected in 0.12s**. JSON observed `running` rather than `cancelled`; SQLite reached `ready` rather than `cancelled`, confirming the stale admission path could continue after cancellation.
+
+GREEN narrow:
+`uv run --directory backend pytest tests/test_workspace_jobs.py -k 'cancel_before_step_claim or cancel_during_valid_result' -q --show-capture=no --tb=short`
+→ **4 passed, 33 deselected in 0.14s**.
+
+GREEN covering group (from backend):
+`uv run pytest tests/test_workspace_jobs.py tests/test_json_storage_concurrency.py tests/test_sqlite_transactions.py -q --show-capture=no --tb=short`
+→ **57 passed in 1.84s**.
+
+`uv run ruff check services/workspace_runner.py tests/test_workspace_jobs.py --output-format concise` → **All checks passed**. `uv run ruff format --check ...` initially requested one line collapse; applied formatter, final check → **2 files already formatted**. `git diff --check` clean. Self-review confirmed no provider await/task spawn inside the new transaction boundaries and no change to staging/finalize-only/provider identity/accounting behavior.
+
+## Python 3.12 CI compatibility repair
+
+CI run40335214165 exposed eager annotation evaluation on Python 3.12: `WorkspaceJobService.list` shadowed the builtin used by the later `retry(..., step_ids: list[str])` declaration. Python 3.14's lazy annotations had hidden this during imports. Audited all new Task 2 service/model declarations; the list-named job and plan service classes are the affected namespace boundaries. Added `from __future__ import annotations` to those two service modules only. No runner/cancellation/accounting behavior changed.
+
+Added `test_workspace_service_type_annotations_resolve`, evaluating every public method's `get_type_hints` in JobService, PlanService, ChangeService, WorkspaceContext and WorkspaceRunner. This catches the shadowing even under Python 3.14, including the list method's own lazy return annotation. New model schemas were also explicitly generated under Python 3.12.
+
+Isolated environment: `/tmp/coursekind-task2-py312.YPOg0F`, **CPython 3.12.13**. Created with `uv venv ... --python 3.12`; installed the existing backend/dev requirements with `uv pip install --python .../bin/python -e './backend[dev]'`. The normal backend `.venv`, interpreter selection, dependency declarations/lockfiles and runtime services were not changed.
+
+RED Python 3.12 import:
+`/tmp/coursekind-task2-py312.YPOg0F/bin/python -c 'from services.workspace_job_service import WorkspaceJobService'`
+→ `TypeError: 'function' object is not subscriptable` at the retry `step_ids: list[str]` annotation.
+
+RED Python 3.14 regression:
+`uv run --directory backend pytest tests/test_workspace_jobs.py -k type_annotations_resolve -q --show-capture=no --tb=short`
+→ **1 failed, 37 deselected in 0.07s**, with the same TypeError while evaluating `WorkspaceJobService.list`'s return annotation.
+
+GREEN isolated Python 3.12 imports and `WorkspacePlan/WorkspaceJob/ChangeSet.model_json_schema()` → **Python 3.12 Task 2 imports and schemas passed**.
+
+GREEN full backend on supported Python 3.12 (from backend):
+`/tmp/coursekind-task2-py312.YPOg0F/bin/python -m pytest -q --show-capture=no --tb=short`
+→ **383 passed in 51.38s**, exit0. Transcript: `/tmp/coursekind-task2-python312-full.txt`. This full run includes the final Task 2 regression additions, atomic cancellation fix, and compatibility regression.
+
+GREEN normal Python 3.14 regression:
+`uv run pytest tests/test_workspace_jobs.py -k type_annotations_resolve -q --show-capture=no --tb=short`
+→ **1 passed, 37 deselected in 0.01s**.
+
+Isolated-environment Ruff check on the two services and test file → **All checks passed**; format check → **3 files already formatted**. `git diff --check` clean. No browser execution, live provider call, service restart, root-doc edit, push or merge performed.

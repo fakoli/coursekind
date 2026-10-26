@@ -70,5 +70,70 @@
     "duration_ms": 32168,
     "commit": "d92da47",
     "notes": "Verified DOM clientWidth=scrollWidth=360 and full-page screenshot. All five mobile destinations visible; Workspaces navigation works. Goal+Learning path scope created private workspace78f19fb2 with defaults5/3. Playwright label helper failed to locate Scope; native AX selection worked. AI panels pending."
+  },
+  {
+    "journey": "WORKSPACE-01",
+    "scenario": "Live Anvil plan attempt 1",
+    "status": "fail",
+    "duration_ms": null,
+    "server_job_elapsed_ms": 155,
+    "commit": "ca8f8b3",
+    "notes": "Synthetic one-course/two-module goal. UI showed running then failed,0applicationcredits,no draft. Persisted job d0d0dd0a failed in155ms; cause under diagnosis, not classified as provider outage yet."
+  },
+  {
+    "journey": "WORKSPACE-01",
+    "scenario": "Explicit live Anvil retry during local model maintenance",
+    "result": "blocked-provider-unavailable",
+    "duration_ms": null,
+    "provider": "anvil/llm.primary",
+    "server_http_status": 503,
+    "application_credits": 0,
+    "commit": "ca8f8b3",
+    "notes": "Second explicit attempt failed in about 66ms; saved job remains discoverable, shows attempt 2 and zero credits. No automatic fallback. Safe temporary exception diagnostic confirmed upstream HTTP503."
+  },
+  {
+    "journey": "WORKSPACE-01",
+    "scenario": "Explicit retry after selecting mock OpenAI",
+    "result": "pass",
+    "duration_ms": 6553,
+    "provider": "mock OpenAI/gpt-test",
+    "commit": "a1e6f33",
+    "notes": "Attempt 3 is ready, updated provider provenance, zero application credits, plan editable; prior Anvil failures retained."
+  },
+  {
+    "journey": "WORKSPACE-01",
+    "scenario": "Edit saved plan, reload, apply private course",
+    "result": "pass",
+    "duration_ms": 15014,
+    "provider": "mock OpenAI/gpt-test",
+    "commit": "a1e6f33",
+    "notes": "Edited title survived reload; Apply created one linked course with two modules; applied plan read-only; first incomplete module selected by default with five cards and three questions."
+  },
+  {
+    "journey": "WORKSPACE-01",
+    "scenario": "Build first lesson, reload, dismiss/reopen review, apply and study",
+    "result": "pass",
+    "duration_ms": 36022,
+    "provider": "mock OpenAI/gpt-test",
+    "commit": "a1e6f33",
+    "notes": "Draft persisted through reload and dismissal, five cards/three questions; apply created history and Study link to same module, next incomplete module auto-selected."
+  },
+  {
+    "journey": "WORKSPACE-02",
+    "scenario": "Plan new path with explicitly selected foreign course, reorder, apply, inspect path",
+    "result": "pass",
+    "duration_ms": 35990,
+    "provider": "mock OpenAI/gpt-test",
+    "commit": "a1e6f33",
+    "notes": "Private two-course path has reused original course995b47b1 first and new course second, two modules each, original Baseline Learner attribution; workspace Build only offers owned new modules."
+  },
+  {
+    "journey": "WORKSPACE-06",
+    "scenario": "Partial two-module batch and selected-step recovery",
+    "result": "pass",
+    "duration_ms": 31166,
+    "provider": "mock OpenAI/gpt-test",
+    "commit": "a1e6f33",
+    "notes": "Injected fourth provider POST failure: first draft remains ready at attempt1; second fails. Explicit Retry step2 preserves first, produces second at attempt2; both review buttons available, no auto-apply."
   }
 ]
