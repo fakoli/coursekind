@@ -8,6 +8,7 @@ import type { CourseResponse } from '../../types';
 
 const identity = vi.hoisted(() => ({ user: { id: 'owner' }, isLoading: false }));
 vi.mock('./AuthContext', () => ({ useAuthContext: () => identity }));
+// String bodies exercise Response.blob() without mixing JSDOM Blob with Node 22 undici.
 const RealURL = URL;
 
 beforeEach(() => {
@@ -21,7 +22,7 @@ beforeEach(() => {
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); localStorage.clear(); });
 
 it('loads local markdown images using a header and revokes their blob on unmount', async () => {
-  const fetcher = vi.fn().mockResolvedValue(new Response(new Blob(['synthetic'])));
+  const fetcher = vi.fn().mockResolvedValue(new Response('synthetic'));
   vi.stubGlobal('fetch', fetcher);
   const view = render(<MarkdownRenderer content="![Private diagram](/api/v1/uploads/courses/c1/images/test.png)" />);
   const image = await screen.findByAltText('Private diagram');
@@ -56,7 +57,7 @@ it('aborts pending image reads on identity changes and never mounts the old resu
   view.rerender(<CourseImage src="/api/v1/uploads/courses/c1/images/x.png" alt="Secret" />);
   expect(pending[0].signal.aborted).toBe(true);
   await waitFor(() => expect(pending).toHaveLength(2));
-  pending[0].resolve(new Response(new Blob(['owner secret'])));
+  pending[0].resolve(new Response('owner secret'));
   pending[1].resolve(new Response('', { status: 404 }));
   expect(await screen.findByText('Image unavailable: Secret')).toBeInTheDocument();
   expect(URL.createObjectURL).not.toHaveBeenCalled();
@@ -65,7 +66,7 @@ it('aborts pending image reads on identity changes and never mounts the old resu
 });
 
 it('clears a loaded blob immediately when the identity changes', async () => {
-  const fetcher = vi.fn().mockResolvedValueOnce(new Response(new Blob(['secret'])))
+  const fetcher = vi.fn().mockResolvedValueOnce(new Response('secret'))
     .mockResolvedValue(new Response('', { status: 404 }));
   vi.stubGlobal('fetch', fetcher);
   const view = render(<CourseImage src="/api/v1/uploads/courses/c1/images/x.png" alt="Secret" />);
@@ -78,7 +79,7 @@ it('clears a loaded blob immediately when the identity changes', async () => {
 });
 
 it('uses the same protected renderer for course thumbnails', async () => {
-  const fetcher = vi.fn().mockResolvedValue(new Response(new Blob(['thumbnail'])));
+  const fetcher = vi.fn().mockResolvedValue(new Response('thumbnail'));
   vi.stubGlobal('fetch', fetcher);
   const course = { id: 'c1', title: 'Shared course', thumbnail_url: '/api/v1/uploads/courses/c1/images/x.png',
     difficulty: 'beginner', tags: [], author_name: 'Author', module_count: 1, times_added: 0 } as unknown as CourseResponse;
