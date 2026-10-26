@@ -1,6 +1,7 @@
 import time
 
 from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
@@ -82,6 +83,49 @@ async def request_logging_middleware(request: Request, call_next):
         # We must NOT swallow it here: a response built inside this
         # middleware's except would short-circuit the error contract.
         raise e
+
+
+@app.exception_handler(RequestValidationError)
+async def request_validation_exception_handler(request: Request, exc: RequestValidationError):
+    """Retain field diagnostics without echoing unvalidated credentials or request bodies."""
+    # SecretStr cannot protect a missing sibling field's raw input object. Rebuild
+    # the public errors instead of serializing exc/errors/body. Even custom
+    # validator messages can interpolate secrets, so use input-independent text.
+    messages = {
+        "missing": "Field required",
+        "string_type": "Input should be a valid string",
+        "string_too_short": "Text is shorter than the allowed minimum",
+        "string_too_long": "Text exceeds the allowed maximum",
+        "string_pattern_mismatch": "Text does not match the required format",
+        "literal_error": "Select a supported value",
+        "enum": "Select a supported value",
+        "json_invalid": "Request body must be valid JSON",
+        "model_attributes_type": "Input should be a valid object",
+        "dict_type": "Input should be a valid object",
+        "list_type": "Input should be a valid list",
+        "int_type": "Input should be a valid integer",
+        "int_parsing": "Input should be a valid integer",
+        "bool_type": "Input should be a valid boolean",
+        "bool_parsing": "Input should be a valid boolean",
+    }
+    errors = [
+        {
+            "loc": error["loc"],
+            "type": error["type"],
+            "msg": messages.get(error["type"], "Input does not satisfy this field's validation rules"),
+        }
+        for error in exc.errors()
+    ]
+    logger.warning(
+        "Request validation failed",
+        status_code=422,
+        error_code=ErrorCode.VALIDATION_ERROR.value,
+        error_count=len(errors),
+        path=request.url.path,
+        method=request.method,
+    )
+    # Preserve FastAPI's detail-list shape; omit input, ctx, body and exception text.
+    return JSONResponse(status_code=422, content={"detail": errors})
 
 
 @app.exception_handler(StudyBuddyException)
