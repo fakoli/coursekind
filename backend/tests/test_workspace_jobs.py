@@ -493,3 +493,50 @@ async def test_finalize_only_retry_needs_no_current_credential(setup_job, monkey
     await service.runner.wait_idle()
     assert (await service.get("owner", w.id, job.id)).state == "ready"
     assert len(state["calls"]) == 1
+
+
+@pytest.mark.asyncio
+async def test_cancel_before_step_claim_prevents_inference_and_debit(setup_job, monkeypatch):
+    from contextlib import asynccontextmanager
+    from contextvars import ContextVar
+
+    store, service, w, modules, state = setup_job
+    runner = service.runner
+    transaction = store.transaction
+    before_claim, release = asyncio.Event(), asyncio.Event()
+    runner_transactions = 0
+    depth = ContextVar("claim_test_transaction_depth", default=0)
+
+    @asynccontextmanager
+    async def pause_before_claim():
+        nonlocal runner_transactions
+        # Pause outside the storage transaction, so cancellation can commit first.
+        if depth.get() == 0 and asyncio.current_task() in runner.tasks.values():
+            runner_transactions += 1
+            if runner_transactions == 2:
+                before_claim.set()
+                await release.wait()
+        token = depth.set(depth.get() + 1)
+        try:
+            async with transaction():
+                yield
+        finally:
+            depth.reset(token)
+
+    monkeypatch.setattr(store, "transaction", pause_before_claim)
+    job = await service.start("owner", w.id, "build", build(modules[:1]))
+    try:
+        await asyncio.wait_for(before_claim.wait(), timeout=2)
+        cancelled = await service.cancel("owner", w.id, job.id, "cancel-before-claim")
+        assert cancelled.steps[0].state == "cancelled"
+    finally:
+        release.set()
+        await runner.wait_idle()
+    result = await service.get("owner", w.id, job.id)
+    assert result.state == "cancelled"
+    assert result.steps[0].state == "cancelled"
+    assert result.steps[0].credits == 0
+    assert not state["calls"]
+    assert not await store.list("generation_operations")
+    assert not await store.list("token_transactions")
+    assert (await store.get("users", "owner"))["token_balance"] == 100

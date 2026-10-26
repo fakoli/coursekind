@@ -76,20 +76,25 @@ class WorkspaceRunner:
     async def _run(self, job_id, snapshot):
         async with self.serial:
             try:
-                job = await self.storage.get("workspace_jobs", job_id)
-                if job["state"] != "queued":
-                    return
-                await self.storage.update(
-                    "workspace_jobs", job_id, dict(state="running", updated_at=now())
-                )
-                for step_id in job["step_ids"]:
+                async with self.storage.transaction():
                     job = await self.storage.get("workspace_jobs", job_id)
-                    step = await self.storage.get("workspace_steps", step_id)
-                    if job["cancel_requested"]:
-                        break
-                    if step["state"] != "queued":
-                        continue
-                    await self.storage.update("workspace_steps", step_id, {"state": "running"})
+                    if job["state"] != "queued" or job["cancel_requested"]:
+                        return
+                    await self.storage.update(
+                        "workspace_jobs", job_id, dict(state="running", updated_at=now())
+                    )
+                for step_id in job["step_ids"]:
+                    # Cancellation and admission arbitrate under the same storage lock.
+                    # Once claimed, a valid in-flight result may finish and be charged.
+                    async with self.storage.transaction():
+                        job = await self.storage.get("workspace_jobs", job_id)
+                        step = await self.storage.get("workspace_steps", step_id)
+                        if job["cancel_requested"]:
+                            break
+                        if step["state"] != "queued":
+                            continue
+                        await self.storage.update("workspace_steps", step_id, {"state": "running"})
+                    # No provider await runs inside the claim transaction.
                     try:
                         await self._execute(job, step, snapshot)
                     except asyncio.CancelledError:
