@@ -5,6 +5,7 @@ filtered flashcards, and unhelpful-cards feedback — the paths that were
 previously uncovered.
 """
 
+from contextlib import nullcontext
 from datetime import datetime, timezone
 from uuid import uuid4
 
@@ -20,6 +21,9 @@ class FakeStorage:
 
     def __init__(self):
         self.data: dict[str, dict] = {}
+
+    def transaction(self):
+        return nullcontext(self)
 
     async def get(self, collection, key):
         return self.data.get(collection, {}).get(key)

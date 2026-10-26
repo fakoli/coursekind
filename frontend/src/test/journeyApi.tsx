@@ -31,6 +31,11 @@ export function installJourneyApi(modules: Module[] = []) {
     } as Course,
     modules: structuredClone(modules),
     progress: new Map<string, { reviews: number; completed: boolean }>(),
+    timezone: 'UTC',
+    actions: [] as Record<string, unknown>[],
+    failQuiz: false,
+    failPersonal: false,
+    personal: new Map<string, Record<string, unknown>>(),
     failCompletion: false,
     failReview: false,
     failModuleCreate: false,
@@ -47,6 +52,10 @@ export function installJourneyApi(modules: Module[] = []) {
     const method = init?.method || 'GET';
     const body = init?.body ? JSON.parse(String(init.body)) : {};
     const reply = (data: unknown, status = 200) => new Response(JSON.stringify(data), { status });
+    if (path === '/notifications/preferences') {
+      if (method === 'PUT' && body.timezone) state.timezone = body.timezone;
+      return reply({ timezone: state.timezone });
+    }
     if (path === '/auth/me') return reply({ id: 'u1', name: 'Author', email: 'author@example.test', role: 'user', token_balance: 100 });
     if (path === '/courses' && method === 'POST') {
       state.course = { ...state.course, ...body };
@@ -64,6 +73,7 @@ export function installJourneyApi(modules: Module[] = []) {
         visibility: 'private', created_at: state.course.created_at, updated_at: state.course.updated_at },
       courses: [{ ...state.course, module_count: state.modules.length }],
     });
+    if (path === '/generate/quiz') return reply({ quiz: { questions: [{ question: 'Extra question?', options: ['Yes', 'No'], correct_index: 0 }] }, tokens_used: 1 });
     if (path === '/generate/suggest-modules') return reply({ suggestions: [{
       title: 'Suggested lesson', description: 'Generated outline', objectives: ['Learn addition'], suggested: true,
     }], tokens_used: 10 });
@@ -112,6 +122,10 @@ export function installJourneyApi(modules: Module[] = []) {
     const progressMatch = path.match(/^\/progress\/modules\/c1\/([^/]+)$/);
     if (progressMatch) {
       const id = progressMatch[1];
+      if (method === "POST") state.actions.push(body);
+      if (body.action === "submit_quiz" && state.failQuiz) return reply({ detail: "Quiz save failed" }, 500);
+      if (method === 'GET') return reply(state.personal.get(id) ?? null);
+      if (body.action === 'save_state' && state.failPersonal) return reply({ detail: 'Personal save failed' }, 500);
       const progress = state.progress.get(id) || { reviews: 0, completed: false };
       if (body.action === 'complete') {
         if (state.failCompletion) return reply({ detail: 'Try again' }, 500);
@@ -122,12 +136,18 @@ export function installJourneyApi(modules: Module[] = []) {
         progress.reviews++;
       }
       state.progress.set(id, progress);
-      return reply({ id: `progress-${id}`, user_id: 'u1', course_id: 'c1', module_id: id,
+      const previous = state.personal.get(id) ?? {};
+      const saved = { id: `progress-${id}`, user_id: 'u1', course_id: 'c1', module_id: id,
         status: progress.completed ? 'completed' : 'in_progress', content_read: true,
         started_at: '2026-10-25T12:00:00Z', completed_at: progress.completed ? '2026-10-25T12:01:00Z' : null,
         flashcards_reviewed: progress.reviews, quiz_score: null, quiz_attempts: 0,
         last_quiz_at: null, time_spent_minutes: 0,
-        created_at: '2026-10-25T12:00:00Z', updated_at: '2026-10-25T12:01:00Z' });
+        created_at: '2026-10-25T12:00:00Z', updated_at: '2026-10-25T12:01:00Z', ...previous,
+        ...(body.practice_code !== undefined ? { practice_code: body.practice_code } : {}),
+        ...(body.extra_quiz_questions !== undefined ? { extra_quiz_questions: body.extra_quiz_questions } : {}),
+      };
+      state.personal.set(id, saved);
+      return reply(saved);
     }
     return reply({ detail: `Unexpected test request: ${method} ${path}` }, 404);
   });

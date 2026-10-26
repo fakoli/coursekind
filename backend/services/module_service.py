@@ -18,6 +18,7 @@ from models.module import (
 from services.access_service import AccessService
 from services.base_service import BaseService
 from storage.base import StorageBackend
+from utils.card_identity import identified_cards
 
 
 class ModuleService(BaseService):
@@ -39,7 +40,12 @@ class ModuleService(BaseService):
             course_id, user_id
         )
         if course_data.get("source") == "filesystem":
-            return await self._get_filesystem_module(course_id, module_id)
+            module = await self._get_filesystem_module(course_id, module_id)
+            module.flashcards = [
+                FlashcardData(**c)
+                for c in identified_cards(module_id, [c.model_dump() for c in module.flashcards])
+            ]
+            return module
 
         # Get database module
         module_data = await self.storage.get("modules", module_id)
@@ -100,6 +106,10 @@ class ModuleService(BaseService):
             updated_at=now,
         )
 
+        module.flashcards = [
+            FlashcardData(**c)
+            for c in identified_cards(module.id, [c.model_dump() for c in module.flashcards])
+        ]
         await self.storage.create("modules", module.model_dump(mode="json"))
         return module
 
@@ -126,6 +136,10 @@ class ModuleService(BaseService):
                 created_at=now,
                 updated_at=now,
             )
+            module.flashcards = [
+                FlashcardData(**c)
+                for c in identified_cards(module.id, [c.model_dump() for c in module.flashcards])
+            ]
             module_data_list.append(module.model_dump(mode="json"))
 
         results = await self.storage.batch_create("modules", module_data_list)
@@ -149,6 +163,19 @@ class ModuleService(BaseService):
         # Apply updates
         updates = data.model_dump(exclude_unset=True, mode="json")
         updates["updated_at"] = datetime.now(timezone.utc).isoformat()
+        if updates.get("flashcards") is not None:
+            current_ids = {
+                c["id"] for c in identified_cards(module_id, module_data.get("flashcards", []))
+            }
+            kept = set()
+            cards = []
+            for card in updates["flashcards"]:
+                card_id = card.get("id")
+                if card_id not in current_ids or card_id in kept:
+                    card_id = str(uuid4())
+                kept.add(card_id)
+                cards.append({**card, "id": card_id})
+            updates["flashcards"] = cards
 
         updated_data = await self.storage.update("modules", module_id, updates)
         if not updated_data:
@@ -363,7 +390,7 @@ class ModuleService(BaseService):
     def _parse_module(self, data: dict) -> Module:
         """Parse module data from storage into Module model."""
         flashcards = []
-        for card in data.get("flashcards", []):
+        for card in identified_cards(data["id"], data.get("flashcards", [])):
             if isinstance(card, dict):
                 flashcards.append(FlashcardData(**card))
             else:

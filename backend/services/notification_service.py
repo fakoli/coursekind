@@ -16,7 +16,9 @@ from storage.base import StorageBackend
 
 
 class NotificationService:
-    def __init__(self, storage: StorageBackend, email_service: EmailService, sms_service: SMSService):
+    def __init__(
+        self, storage: StorageBackend, email_service: EmailService, sms_service: SMSService
+    ):
         self.storage = storage
         self.email_service = email_service
         self.sms_service = sms_service
@@ -25,12 +27,15 @@ class NotificationService:
         """Get notification preferences for a user."""
         prefs_data = await self.storage.get("notification_preferences", user_id)
 
+        user = await self.storage.get("users", user_id)
+        canonical_timezone = (user or {}).get("timezone", "UTC")
         if prefs_data:
-            return NotificationPreferences(**prefs_data)
+            return NotificationPreferences(**{**prefs_data, "timezone": canonical_timezone})
 
         default_prefs = NotificationPreferences(
             user_id=user_id,
             email_address=email,
+            timezone=canonical_timezone,
         )
         data = default_prefs.model_dump()
         data["id"] = user_id  # Use user_id as document id
@@ -41,14 +46,19 @@ class NotificationService:
         self, user_id: str, updates: NotificationPreferencesUpdate
     ) -> NotificationPreferences:
         """Update notification preferences."""
-        prefs_data = await self.storage.get("notification_preferences", user_id)
-        if not prefs_data:
-            raise NotFoundException("Notification preferences not found")
-
-        update_dict = updates.model_dump(exclude_unset=True)
-        updated = await self.storage.update("notification_preferences", user_id, update_dict)
-
-        return NotificationPreferences(**updated)
+        async with self.storage.transaction():
+            prefs_data = await self.storage.get("notification_preferences", user_id)
+            if not prefs_data:
+                raise NotFoundException("Notification preferences not found")
+            update_dict = updates.model_dump(exclude_unset=True)
+            user = await self.storage.get("users", user_id)
+            canonical = (user or {}).get("timezone", "UTC")
+            if update_dict.get("timezone") is not None:
+                canonical = update_dict["timezone"]
+                await self.storage.update("users", user_id, {"timezone": canonical})
+            update_dict["timezone"] = canonical
+            updated = await self.storage.update("notification_preferences", user_id, update_dict)
+            return NotificationPreferences(**updated)
 
     async def get_history(
         self, user_id: str, limit: int = 50, offset: int = 0
@@ -57,9 +67,11 @@ class NotificationService:
         records = await self.storage.list("notifications", {"user_id": user_id})
 
         records.sort(
-            key=lambda r: r["sent_at"]
-            if isinstance(r["sent_at"], datetime)
-            else datetime.fromisoformat(r["sent_at"]),
+            key=lambda r: (
+                r["sent_at"]
+                if isinstance(r["sent_at"], datetime)
+                else datetime.fromisoformat(r["sent_at"])
+            ),
             reverse=True,
         )
 

@@ -204,7 +204,7 @@ export function CourseDetail() {
                 {progressData.total_time_spent_minutes > 0 && (
                   <span className="flex items-center gap-1">
                     <Clock className="w-4 h-4" />
-                    {progressData.total_time_spent_minutes} min studied
+                    {Math.round(progressData.total_time_spent_minutes * 10) / 10} min studied
                   </span>
                 )}
               </div>

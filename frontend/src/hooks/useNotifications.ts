@@ -17,6 +17,8 @@ export function useUpdateNotificationPreferences() {
       notificationsApi.updatePreferences(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications', 'preferences'] });
+      queryClient.invalidateQueries({ queryKey: ['progress'] });
+      queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
     },
   });
 }

@@ -1,3 +1,4 @@
+import { usePathProgress } from '../hooks/useProgress';
 import { SharingPanel } from '../components/courses/SharingPanel';
 import { useFollowPath, useReorderCoursesInPath } from '../hooks/useLearningPaths';
 import { useCourses } from '../hooks/useCourses';
@@ -42,6 +43,7 @@ export function LearningPathDetail() {
   const { success, error: showError } = useToast();
 
   const { data, isLoading, error } = useLearningPath(pathId || '');
+  const { data: progress } = usePathProgress(pathId || '');
   const updatePath = useUpdateLearningPath();
   const follow = useFollowPath();
   const reorder = useReorderCoursesInPath();
@@ -228,6 +230,8 @@ export function LearningPathDetail() {
         }}>{data.is_following ? 'Unfollow' : 'Follow path'}</Button>}
       </div>
 
+      {progress && <Card><CardContent><p className="font-medium">Your progress: {progress.completion_percentage}% · {progress.completed_courses} of {progress.total_courses} courses completed</p>
+        <p className="text-sm text-gray-600">Each course has equal weight. Empty and unavailable courses contribute 0%.</p></CardContent></Card>}
       {isOwner && <SharingPanel resource="paths" id={path.id} visibility={path.visibility} />}
       {/* Path Info */}
       <Card>
@@ -262,6 +266,7 @@ export function LearningPathDetail() {
                 <span>{index + 1}.</span>
                 {course ? <Link to={`/courses/${id}`} className="flex-1 min-w-0">
                   <h3 className="font-medium">{course.title}</h3>
+                  {progress?.courses.find(c => c.course_id === id) && <p className="text-sm text-indigo-600">{progress.courses.find(c => c.course_id === id)!.completion_percentage}% complete</p>}
                   <p className="text-sm text-gray-500">{course.module_count} {course.module_count === 1 ? 'module' : 'modules'} · by {course.author_name}</p>
                 </Link> : <div className="flex-1"><h3 className="font-medium">Unavailable course</h3>
                   <p className="text-sm text-gray-600">This course was removed or you no longer have access.</p></div>}

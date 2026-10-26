@@ -1,4 +1,4 @@
-import { Trash2, Check } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import { Textarea } from '../common/Textarea';
 import { Card, CardContent } from '../common/Card';
 import type { QuizQuestionData } from '../../types';
@@ -61,17 +61,12 @@ export function QuizQuestionItem({
                       ? 'bg-green-50 border-2 border-green-200'
                       : 'bg-gray-50 border-2 border-transparent hover:border-gray-200'
                   }`}
-                  onClick={() => onUpdateQuestion('correct_index', oIndex)}
+
                 >
-                  <div
-                    className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
-                      isCorrect
-                        ? 'bg-green-500 text-white'
-                        : 'bg-white border-2 border-gray-300'
-                    }`}
-                  >
-                    {isCorrect && <Check className="w-4 h-4" />}
-                  </div>
+                  <input type="radio" name={`correct-answer-${index}`} checked={isCorrect}
+                    aria-label={`Correct answer ${String.fromCharCode(65 + oIndex)}`}
+                    onChange={() => onUpdateQuestion('correct_index', oIndex)}
+                    className="w-5 h-5 accent-green-600" />
                   <span className={`w-6 font-medium text-sm ${isCorrect ? 'text-green-700' : 'text-gray-500'}`}>
                     {String.fromCharCode(65 + oIndex)}.
                   </span>

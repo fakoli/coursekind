@@ -40,6 +40,14 @@ export function usePathProgress(pathId: string) {
   });
 }
 
+export function useModuleProgress(courseId: string, moduleId: string) {
+  return useQuery({
+    queryKey: ['progress', 'modules', courseId, moduleId],
+    queryFn: () => progressApi.getModuleProgress(courseId, moduleId),
+    enabled: !!courseId && !!moduleId,
+  });
+}
+
 export function useUpdateModuleProgress() {
   const queryClient = useQueryClient();
 
@@ -55,7 +63,10 @@ export function useUpdateModuleProgress() {
       courseId: string;
       moduleId: string;
       data: UpdateModuleProgressRequest;
-    }) => progressApi.updateModuleProgress(courseId, moduleId, data),
+    }) => {
+      data.event_id ??= crypto.randomUUID();
+      return progressApi.updateModuleProgress(courseId, moduleId, data);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['progress'] });
     },

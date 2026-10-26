@@ -1,8 +1,9 @@
 from datetime import datetime
 from enum import Enum
 from typing import Literal
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, field_validator
 
 
 class NotificationChannel(str, Enum):
@@ -47,7 +48,7 @@ class NotificationPreferences(BaseModel):
     quiet_hours_enabled: bool = False
     quiet_hours_start: str = "22:00"
     quiet_hours_end: str = "08:00"
-    timezone: str = "America/Los_Angeles"
+    timezone: str = "UTC"
 
     # Per-type toggles
     send_encouragement: bool = True
@@ -73,6 +74,16 @@ class NotificationPreferencesUpdate(BaseModel):
     timezone: str | None = None
     send_encouragement: bool | None = None
     send_hints: bool | None = None
+
+    @field_validator("timezone")
+    @classmethod
+    def valid_timezone(cls, value: str | None) -> str | None:
+        if value is not None:
+            try:
+                ZoneInfo(value)
+            except (ZoneInfoNotFoundError, ValueError) as exc:
+                raise ValueError("Choose a valid IANA timezone") from exc
+        return value
 
 
 class NotificationRecord(BaseModel):

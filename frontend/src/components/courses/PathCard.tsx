@@ -1,3 +1,4 @@
+import { usePathProgress } from '../../hooks/useProgress';
 import { CourseImage } from '../common/CourseImage';
 import { Link } from 'react-router-dom';
 import { BookOpen, Clock, MoreVertical, Play, CheckCircle } from 'lucide-react';
@@ -27,11 +28,12 @@ const defaultThumbnails: Record<CourseDifficulty, string> = {
 };
 
 export function PathCard({ path, onOptions, progress }: PathCardProps) {
+  const { data: savedProgress } = usePathProgress(path.id);
   const colors = difficultyColors[path.difficulty];
-  const progressPercent = progress && progress.totalCourses > 0
+  const progressPercent = savedProgress?.completion_percentage ?? (progress && progress.totalCourses > 0
     ? Math.round((progress.completedCourses / progress.totalCourses) * 100)
-    : 0;
-  const isComplete = progress && progress.completedCourses === progress.totalCourses && progress.totalCourses > 0;
+    : 0);
+  const isComplete = savedProgress ? savedProgress.completion_percentage === 100 : progress && progress.completedCourses === progress.totalCourses && progress.totalCourses > 0;
 
   return (
     <Link to={`/paths/${path.id}`}>
@@ -86,11 +88,11 @@ export function PathCard({ path, onOptions, progress }: PathCardProps) {
           )}
 
           {/* Progress bar (only shown if enrolled) */}
-          {progress?.isEnrolled && (
+          {(savedProgress || progress?.isEnrolled) && (
             <div className="mt-3">
               <div className="flex items-center justify-between text-xs mb-1.5">
                 <span className="text-gray-600 font-medium">
-                  {progress.completedCourses} of {progress.totalCourses} courses
+                  {savedProgress?.completed_courses ?? progress?.completedCourses ?? 0} of {savedProgress?.total_courses ?? progress?.totalCourses ?? 0} courses completed
                 </span>
                 <span className={`font-semibold ${isComplete ? 'text-green-600' : 'text-indigo-600'}`}>
                   {progressPercent}%

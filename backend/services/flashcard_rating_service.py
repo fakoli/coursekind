@@ -31,200 +31,91 @@ class FlashcardRatingService:
         module_id: str,
         data: RateFlashcardRequest,
     ) -> FlashcardRatingResponse:
-        """Rate a flashcard. Updates existing rating if one exists."""
-        now = datetime.now(timezone.utc)
-
-        # Check if module exists
-        module = await AccessService(self.storage).require_module(course_id, module_id, user_id)
-        if not module or module.get("course_id") != course_id:
-            raise NotFoundException("Module not found", code=ErrorCode.MODULE_NOT_FOUND)
-
-        # Verify flashcard index is valid
-        flashcards = module.get("flashcards", [])
-        if data.flashcard_index < 0 or data.flashcard_index >= len(flashcards):
-            raise NotFoundException("Flashcard not found", code=ErrorCode.NOT_FOUND)
-
-        # Check for existing rating
-        existing_ratings = await self.storage.list(
-            "flashcard_ratings",
-            {
-                "user_id": user_id,
-                "module_id": module_id,
-                "course_id": course_id,
-                "flashcard_index": data.flashcard_index,
-            },
-        )
-
-        if existing_ratings:
-            # Update existing rating
-            existing = existing_ratings[0]
-            existing["rating"] = data.rating.value
-            existing["updated_at"] = now.isoformat()
-            await self.storage.update("flashcard_ratings", existing["id"], existing)
-            return FlashcardRatingResponse(
+        """Resolve index once, persist stable identity, and serialize rating updates."""
+        async with self.storage.transaction():
+            module = await AccessService(self.storage).require_module(course_id, module_id, user_id)
+            cards = module.get("flashcards", [])
+            if not 0 <= data.flashcard_index < len(cards):
+                raise NotFoundException("Flashcard not found")
+            card_id = cards[data.flashcard_index]["id"]
+            if data.flashcard_id is not None and data.flashcard_id != card_id:
+                raise NotFoundException("Flashcard changed; reload before rating")
+            records = await self.storage.list(
+                "flashcard_ratings",
+                {
+                    "user_id": user_id,
+                    "course_id": course_id,
+                    "module_id": module_id,
+                    "flashcard_id": card_id,
+                },
+            )
+            now = datetime.now(timezone.utc).isoformat()
+            record = (
+                records[0]
+                if records
+                else {
+                    "id": str(uuid4()),
+                    "user_id": user_id,
+                    "course_id": course_id,
+                    "module_id": module_id,
+                    "created_at": now,
+                }
+            )
+            record.update(
+                flashcard_id=card_id,
                 flashcard_index=data.flashcard_index,
-                rating=data.rating,
-                updated=True,
+                rating=data.rating.value,
+                updated_at=now,
+            )
+            if records:
+                await self.storage.update("flashcard_ratings", record["id"], record)
+            else:
+                await self.storage.create("flashcard_ratings", record)
+            return FlashcardRatingResponse(
+                flashcard_index=data.flashcard_index, rating=data.rating, updated=bool(records)
             )
 
-        # Create new rating
-        rating_record = {
-            "id": str(uuid4()),
-            "user_id": user_id,
-            "course_id": course_id,
-            "module_id": module_id,
-            "flashcard_index": data.flashcard_index,
-            "flashcard_id": data.flashcard_id,
-            "rating": data.rating.value,
-            "created_at": now.isoformat(),
-            "updated_at": now.isoformat(),
-        }
-        await self.storage.create("flashcard_ratings", rating_record)
-
-        return FlashcardRatingResponse(
-            flashcard_index=data.flashcard_index,
-            rating=data.rating,
-            updated=False,
-        )
-
     async def get_user_ratings(
-        self,
-        user_id: str,
-        module_id: str,
-        course_id: str | None = None,
+        self, user_id: str, module_id: str, course_id: str | None = None
     ) -> list[FlashcardRatingRecord]:
-        """Get all ratings for a user in a specific readable module."""
         if course_id is None:
             module = await self.storage.get("modules", module_id)
             if not module:
                 raise NotFoundException("Module not found")
             course_id = module["course_id"]
-        await AccessService(self.storage).require_module(course_id, module_id, user_id)
-        ratings = await self.storage.list(
+        module = await AccessService(self.storage).require_module(course_id, module_id, user_id)
+        indexes = {c["id"]: i for i, c in enumerate(module.get("flashcards", []))}
+        records = await self.storage.list(
             "flashcard_ratings",
-            {"user_id": user_id, "course_id": course_id, "module_id": module_id},
+            {
+                "user_id": user_id,
+                "course_id": course_id,
+                "module_id": module_id,
+            },
         )
-
+        # Unidentified legacy ratings cannot safely be attributed after content edits.
         return [
-            FlashcardRatingRecord(
-                id=r["id"],
-                user_id=r["user_id"],
-                course_id=r["course_id"],
-                module_id=r["module_id"],
-                flashcard_index=r["flashcard_index"],
-                flashcard_id=r.get("flashcard_id"),
-                rating=FlashcardRating(r["rating"]),
-                created_at=ensure_datetime(r["created_at"]) or datetime.now(timezone.utc),
-                updated_at=ensure_datetime(r["updated_at"]) or datetime.now(timezone.utc),
-            )
-            for r in ratings
+            FlashcardRatingRecord(**{**r, "flashcard_index": indexes[r["flashcard_id"]]})
+            for r in records
+            if r.get("flashcard_id") in indexes
         ]
 
     async def get_rating_summary(
-        self,
-        user_id: str,
-        course_id: str,
-        module_id: str,
+        self, user_id: str, course_id: str, module_id: str
     ) -> FlashcardRatingSummary:
-        """Get summary of ratings for a module."""
-        # Get module to know total flashcards
-        module = await AccessService(self.storage).require_module(course_id, module_id, user_id)
-        if not module or module.get("course_id") != course_id:
-            raise NotFoundException("Module not found", code=ErrorCode.MODULE_NOT_FOUND)
-
-        total = len(module.get("flashcards", []))
-
-        # Get user's ratings for this module
-        ratings = await self.storage.list(
-            "flashcard_ratings",
-            {"user_id": user_id, "course_id": course_id, "module_id": module_id},
-        )
-
-        # Count by rating type
-        counts = {r.value: 0 for r in FlashcardRating}
-        for rating in ratings:
-            rating_value = rating["rating"]
-            if rating_value in counts:
-                counts[rating_value] += 1
-
-        rated_count = len(ratings)
-
-        return FlashcardRatingSummary(
-            total=total,
-            unrated=total - rated_count,
-            easy=counts[FlashcardRating.EASY.value],
-            medium=counts[FlashcardRating.MEDIUM.value],
-            hard=counts[FlashcardRating.HARD.value],
-            unhelpful=counts[FlashcardRating.UNHELPFUL.value],
-        )
+        _, summary = await self.get_ratings_with_summary(user_id, course_id, module_id)
+        return summary
 
     async def get_ratings_with_summary(
-        self,
-        user_id: str,
-        course_id: str,
-        module_id: str,
+        self, user_id: str, course_id: str, module_id: str
     ) -> tuple[list[FlashcardRatingRecord], FlashcardRatingSummary]:
-        """Get both ratings and summary in a single call.
-
-        This is more efficient than calling get_user_ratings and get_rating_summary
-        separately as it shares the database queries.
-
-        Args:
-            user_id: User ID
-            course_id: Course ID
-            module_id: Module ID
-
-        Returns:
-            Tuple of (ratings_list, summary)
-        """
-        # Get module to know total flashcards
         module = await AccessService(self.storage).require_module(course_id, module_id, user_id)
-        if not module or module.get("course_id") != course_id:
-            raise NotFoundException("Module not found", code=ErrorCode.MODULE_NOT_FOUND)
-
-        total = len(module.get("flashcards", []))
-
-        # Get user's ratings for this module (single query)
-        ratings_raw = await self.storage.list(
-            "flashcard_ratings",
-            {"user_id": user_id, "course_id": course_id, "module_id": module_id},
-        )
-
-        # Build ratings list
-        ratings = [
-            FlashcardRatingRecord(
-                id=r["id"],
-                user_id=r["user_id"],
-                course_id=r["course_id"],
-                module_id=r["module_id"],
-                flashcard_index=r["flashcard_index"],
-                flashcard_id=r.get("flashcard_id"),
-                rating=FlashcardRating(r["rating"]),
-                created_at=ensure_datetime(r["created_at"]) or datetime.now(timezone.utc),
-                updated_at=ensure_datetime(r["updated_at"]) or datetime.now(timezone.utc),
-            )
-            for r in ratings_raw
-        ]
-
-        # Count by rating type
+        ratings = await self.get_user_ratings(user_id, module_id, course_id)
         counts = {r.value: 0 for r in FlashcardRating}
-        for rating_raw in ratings_raw:
-            rating_value = rating_raw["rating"]
-            if rating_value in counts:
-                counts[rating_value] += 1
-
-        rated_count = len(ratings_raw)
-
-        summary = FlashcardRatingSummary(
-            total=total,
-            unrated=total - rated_count,
-            easy=counts[FlashcardRating.EASY.value],
-            medium=counts[FlashcardRating.MEDIUM.value],
-            hard=counts[FlashcardRating.HARD.value],
-            unhelpful=counts[FlashcardRating.UNHELPFUL.value],
-        )
-
-        return ratings, summary
+        for rating in ratings:
+            counts[rating.rating.value] += 1
+        total = len(module.get("flashcards", []))
+        return ratings, FlashcardRatingSummary(total=total, unrated=total - len(ratings), **counts)
 
     async def get_filtered_flashcards(
         self,
@@ -242,11 +133,8 @@ class FlashcardRatingService:
         flashcards = module.get("flashcards", [])
 
         # Get user's ratings
-        ratings = await self.storage.list(
-            "flashcard_ratings",
-            {"user_id": user_id, "course_id": course_id, "module_id": module_id},
-        )
-        rating_map = {r["flashcard_index"]: FlashcardRating(r["rating"]) for r in ratings}
+        ratings = await self.get_user_ratings(user_id, module_id, course_id)
+        rating_map = {r.flashcard_index: r.rating for r in ratings}
 
         # Build filtered list
         result = []
@@ -310,7 +198,18 @@ class FlashcardRatingService:
         # Group by module and flashcard index
         feedback_map: dict[tuple[str, int], list] = {}
         for rating in unhelpful_ratings:
-            key = (rating["module_id"], rating["flashcard_index"])
+            module = module_map.get(rating["module_id"])
+            if not module:
+                continue
+            from utils.card_identity import identified_cards
+
+            ids = {
+                c["id"]: i
+                for i, c in enumerate(identified_cards(module["id"], module.get("flashcards", [])))
+            }
+            if rating.get("flashcard_id") not in ids:
+                continue
+            key = (rating["module_id"], ids[rating["flashcard_id"]])
             if key not in feedback_map:
                 feedback_map[key] = []
             feedback_map[key].append(rating)

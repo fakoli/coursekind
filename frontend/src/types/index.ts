@@ -202,6 +202,17 @@ export interface ModuleProgressStatus {
   time_spent_minutes: number;
 }
 
+export interface ModuleProgress extends Omit<ModuleProgressStatus, 'module_title' | 'flashcards_total'> {
+  id: string;
+  user_id: string;
+  course_id: string;
+  reviewed_card_ids: string[];
+  practice_code: string | null;
+  extra_quiz_questions: QuizQuestionData[];
+  quiz_history: { score: number; answers: Record<string, number>; created_at: string }[];
+  practice_history: { code: string; result: { success: boolean; output?: string; error?: string }; created_at: string }[];
+}
+
 export interface CourseProgressStatus {
   course_id: string;
   course_title: string;
@@ -232,6 +243,10 @@ export interface PathProgressStatus {
 export interface DashboardStats {
   user_id: string;
   active_paths: number;
+  selected_paths: number;
+  completed_selected_paths: number;
+  study_sessions_week: number;
+  timezone: string;
   courses_in_progress: number;
   courses_completed: number;
   modules_completed_week: number;
@@ -246,7 +261,7 @@ export interface DashboardStats {
   last_activity_date: string | null;
 }
 
-export type ActivityType = 'module_started' | 'module_completed' | 'quiz_submitted' | 'content_read' | 'flashcard_reviewed';
+export type ActivityType = 'module_started' | 'module_completed' | 'quiz_submitted' | 'content_read' | 'flashcard_reviewed' | 'practice';
 
 export interface RecentActivity {
   id: string;

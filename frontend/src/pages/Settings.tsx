@@ -1,3 +1,4 @@
+import { TimezoneSettings } from '../components/common/TimezoneSettings';
 import { useState } from 'react';
 import { useAuthContext } from '../components/common/AuthProvider';
 import { Card, CardContent, CardHeader } from '../components/common/Card';
@@ -89,6 +90,7 @@ export function Settings() {
         </CardContent>
       </Card>
 
+      <TimezoneSettings key={user?.id} />
       <Card>
         <CardHeader>
           <h3 className="font-medium text-gray-900">Notifications</h3>
