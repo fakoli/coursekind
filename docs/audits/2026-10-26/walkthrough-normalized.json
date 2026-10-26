@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "source": "walkthrough-log.json",
-  "record_count": 77,
+  "record_count": 78,
   "note": "Historical outcomes and source notes are preserved, not promoted into final journey passes. Record indices are zero-based.",
   "records": [
     {
@@ -1516,6 +1516,25 @@
         "status": "pass",
         "duration_ms": 16885,
         "notes": "After live subscription validation/outlines/module and failed outline, Settingsstill65credits. Explicitly selectAnvil/llm.primary,save,reload verified; Codex remains an availableoptionalchoice. GlobalCodexauthunchanged."
+      }
+    },
+    {
+      "record": 77,
+      "journey_ids": [
+        "COURSE-02"
+      ],
+      "scenario": "Older course editor save must preserve a module added in another tab",
+      "observed_status": "fail",
+      "elapsed_seconds": 17.001,
+      "timing_source": "duration_ms",
+      "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
+      "later_retest_records": [],
+      "source": {
+        "journey": "COURSE-02",
+        "scenario": "Older course editor save must preserve a module added in another tab",
+        "status": "fail",
+        "duration_ms": 17001,
+        "notes": "Actual2tabrepro: oldcourseeditorheld1module; other tabcreatedConcurrent outline must survive239036cb-797c-45bd-9f59-b1899c212b93; savingolderunchangeddraftdeletednewmodule, coursecountback1, newmoduleURLreloadModuleNotFound. Onlynewsyntheticmoduleaffected; existinggeneratedmodule4f8f preserved. Finalreviewfinding; pendingfix."
       }
     }
   ]

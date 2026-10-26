@@ -531,5 +531,12 @@
     "status": "pass",
     "duration_ms": 16885,
     "notes": "After live subscription validation/outlines/module and failed outline, Settingsstill65credits. Explicitly selectAnvil/llm.primary,save,reload verified; Codex remains an availableoptionalchoice. GlobalCodexauthunchanged."
+  },
+  {
+    "journey": "COURSE-02",
+    "scenario": "Older course editor save must preserve a module added in another tab",
+    "status": "fail",
+    "duration_ms": 17001,
+    "notes": "Actual2tabrepro: oldcourseeditorheld1module; other tabcreatedConcurrent outline must survive239036cb-797c-45bd-9f59-b1899c212b93; savingolderunchangeddraftdeletednewmodule, coursecountback1, newmoduleURLreloadModuleNotFound. Onlynewsyntheticmoduleaffected; existinggeneratedmodule4f8f preserved. Finalreviewfinding; pendingfix."
   }
 ]
