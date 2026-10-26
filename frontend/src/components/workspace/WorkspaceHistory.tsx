@@ -34,10 +34,10 @@ export function WorkspaceHistory({
       {history.error && (
         <p role="alert">History unavailable. Current source access may have changed.</p>
       )}
-      {history.data?.length === 0 && (
+      {!history.error && history.data?.length === 0 && (
         <p>No recorded changes yet. Earlier manual edits are not reconstructed.</p>
       )}
-      {history.data?.map((revision) => (
+      {!history.error && history.data?.map((revision) => (
         <HistoryEntry
           key={revision.id}
           revision={revision}

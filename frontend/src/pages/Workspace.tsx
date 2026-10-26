@@ -1,3 +1,5 @@
+import { useQuery } from '@tanstack/react-query';
+import { workspacesApi } from '../api/workspaces';
 import { MaterialReview } from '../components/workspace/MaterialReview';
 import { RevisionPanel } from '../components/workspace/RevisionPanel';
 import { WorkspaceHistory } from '../components/workspace/WorkspaceHistory';
@@ -42,6 +44,10 @@ function WorkspaceDetail({ workspace }: { workspace: WorkspaceData }) {
   const preferences = useAIPreferences(user?.id);
   const archive = useUpdateWorkspace(workspace.id);
   const activity = useWorkspaceActivity(workspace.id);
+  const currentSources = useQuery({
+    queryKey: ['workspace-snapshots', user?.id, workspace.id],
+    queryFn: () => workspacesApi.snapshots(workspace.id),
+  });
   const request = useRef<WorkspaceUpdate | null>(null);
   const briefDisclosure = useRef<HTMLDetailsElement>(null);
   const planDisclosure = useRef<HTMLDetailsElement>(null);
@@ -56,7 +62,7 @@ function WorkspaceDetail({ workspace }: { workspace: WorkspaceData }) {
     if (section === 'plan' && planDisclosure.current) planDisclosure.current.open = true;
   };
   const [archiveError, setArchiveError] = useState('');
-  const [confirmedArchive, setConfirmedArchive] = useState<WorkspaceData | null>(null);
+  const [confirmedMutation, setConfirmedMutation] = useState<WorkspaceData | null>(null);
   const handleArchive = async () => {
     request.current ??= {
       request_id: crypto.randomUUID(),
@@ -65,7 +71,7 @@ function WorkspaceDetail({ workspace }: { workspace: WorkspaceData }) {
     };
     try {
       const result = await archive.mutateAsync(request.current);
-      setConfirmedArchive(result);
+      setConfirmedMutation(result);
       request.current = null;
       setArchiveError('');
     } catch (err) {
@@ -111,18 +117,14 @@ function WorkspaceDetail({ workspace }: { workspace: WorkspaceData }) {
         ))}
       </nav>
       <p role="status" className="text-sm text-gray-600">
-        {
-          (activity.jobs.data || []).filter((job) => ['queued', 'running'].includes(job.state))
-            .length
-        }{' '}
-        active jobs ·{' '}
-        {
-          (activity.jobs.data || []).filter((job) =>
-            ['partial', 'failed', 'interrupted'].includes(job.state),
-          ).length
-        }{' '}
-        jobs needing attention. Saved drafts and retry controls are in their Plan, Build or Revision
-        section.
+        {activity.jobs.error ? 'Job status unavailable. Restore source access to inspect saved attempts.' : (
+          <>
+            {(activity.jobs.data || []).filter((job) => ['queued', 'running'].includes(job.state)).length}{' '}
+            active jobs ·{' '}
+            {(activity.jobs.data || []).filter((job) => ['partial', 'failed', 'interrupted'].includes(job.state)).length}{' '}
+            jobs needing attention. Saved drafts and retry controls are in their Plan, Build or Revision section.
+          </>
+        )}
       </p>
       {!workspace.archived && (
         <a
@@ -167,10 +169,22 @@ function WorkspaceDetail({ workspace }: { workspace: WorkspaceData }) {
         <summary className="cursor-pointer font-semibold">
           Saved brief · edit goal and defaults
         </summary>
-        <WorkspaceBriefEditor workspace={workspace} confirmedArchive={confirmedArchive} />
+        <WorkspaceBriefEditor workspace={workspace} confirmedMutation={confirmedMutation} />
       </details>
-      {activity.jobs.error || activity.plans.error ? (
-        <p role="alert">Saved plans and jobs unavailable. Reload to check current source access.</p>
+      {(activity.jobs.error || activity.plans.error || currentSources.error) && (
+        <div role="alert" className="space-y-2">
+          <p>Some saved plans or jobs are unavailable. Source access is required even for historical drafts.</p>
+          {workspace.path_id && (
+            <p>
+              If a current source is unavailable, open the linked path and remove its reference using Edit path, then return here.
+              {' '}<Link className="underline" to={`/paths/${workspace.path_id}`}>Repair linked path</Link>
+            </p>
+          )}
+          <Button variant="secondary" onClick={() => void activity.refresh()}>Reload current source access</Button>
+        </div>
+      )}
+      {currentSources.error ? null : currentSources.isPending ? (
+        <p role="status">Checking current source access…</p>
       ) : (
         <div className="space-y-6 max-w-4xl mx-auto">
           <details
@@ -186,16 +200,17 @@ function WorkspaceDetail({ workspace }: { workspace: WorkspaceData }) {
             </summary>
             <PlanPanel
               workspace={workspace}
-              plans={activity.plans.data || []}
-              jobs={(activity.jobs.data || []).filter((j) => j.kind === 'plan')}
+              plans={activity.plans.error ? [] : activity.plans.data || []}
+              jobs={(activity.jobs.error ? [] : activity.jobs.data || []).filter((j) => j.kind === 'plan')}
               preferences={preferences.data}
               onChanged={activity.refresh}
+              onApplied={setConfirmedMutation}
             />
           </details>
           <div id="workspace-build" className="scroll-mt-20">
             <BuildPanel
               workspace={workspace}
-              jobs={(activity.jobs.data || []).filter((j) => j.kind === 'build')}
+              jobs={(activity.jobs.error ? [] : activity.jobs.data || []).filter((j) => j.kind === 'build')}
               preferences={preferences.data}
               onChanged={activity.refresh}
             />
@@ -212,7 +227,7 @@ function WorkspaceDetail({ workspace }: { workspace: WorkspaceData }) {
             </summary>
             <RevisionPanel
               workspace={workspace}
-              jobs={(activity.jobs.data || []).filter((j) => j.kind === 'revision')}
+              jobs={(activity.jobs.error ? [] : activity.jobs.data || []).filter((j) => j.kind === 'revision')}
               preferences={preferences.data}
               onChanged={activity.refresh}
             />

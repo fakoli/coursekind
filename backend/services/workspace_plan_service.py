@@ -284,6 +284,7 @@ class WorkspacePlanService:
                     mode="json", exclude={"current_fingerprint", "current_snapshots", "restorable"}
                 ),
             )
+            p.applied_workspace = await self.ctx.workspace(user_id, workspace_id)
             p.status = "applied"
             await self.storage.update("workspace_plans", p.id, p.model_dump(mode="json"))
             return await ledger.record(workspace_id, p)

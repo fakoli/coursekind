@@ -5,6 +5,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from models.workspace import Workspace
 from models.workspace_change import ResourceSnapshot
 
 
@@ -80,6 +81,7 @@ class PlanProposal(BaseModel):
     status: Literal["ready", "applied"] = "ready"
     job_id: str | None = None
     applied_ids: dict[str, str] = Field(default_factory=dict)
+    applied_workspace: Workspace | None = None
     reuse_course_ids: list[str] = Field(default_factory=list)
     created_at: datetime
 

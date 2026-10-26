@@ -55,9 +55,9 @@ export function RevisionPanel({
   const [count, setCount] = useState(5);
   const [reuse, setReuse] = useState<string[]>([]);
   const reviewTrigger = useRef<HTMLElement | null>(null);
-  const openReview = (id: string) => {
+  const openReview = (id: string, trigger?: HTMLElement) => {
     reviewTrigger.current =
-      document.activeElement instanceof HTMLElement ? document.activeElement : null;
+      trigger ?? (document.activeElement instanceof HTMLElement ? document.activeElement : null);
     setReview(id);
   };
   const [review, setReview] = useState<string | null>(null);
@@ -97,7 +97,7 @@ export function RevisionPanel({
   const selected = choices.find((c) => c.id === targetId) || choices[0];
   const activity = scope === 'quiz' || scope === 'flashcards';
   const running = jobs.some((j) => ['queued', 'running'].includes(j.state));
-  const pathSnapshot = snapshots.data?.find((s) => s.target.kind === 'path');
+  const pathSnapshot = !snapshots.error && snapshots.data?.find((s) => s.target.kind === 'path');
   async function generate() {
     if (!selected) return;
     const target: ResourceTarget = {
@@ -255,13 +255,14 @@ export function RevisionPanel({
           workspaceId={workspace.id}
           titles={Object.fromEntries((courses.data || []).map((c) => [c.id, c.title]))}
           disabled={workspace.archived}
-          onReview={(id) => {
-            openReview(id);
+          onReview={(id, trigger) => {
+            openReview(id, trigger);
             void manualDrafts.refetch();
           }}
         />
       )}
-      {(manualDrafts.data || [])
+      {manualDrafts.error && <p role="alert">Saved manual drafts unavailable. Historical source access may have changed.</p>}
+      {(manualDrafts.error ? [] : manualDrafts.data || [])
         .filter((change) => !change.origin_job_id && change.status === 'ready')
         .map((change) => (
           <Button key={change.id} variant="secondary" onClick={() => openReview(change.id)}>
@@ -269,6 +270,7 @@ export function RevisionPanel({
           </Button>
         ))}
       <WorkspaceJobs
+        preferences={preferences}
         jobs={jobs}
         onChanged={onChanged}
         onReview={openReview}
@@ -301,7 +303,7 @@ function PathReferences({
   workspaceId: string;
   titles: Record<string, string>;
   disabled?: boolean;
-  onReview: (id: string) => void;
+  onReview: (id: string, trigger: HTMLElement) => void;
 }) {
   const original = snapshot.fields.course_ids as string[];
   const [ids, setIds] = useState(original);
@@ -316,7 +318,7 @@ function PathReferences({
     [next[index], next[index + offset]] = [next[index + offset], next[index]];
     setIds(next);
   }
-  async function review() {
+  async function review(trigger: HTMLElement) {
     const patches = [
       {
         target: snapshot.target,
@@ -331,7 +333,7 @@ function PathReferences({
     try {
       const change = await workspacesApi.manualChange(workspaceId, request.current);
       request.current = null;
-      onReview(change.id);
+      onReview(change.id, trigger);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not prepare path edit');
     } finally {
@@ -381,7 +383,7 @@ function PathReferences({
       </ol>
       <Button
         disabled={disabled || busy || JSON.stringify(ids) === JSON.stringify(original)}
-        onClick={() => void review()}
+        onClick={(event) => void review(event.currentTarget)}
       >
         Review path changes · free
       </Button>

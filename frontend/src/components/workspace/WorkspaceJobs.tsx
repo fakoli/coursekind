@@ -1,5 +1,7 @@
 import { useRef, useState } from 'react';
 import { workspacesApi } from '../../api/workspaces';
+import type { AIPreferenceData } from '../../api/userSettings';
+import { CreditPreflight } from './CreditPreflight';
 import { Button } from '../common/Button';
 import type { WorkspaceJob } from '../../types/workspace';
 
@@ -8,11 +10,13 @@ export function WorkspaceJobs({
   onChanged,
   onReview,
   disabled,
+  preferences,
 }: {
   jobs: WorkspaceJob[];
   onChanged: () => Promise<void>;
   onReview: (id: string) => void;
   disabled?: boolean;
+  preferences?: AIPreferenceData;
 }) {
   return (
     <div className="space-y-3" aria-label="Saved jobs">
@@ -22,7 +26,13 @@ export function WorkspaceJobs({
             <summary className="cursor-pointer">
               Earlier {job.kind} · {job.steps.length} saved draft(s)
             </summary>
-            <Job job={job} onChanged={onChanged} onReview={onReview} disabled={disabled} />
+            <Job
+              job={job}
+              onChanged={onChanged}
+              onReview={onReview}
+              disabled={disabled}
+              preferences={preferences}
+            />
           </details>
         ) : (
           <Job
@@ -31,6 +41,7 @@ export function WorkspaceJobs({
             onChanged={onChanged}
             onReview={onReview}
             disabled={disabled}
+            preferences={preferences}
           />
         ),
       )}
@@ -42,19 +53,30 @@ function Job({
   onChanged,
   onReview,
   disabled,
+  preferences,
 }: {
   job: WorkspaceJob;
   onChanged: () => Promise<void>;
   onReview: (id: string) => void;
   disabled?: boolean;
+  preferences?: AIPreferenceData;
 }) {
   const [selected, setSelected] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const request = useRef<{ key: string; id: string } | null>(null);
   const running = ['queued', 'running'].includes(job.state);
+  const retrySteps = job.steps.filter((step) => selected.includes(step.id));
+  const needsInference = retrySteps.some((step) => !step.finalize_only);
+  const costsKnown = retrySteps.every((step) => typeof step.operation_credits === 'number');
+  const retryCost = retrySteps.reduce((total, step) => {
+    const provider = step.finalize_only ? step.provider || job.provider : preferences?.provider;
+    return total + (provider === 'anvil' ? step.operation_credits || 0 : 0);
+  }, 0);
   async function act(cancel: boolean) {
-    const key = JSON.stringify({ cancel, selected });
+    const key = JSON.stringify({
+      cancel, selected, provider: preferences?.provider, model: preferences?.model,
+    });
     if (request.current?.key !== key) request.current = { key, id: crypto.randomUUID() };
     setBusy(true);
     setError('');
@@ -130,11 +152,34 @@ function Job({
       ) : (
         selected.length > 0 && (
           <>
-            <p className="text-sm">
-              Retry uses your current provider selection. Interrupted or failed attempts may already
-              have external charges. Saved validated drafts finalize without another model call.
-            </p>
-            <Button size="sm" disabled={disabled || busy} onClick={() => void act(false)}>
+            <div className="text-sm space-y-2" aria-label="Selected retry preview">
+              {retrySteps.map((step) => (
+                <p key={step.id}>
+                  Step {job.steps.indexOf(step) + 1}:{' '}
+                  {step.finalize_only
+                    ? `Finalize saved output · ${step.provider || job.provider} / ${step.model || job.model}. No model call or current credentials needed; original accounting is retained.`
+                    : `New inference · ${preferences ? `${preferences.provider} / ${preferences.model}` : 'provider selection unavailable'}.`}
+                </p>
+              ))}
+              <p>
+                {costsKnown
+                  ? `Selected retry: at most ${retryCost} application credits when validated output is saved.`
+                  : 'Retry cost unavailable. Reload jobs before retrying.'}
+              </p>
+              <p>
+                Interrupted or failed attempts may already have external charges.
+                New external inference may incur additional provider charges.
+              </p>
+              {needsInference && !preferences?.is_configured && (
+                <p>Configure the selected provider in Settings before new inference.</p>
+              )}
+              <CreditPreflight provider="anvil" cost={retryCost} />
+            </div>
+            <Button
+              size="sm"
+              disabled={disabled || busy || !costsKnown || (needsInference && !preferences?.is_configured)}
+              onClick={() => void act(false)}
+            >
               Retry selected steps
             </Button>
           </>

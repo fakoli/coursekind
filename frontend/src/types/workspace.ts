@@ -88,6 +88,7 @@ export interface PlanProposal {
   status: 'ready' | 'applied';
   job_id: string | null;
   applied_ids: Record<string, string>;
+  applied_workspace?: Workspace | null;
   reuse_course_ids: string[];
   created_at: string;
 }
@@ -119,6 +120,8 @@ export interface JobStep {
   attempt: number;
   state: JobState;
   credits: number;
+  finalize_only?: boolean;
+  operation_credits?: number;
   provider?: string;
   model?: string;
   output_ref: string | null;

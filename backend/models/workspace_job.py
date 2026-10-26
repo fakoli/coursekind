@@ -39,6 +39,8 @@ class JobStep(BaseModel):
     attempt: int = 1
     state: JobState = "queued"
     credits: int = 0
+    finalize_only: bool = False
+    operation_credits: int = 0
     provider: str = ""
     model: str = ""
     output_ref: str | None = None

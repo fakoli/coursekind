@@ -20,12 +20,23 @@ class WorkspaceService:
         doc = await self.storage.get("workspaces", workspace_id)
         if not doc or doc["owner_id"] != user_id:
             raise NotFoundException("Workspace not found")
-        return Workspace.model_validate(doc)
+        return await self._current_links(user_id, doc)
+
+    async def _current_links(self, user_id: str, doc: dict) -> Workspace:
+        workspace = Workspace.model_validate(doc)
+        if workspace.path_id:
+            try:
+                path = await self.access.require_path(workspace.path_id, user_id)
+            except NotFoundException:
+                # Keep the private brief available for missing-source recovery.
+                return workspace
+            workspace.course_ids = list(path.get("course_ids", []))
+        return workspace
 
     async def list(self, user_id: str, archived: bool = False) -> list[Workspace]:
         docs = await self.storage.list("workspaces", {"owner_id": user_id, "archived": archived})
         return [
-            Workspace.model_validate(doc)
+            await self._current_links(user_id, doc)
             for doc in sorted(docs, key=lambda d: d["updated_at"], reverse=True)
         ]
 
@@ -118,4 +129,4 @@ class WorkspaceService:
                 version=workspace.version + 1, updated_at=datetime.now(timezone.utc).isoformat()
             )
             doc = await self.storage.update("workspaces", workspace_id, updates)
-            return await self._record(key, fingerprint, Workspace.model_validate(doc))
+            return await self._record(key, fingerprint, await self._current_links(user_id, doc))

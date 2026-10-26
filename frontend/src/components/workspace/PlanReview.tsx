@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { Button } from '../common/Button';
 import { workspacesApi } from '../../api/workspaces';
-import type { CourseNode, PlanProposal, WorkspacePlan } from '../../types/workspace';
+import type { CourseNode, PlanProposal, WorkspacePlan, Workspace } from '../../types/workspace';
 
 const field = 'block w-full min-w-0 rounded border p-2 text-sm';
 function move<T>(items: T[], index: number, direction: number): T[] {
@@ -12,10 +12,12 @@ function move<T>(items: T[], index: number, direction: number): T[] {
 export function PlanReview({
   proposal,
   onChanged,
+  onApplied,
   disabled = false,
 }: {
   proposal: PlanProposal;
   onChanged: () => Promise<void>;
+  onApplied?: (workspace: Workspace) => void;
   disabled?: boolean;
 }) {
   const [plan, setPlan] = useState<WorkspacePlan>(() => structuredClone(proposal.plan));
@@ -45,7 +47,10 @@ export function PlanReview({
         request_id: request.current.id,
         expected_proposal_version: proposal.version,
       };
-      if (apply) await workspacesApi.applyPlan(proposal.workspace_id, proposal.id, base);
+      if (apply) {
+        const applied = await workspacesApi.applyPlan(proposal.workspace_id, proposal.id, base);
+        if (applied.applied_workspace) onApplied?.(applied.applied_workspace);
+      }
       else
         await workspacesApi.updatePlan(proposal.workspace_id, proposal.id, {
           ...base,

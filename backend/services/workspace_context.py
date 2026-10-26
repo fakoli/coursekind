@@ -78,6 +78,9 @@ class WorkspaceContext:
 
     async def check(self, user_id, snapshots, *, compare=False, editable=False):
         for saved in snapshots:
+            # Historical path provenance survives changes to current path membership.
+            for course_id in saved.fields.get("course_ids", []):
+                await self.access.require_course(course_id, user_id)
             current = await self.snapshot(user_id, saved.target, editable=editable)
             if compare and saved.fingerprint != current.fingerprint:
                 raise ConflictException("Source changed. Review a fresh proposal before applying.")

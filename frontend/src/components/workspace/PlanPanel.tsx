@@ -14,12 +14,14 @@ export function PlanPanel({
   jobs,
   preferences,
   onChanged,
+  onApplied,
 }: {
   workspace: Workspace;
   plans: PlanProposal[];
   jobs: WorkspaceJob[];
   preferences?: AIPreferenceData;
   onChanged: () => Promise<void>;
+  onApplied?: (workspace: Workspace) => void;
 }) {
   const courses = useCourses();
   const [instruction, setInstruction] = useState('');
@@ -120,6 +122,7 @@ export function PlanPanel({
         )}
       </div>
       <WorkspaceJobs
+        preferences={preferences}
         jobs={jobs}
         onChanged={onChanged}
         onReview={setSelected}
@@ -130,6 +133,7 @@ export function PlanPanel({
           key={`${proposal.id}:${proposal.version}`}
           proposal={proposal}
           onChanged={onChanged}
+          onApplied={onApplied}
           disabled={workspace.archived}
         />
       )}

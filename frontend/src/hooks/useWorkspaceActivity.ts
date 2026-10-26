@@ -52,6 +52,8 @@ export function useWorkspaceActivity(id: string) {
         'module',
         'path',
         'paths',
+        'progress',
+        'flashcard-ratings',
         'user',
         'auth',
       ].map((key) => client.invalidateQueries({ queryKey: [key] })),

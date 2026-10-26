@@ -61,6 +61,8 @@ export function jobFixture(kind: 'plan' | 'build' = 'build'): WorkspaceJob {
         attempt: 1,
         state: 'ready',
         credits: 25,
+        finalize_only: false,
+        operation_credits: kind === 'plan' ? 10 : 25,
         output_ref: kind === 'build' ? 'change-1' : planFixture.id,
         safe_error: null,
         source_snapshots: [],
@@ -115,7 +117,14 @@ export function installWorkspaceBuildApi() {
       state.writes.push({ path, body });
       if (state.fail) return reply({ detail: 'Synthetic failed request' }, 500);
     }
-    if (path === '/workspaces/w1') return reply(state.workspace);
+    if (path === '/workspaces/w1') {
+      if (method === 'PUT') {
+        if (body.expected_version !== state.workspace.version) return reply({ detail: 'Workspace changed' }, 409);
+        if (body.brief) state.workspace.brief = body.brief;
+        state.workspace.version++;
+      }
+      return reply(state.workspace);
+    }
     if (path.endsWith('/history') || path.endsWith('/snapshots') || path.endsWith('/changes')) return reply([]);
     if (path === '/workspaces/w1/jobs') return reply(state.jobs);
     if (path.endsWith('/changes/change-1')) return reply(state.change);
@@ -127,6 +136,8 @@ export function installWorkspaceBuildApi() {
     }
     if (path.endsWith('/plans/proposal-1/apply')) {
       state.plans[0].status = 'applied';
+      state.workspace.version++;
+      state.plans[0].applied_workspace = structuredClone(state.workspace);
       return reply(state.plans[0]);
     }
     if (path.endsWith('/plans/proposal-1') && method === 'PUT') {

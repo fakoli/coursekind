@@ -5,6 +5,8 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { render } from '@testing-library/react';
 import { AuthContext } from '../components/common/AuthContext';
 import { Workspace } from './Workspace';
+import { useRemoveCourseFromPath } from '../hooks/useLearningPaths';
+import { learningPathsApi } from '../api/learningPaths';
 import { Workspaces } from './Workspaces';
 import { installWorkspaceApi } from '../test/workspaceApi';
 import { renderJourney } from '../test/journeyApi';
@@ -12,6 +14,7 @@ import type { User } from '../types';
 
 afterEach(() => {
   cleanup();
+  vi.restoreAllMocks();
   vi.unstubAllGlobals();
   localStorage.clear();
 });
@@ -274,4 +277,36 @@ it('the primary next action reopens a collapsed Plan and retains planning instru
   fireEvent.click(screen.getByRole('link', { name: 'Next: generate and review a plan' }));
   expect(screen.getByRole('button', { name: 'Generate plan' })).toBeVisible();
   expect(screen.getByRole('textbox', { name: 'Additional planning instructions' })).toHaveValue('Keep these planning instructions');
+});
+
+it('offers baseline path repair and recovers current work while historical jobs stay unavailable', async () => {
+  const state = installWorkspaceApi();
+  state.workspaces[0].path_id = 'p1';
+  let currentUnavailable = true;
+  const original = fetch;
+  vi.stubGlobal('fetch', (input: string, init?: RequestInit) => {
+    if (input.endsWith('/jobs') || input.endsWith('/plans') || (currentUnavailable && input.endsWith('/snapshots'))) {
+      return Promise.resolve(new Response(JSON.stringify({ detail: 'Source unavailable' }), { status: 404 }));
+    }
+    return original(input, init);
+  });
+  vi.spyOn(learningPathsApi, 'removeCourse').mockImplementation(async () => {
+    currentUnavailable = false;
+    state.workspaces[0].course_ids = [];
+    return {} as Awaited<ReturnType<typeof learningPathsApi.removeCourse>>;
+  });
+  function BaselineRepairHarness() {
+    const remove = useRemoveCourseFromPath();
+    return <><button onClick={() => remove.mutate({ pathId: 'p1', courseId: 'c1' })}>Baseline remove reference</button><Workspace /></>;
+  }
+  renderJourney(<BaselineRepairHarness />, '/workspaces/w1', '/workspaces/:workspaceId');
+  expect(await screen.findByRole('link', { name: 'Repair linked path' })).toHaveAttribute('href', '/paths/p1');
+  expect(screen.queryByRole('button', { name: 'Generate plan' })).not.toBeInTheDocument();
+  expect(screen.getByText(/Source access is required even for historical drafts/)).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Baseline remove reference' }));
+  await screen.findByRole('button', { name: 'Generate plan' });
+  expect(screen.getByText(/Some saved plans or jobs are unavailable/)).toBeInTheDocument();
+  await screen.findByText('No linked courses yet.');
+  expect(screen.getByText(/Job status unavailable/)).toBeInTheDocument();
+  expect(screen.getByRole('region', { name: 'Build learning material' })).toBeInTheDocument();
 });

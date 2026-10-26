@@ -180,6 +180,7 @@ export function BuildPanel({
         )}
       </div>
       <WorkspaceJobs
+        preferences={preferences}
         jobs={jobs}
         onChanged={onChanged}
         onReview={openReview}

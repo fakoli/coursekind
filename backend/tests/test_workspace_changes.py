@@ -919,3 +919,57 @@ async def test_explicit_unchanged_card_identity_is_retained(setup_job):
         "owner", w.id, [await patch_for(store, modules[0], {"flashcards": original})]
     )
     assert change.patches[0].fields.flashcards[0].id == original[0]["id"]
+
+
+@pytest.mark.asyncio
+async def test_path_proposal_add_remove_restore_reconciles_current_links(setup_job, path_setup):
+    from models.course import CourseCreate
+    from models.module import ModuleCreate
+    from services.course_service import CourseService
+    from services.module_service import ModuleService
+    from services.workspace_service import WorkspaceService
+    from tests.test_workspace_jobs import build
+
+    store, jobs, _, modules, _ = setup_job
+    w, path = path_setup
+    b = await CourseService(store).create_course("owner", "Owner", CourseCreate(title="New course"))
+    module = await ModuleService(store).create_module(
+        b.id, "owner", ModuleCreate(title="New", order_index=0)
+    )
+    ctx = WorkspaceContext(store)
+    target = ResourceTarget(kind="path", resource_id=path.id)
+    snapshot = await ctx.snapshot("owner", target, editable=True)
+    changes = WorkspaceChangeService(store)
+    change = await changes.prepare(
+        "owner",
+        w.id,
+        [
+            ResourcePatch(
+                target=target,
+                expected_fingerprint=snapshot.fingerprint,
+                fields={"course_ids": [b.id]},
+            )
+        ],
+    )
+    await changes.apply("owner", w.id, change.id, "replace")
+    assert (await WorkspaceService(store).get("owner", w.id)).course_ids == [b.id]
+    assert (await jobs._inputs("owner", w.id, "build", build([module])))[0]["target"][
+        "resource_id"
+    ] == module.id
+    with pytest.raises(StudyBuddyException):
+        await jobs._inputs("owner", w.id, "build", build(modules[:1]))
+    revision = (await changes.history("owner", w.id))[0]
+    await changes.restore("owner", w.id, revision.id, revision.current_fingerprint, "restore")
+    assert (await ctx.workspace("owner", w.id)).course_ids == [modules[0].course_id]
+    # Remove again, then delete the former source. Current editing recovers; old output does not.
+    from services.learning_path_service import LearningPathService
+
+    await LearningPathService(store, CourseService(store)).replace_course_references(
+        path.id, "owner", [b.id]
+    )
+    await store.delete("courses", modules[0].course_id)
+    assert (await ctx.workspace("owner", w.id, writable=True)).course_ids == [b.id]
+    with pytest.raises(StudyBuddyException):
+        await changes.get("owner", w.id, change.id)
+    with pytest.raises(StudyBuddyException):
+        await changes.restore("owner", w.id, revision.id, revision.current_fingerprint, "denied")

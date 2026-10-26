@@ -515,6 +515,10 @@ async def test_finalize_only_retry_needs_no_current_credential(setup_job, monkey
     async def unavailable(*args):
         raise AssertionError("Finalize must not retrieve credentials")
 
+    pending = await service.get("owner", w.id, job.id)
+    assert pending.steps[0].finalize_only
+    assert pending.steps[0].operation_credits == 25
+    assert "staged_output" not in pending.model_dump_json()
     monkeypatch.setattr(AIPreferencesService, "snapshot", unavailable)
     await service.retry("owner", w.id, job.id, "finalize", [job.steps[0].id])
     await service.runner.wait_idle()

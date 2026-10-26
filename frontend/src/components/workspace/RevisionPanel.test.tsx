@@ -107,3 +107,27 @@ it('returns focus to the saved manual proposal after another review used a diffe
   fireEvent.click(screen.getByRole('button', { name: 'Dismiss review' }));
   expect(manual).toHaveFocus();
 });
+
+it('captures the new manual proposal trigger before pending disables and blurs it', async () => {
+  const state = installWorkspaceBuildApi();
+  state.workspace.path_id = 'p1';
+  vi.spyOn(workspacesApi, 'snapshots').mockResolvedValue([{
+    target: { kind: 'path', resource_id: 'p1', course_id: null },
+    fingerprint: 'path-current', fields: { course_ids: ['c1'] },
+  }]);
+  let resolve!: (value: typeof state.change) => void;
+  vi.spyOn(workspacesApi, 'manualChange').mockImplementation(() => new Promise((done) => { resolve = done; }));
+  renderJourney(<RevisionPanel workspace={state.workspace} jobs={[]} preferences={preferences} onChanged={async () => {}} />,
+    '/workspaces/w1', '/workspaces/:workspaceId');
+  fireEvent.click(await screen.findByRole('button', { name: /Remove reference to/ }));
+  const trigger = screen.getByRole('button', { name: 'Review path changes · free' });
+  trigger.focus();
+  fireEvent.click(trigger);
+  expect(trigger).toBeDisabled();
+  trigger.blur(); // Browsers can blur a newly disabled control while awaiting the response.
+  resolve(state.change);
+  await waitFor(() => expect(screen.getByRole('region', { name: 'Draft review' })).toHaveFocus());
+  expect(trigger).toBeEnabled();
+  fireEvent.click(screen.getByRole('button', { name: 'Dismiss review' }));
+  expect(trigger).toHaveFocus();
+});

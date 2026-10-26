@@ -56,3 +56,37 @@ it('AI refinement leaves live content unchanged and has an explicit stable reque
   expect(state.writes[1].body.previous_proposal_id).toBe('proposal-1');
   expect(state.journey.modules[0].content_markdown).toBe('');
 });
+
+it.each([false, true])('advances a %s dirty mounted brief only after confirmed plan Apply', async (dirty) => {
+  const state = installWorkspaceBuildApi();
+  renderJourney(<Workspace />, '/workspaces/w1', '/workspaces/:workspaceId');
+  fireEvent.click(await screen.findByText('Saved brief · edit goal and defaults'));
+  const goal = screen.getByRole('textbox', { name: 'Learning goal' });
+  if (dirty) fireEvent.change(goal, { target: { value: 'My preserved draft' } });
+  fireEvent.click(await screen.findByRole('button', { name: 'Apply plan · free' }));
+  await waitFor(() => expect(state.plans[0].status).toBe('applied'));
+  if (dirty) expect(goal).toHaveValue('My preserved draft');
+  else fireEvent.change(goal, { target: { value: 'My preserved draft' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Save brief' }));
+  await waitFor(() => expect(state.workspace.brief.goal).toBe('My preserved draft'));
+  expect(state.writes.at(-1)?.body.expected_version).toBe(2);
+  expect(screen.queryByText(/This workspace changed/)).not.toBeInTheDocument();
+});
+
+it('keeps a competing external brief save conflicting after a confirmed plan apply', async () => {
+  const state = installWorkspaceBuildApi();
+  const client = renderJourney(<Workspace />, '/workspaces/w1', '/workspaces/:workspaceId');
+  fireEvent.click(await screen.findByText('Saved brief · edit goal and defaults'));
+  fireEvent.change(screen.getByRole('textbox', { name: 'Learning goal' }), { target: { value: 'Local draft' } });
+  fireEvent.click(await screen.findByRole('button', { name: 'Apply plan · free' }));
+  await waitFor(() => expect(state.plans[0].status).toBe('applied'));
+  state.workspace.brief = { ...state.workspace.brief, goal: 'Competing saved brief' };
+  state.workspace.version = 3;
+  await client.invalidateQueries({ queryKey: ['workspace'] });
+  await screen.findByRole('heading', { name: 'Competing saved brief' });
+  fireEvent.click(screen.getByRole('button', { name: 'Save brief' }));
+  await screen.findByText(/This workspace changed/);
+  expect(screen.getByRole('textbox', { name: 'Learning goal' })).toHaveValue('Local draft');
+  expect(state.writes.at(-1)?.body.expected_version).toBe(2);
+  expect(state.workspace.brief.goal).toBe('Competing saved brief');
+});

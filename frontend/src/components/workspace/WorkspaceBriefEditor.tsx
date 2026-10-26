@@ -7,10 +7,10 @@ import type { Workspace, WorkspaceUpdate } from '../../types/workspace';
 
 export function WorkspaceBriefEditor({
   workspace,
-  confirmedArchive,
+  confirmedMutation,
 }: {
   workspace: Workspace;
-  confirmedArchive: Pick<Workspace, 'brief' | 'version'> | null;
+  confirmedMutation: Pick<Workspace, 'brief' | 'version'> | null;
 }) {
   const [brief, setBrief] = useState(workspace.brief);
   const [saved, setSaved] = useState(workspace.brief);
@@ -21,11 +21,11 @@ export function WorkspaceBriefEditor({
   const request = useRef<WorkspaceUpdate | null>(null);
   const dirty = JSON.stringify(brief) !== JSON.stringify(saved);
   const stale = save.error instanceof ApiError && save.error.status === 409;
-  // Only our confirmed archive mutation may advance this draft's baseline version,
+  // Only a confirmed local archive or plan application may advance this draft's baseline version,
   // and only while its saved brief still matches. External brief edits must conflict.
   const expectedVersion =
-    confirmedArchive && JSON.stringify(confirmedArchive.brief) === JSON.stringify(saved)
-      ? Math.max(version, confirmedArchive.version)
+    confirmedMutation && JSON.stringify(confirmedMutation.brief) === JSON.stringify(saved)
+      ? Math.max(version, confirmedMutation.version)
       : version;
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();

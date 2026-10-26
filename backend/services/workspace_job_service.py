@@ -17,6 +17,7 @@ from services.ai_provider import ProviderSnapshot
 from services.workspace_context import WorkspaceContext
 from services.workspace_plan_service import WorkspacePlanService
 from services.workspace_requests import WorkspaceRequests
+from services.workspace_revision_generator import COSTS
 
 
 def now():
@@ -48,7 +49,16 @@ class WorkspaceJobService:
         doc = await self._raw(user_id, workspace_id, job_id)
         steps = []
         for step_id in doc["step_ids"]:
-            step = JobStep.model_validate(await self.storage.get("workspace_steps", step_id))
+            raw = await self.storage.get("workspace_steps", step_id)
+            step = JobStep.model_validate(raw)
+            step.finalize_only = raw.get("staged_output") is not None
+            step.operation_credits = (
+                10
+                if doc["kind"] == "plan"
+                else COSTS[raw["input"]["scope"]]
+                if doc["kind"] == "revision"
+                else 25
+            )
             await self.ctx.check(user_id, step.source_snapshots)
             steps.append(step)
         return WorkspaceJob.model_validate({**doc, "steps": steps})

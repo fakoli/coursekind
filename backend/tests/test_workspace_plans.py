@@ -94,6 +94,9 @@ async def test_apply_plan_replays_same_ids(workspace_store):
     service, w, p = await proposal(workspace_store, "path", 2)
     request = ApplyPlanRequest(request_id=str(uuid4()), expected_proposal_version=1)
     result = await service.apply("owner", w.id, p.id, request)
+    assert result.applied_workspace is not None
+    assert result.applied_workspace.version == w.version + 1
+    assert result.applied_workspace.brief == w.brief
     assert result == await service.apply("owner", w.id, p.id, request)
     assert len(await workspace_store.list("courses")) == 2
     assert len(await workspace_store.list("modules")) == 2
