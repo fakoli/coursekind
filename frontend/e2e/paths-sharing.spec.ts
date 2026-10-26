@@ -1,4 +1,4 @@
-import { test, expect, login, api, share, visibility, readLesson, type Path } from './fixtures';
+import { openSharing, test, expect, login, api, share, visibility, readLesson, type Path } from './fixtures';
 
 async function addCourse(page: import('@playwright/test').Page, title: string) {
   await page.getByRole('button', { name: 'Add Course', exact: true }).click();
@@ -134,7 +134,7 @@ test('SHARE-01 — publish, discover and study, unlist then restore private acce
   await login(page, world.outsider);
   await page.goto('/courses?tab=discover');
   await page.getByLabel('Search courses').fill(world.course.title);
-  await page.getByRole('heading', { name: world.course.title }).click();
+  await page.getByRole('link', { name: world.course.title, exact: true }).click();
   await readLesson(page, world.course, world.lessons[0]);
   await login(page, world.author);
   await page.goto(`/courses/${world.course.id}`);
@@ -157,6 +157,7 @@ test('SHARE-02 — grant a named learner, deny outsider, revoke and deny bookmar
   await page.goto(`/courses/${world.course.id}`);
   await share(page, world.learner.email);
   await page.reload();
+  await openSharing(page);
   await expect(page.getByRole('button', { name: `Revoke access for ${world.learner.email}` })).toBeVisible();
   await login(page, world.learner);
   await readLesson(page, world.course, world.lessons[0]);
@@ -165,6 +166,7 @@ test('SHARE-02 — grant a named learner, deny outsider, revoke and deny bookmar
   await expect(page.getByText('Course not found')).toBeVisible();
   await login(page, world.author);
   await page.goto(`/courses/${world.course.id}`);
+  await openSharing(page);
   await page.getByRole('button', { name: `Revoke access for ${world.learner.email}` }).click();
   await expect(page.getByRole('button', { name: `Revoke access for ${world.learner.email}` })).toHaveCount(0);
   await login(page, world.learner);
@@ -188,6 +190,7 @@ test('SHARE-03 — share a path without implicitly granting its private course',
   await expect(page.getByText('Learning path not found')).toBeVisible();
   await login(page, world.author);
   await page.goto(`/paths/${world.path.id}`);
+  await openSharing(page);
   await page.getByRole('button', { name: `Revoke access for ${world.learner.email}` }).click();
   await expect(page.getByRole('button', { name: `Revoke access for ${world.learner.email}` })).toHaveCount(0);
   await login(page, world.learner);

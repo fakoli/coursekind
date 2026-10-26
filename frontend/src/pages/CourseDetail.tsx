@@ -5,6 +5,8 @@ import { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   ArrowLeft,
+  ChevronUp,
+  ChevronDown,
   Edit,
   Trash2,
   BookOpen,
@@ -287,21 +289,21 @@ export function CourseDetail() {
                 return (
                   <div
                     key={module.id}
-                    className="flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors"
+                    className="flex items-center gap-2 p-4 hover:bg-gray-50 transition-colors sm:gap-4"
                   >
-                    <div className="text-gray-400">
+                    <div className="shrink-0 text-gray-400">
                       {isEditable && <div className="flex flex-col gap-1">
-                      <button aria-label={`Move ${module.title} up`} disabled={index === 0 || reorderModules.isPending} onClick={async () => {
+                      <button className="rounded p-2 hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-indigo-500 disabled:opacity-30" aria-label={`Move ${module.title} up`} disabled={index === 0 || reorderModules.isPending} onClick={async () => {
                         const ids = modules.map(m => m.id); [ids[index], ids[index - 1]] = [ids[index - 1], ids[index]];
                         try { await reorderModules.mutateAsync({ courseId: course.id, moduleIds: ids }); } catch { showError('Could not reorder modules'); }
-                      }}>Move up</button>
-                      <button aria-label={`Move ${module.title} down`} disabled={index === modules.length - 1 || reorderModules.isPending} onClick={async () => {
+                      }}><ChevronUp className="h-4 w-4" aria-hidden="true" /></button>
+                      <button className="rounded p-2 hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-indigo-500 disabled:opacity-30" aria-label={`Move ${module.title} down`} disabled={index === modules.length - 1 || reorderModules.isPending} onClick={async () => {
                         const ids = modules.map(m => m.id); [ids[index], ids[index + 1]] = [ids[index + 1], ids[index]];
                         try { await reorderModules.mutateAsync({ courseId: course.id, moduleIds: ids }); } catch { showError('Could not reorder modules'); }
-                      }}>Move down</button>
+                      }}><ChevronDown className="h-4 w-4" aria-hidden="true" /></button>
                     </div>}
                     </div>
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                    <div className={`w-8 h-8 shrink-0 rounded-full flex items-center justify-center text-sm font-medium ${
                       status === 'completed'
                         ? 'bg-green-100 text-green-600'
                         : status === 'in_progress'
@@ -317,8 +319,8 @@ export function CourseDetail() {
                       )}
                     </div>
                     <Link to={`/courses/${courseId}/modules/${module.id}`} className="flex-1 min-w-0">
-                      <h3 className="font-medium text-gray-900 truncate">{module.title}</h3>
-                      <div className="flex items-center gap-4 text-sm text-gray-500 mt-1">
+                      <h3 className="font-medium text-gray-900 break-words">{module.title}</h3>
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500 mt-1">
                         {module.flashcard_count > 0 && (
                           <span className="flex items-center gap-1">
                             <FileText className="w-4 h-4" />
@@ -336,7 +338,7 @@ export function CourseDetail() {
                       </div>
                     </Link>
                     {isEditable && (
-                      <div className="flex gap-2">
+                      <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
                         <button
                           onClick={(e) => {
                             e.preventDefault();

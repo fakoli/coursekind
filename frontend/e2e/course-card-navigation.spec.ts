@@ -3,6 +3,32 @@ import type { Locator, Page } from '@playwright/test';
 
 test.use({ hasTouch: true, viewport: { width: 390, height: 844 } });
 
+test('SHARE-06 — mobile course and path sharing opens on demand and keeps drafts', async ({ page, world }) => {
+  await login(page, world.author);
+  for (const route of [`/courses/${world.course.id}`, `/paths/${world.path.id}`]) {
+    await page.goto(route);
+    const toggle = page.getByRole('button', { name: 'Sharing', exact: true });
+    const recipient = page.getByLabel('Recipient email');
+    await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    await expect(recipient).toBeHidden();
+    await toggle.tap();
+    await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    await recipient.fill('unsaved@example.test');
+    for (const field of [recipient, page.getByLabel('Share link'), page.getByLabel('Visibility')]) {
+      const box = await field.boundingBox();
+      expect(box).not.toBeNull();
+      expect(box!.x).toBeGreaterThanOrEqual(0);
+      expect(box!.x + box!.width).toBeLessThanOrEqual(390);
+    }
+    await toggle.tap();
+    await expect(recipient).toBeHidden();
+    await toggle.tap();
+    await expect(recipient).toHaveValue('unsaved@example.test');
+    await page.reload();
+    await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+  }
+});
+
 // Use physical touch coordinates: clicking only the title link misses dead card areas.
 async function tapSurface(page: Page, target: Locator, padding = false) {
   await target.scrollIntoViewIfNeeded();
@@ -30,6 +56,7 @@ test('COURSE-06 — touch opens the whole course card and preserves separate act
   }
 
   await page.goto('/courses?tab=discover');
+  await page.getByLabel('Search courses').fill(world.otherCourse.title);
   const publicCard = page.getByRole('article', { name: world.otherCourse.title, exact: true });
   await tapSurface(page, publicCard.getByRole('button', { name: 'Add to Path' }));
   await expect(page.getByRole('dialog', { name: 'Add to Learning Path' })).toBeVisible();
