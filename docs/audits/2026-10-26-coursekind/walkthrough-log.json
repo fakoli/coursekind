@@ -180,5 +180,37 @@
     "provider": "no inference/manual",
     "commit": "cc6fd8f",
     "notes": "Removed reusedcourse from draft, reviewed savedmanualproposal after frontend reload, applied free. Pathmembership becameone; sourcecourse and bothoriginalmoduleIDs remained. Restored priorreferences asnewhistory; actualpathshows originaltwo-courseorder/authorship/counts. Readabilityminor CourseUUID comparisonlabels assignedTask5."
+  },
+  {
+    "journey": "WORKSPACE-05",
+    "scenario": "Explicit current material disclosure and live three-dimension JEV review",
+    "status": "pass",
+    "duration_ms": 26615,
+    "commit": "acfbfd2",
+    "notes": "Synthetic generated lesson only. Exact objective, excerpt, quiz options and marked answer disclosed before sending to TypeSafe. Live jev-1.14.0 returned support 98%, ambiguity 2%, alignment 38%, usage 465 input / 59 output tokens. Result says Advisory and focuses the result. Duration includes tool/evidence overhead, not provider latency. All nine content, learner-history and accounting collections stayed byte-identical."
+  },
+  {
+    "journey": "WORKSPACE-05",
+    "scenario": "Reload, identical selection cache and restore invalidation",
+    "status": "pass",
+    "duration_ms": null,
+    "commit": "acfbfd2",
+    "notes": "Reload/opening selection did not automatically review. Explicit identical selection recovered the same receipt ID and timestamp; collection still contained one review. Restoring the quiz through History immediately replaced probabilities with Review stale. Review current material removed stale result and disclosed current source without another provider call. Same-module removed-selection recovery is a separate independently identified repair, not covered by this successful case."
+  },
+  {
+    "journey": "WORKSPACE-05",
+    "scenario": "Unavailable, malformed response, explicit retry and staged draft review",
+    "status": "pass",
+    "duration_ms": null,
+    "commit": "acfbfd2",
+    "notes": "Controlled disposable provider transport: 503 and a string probability each produced Review unavailable, material kept; explicit retry with a valid response showed three advisory values. Opening a ready but unapplied second-module draft disclosed proposed lesson/quiz and reviewed it without applying. Synthetic mock call log confirms separate unavailable/malformed/ready calls. These fault/staged cases are mocked; the earlier live result is separately recorded."
+  },
+  {
+    "journey": "WORKSPACE-05",
+    "scenario": "Same-module shortened lesson and removed selected question recovery",
+    "status": "pass",
+    "duration_ms": null,
+    "commit": "06b17dc",
+    "notes": "Actual two-tab CUA: selected Question 3 and obtained controlled advisory; original ModuleEditor shortened lesson from 253 to 48 characters and removed Question 3, then saved. Background review read marked result stale. Explicit Review current material reset to Question 1, end boundary 48 and enabled Send, with no implicit inference. Explicit Send completed a new controlled advisory. Separate sole-objective replacement regression is covered by frontend tests and scoped review. Synthetic module now has short lesson and two questions; prior learner history remains."
   }
 ]

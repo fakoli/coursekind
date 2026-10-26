@@ -1,0 +1,30 @@
+{
+  "date": "2026-10-26",
+  "origin": "MacBook",
+  "commit": "acfbfd21630722f1f9df7f534e0c02df10e32ab0",
+  "environment": "disposable synthetic fixture; live TypeSafe transport",
+  "model": "jev-1.14.0",
+  "prompt_version": "material-review-v1",
+  "status": "ready",
+  "dimensions": {
+    "answer_supported": 0.98,
+    "answer_ambiguous": 0.02,
+    "objective_aligned": 0.38
+  },
+  "usage": {
+    "input_tokens": 465,
+    "output_tokens": 59
+  },
+  "limitations": "One connectivity/application-flow qualification, not educational accuracy or probability calibration.",
+  "preservation": {
+    "activities": true,
+    "courses": true,
+    "flashcard_ratings": true,
+    "generation_operations": true,
+    "learning_paths": true,
+    "module_progress": true,
+    "modules": true,
+    "token_transactions": true,
+    "users": true
+  }
+}

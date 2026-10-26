@@ -99,3 +99,13 @@ JEV implementation is now underway. It will use explicit exact-source selection 
 
 
 Final revision gate passed: CI40344615240 at `cc6fd8f` completed all44 browser cases with no retries in7.1minutes, plus454 backend tests and181 frontend tests on both Node22/24 lint/build jobs. Initial Task3 CI40342873356 also passed. Revision/restore is accepted; JEV implementation and final product polish remain.
+
+
+## JEV checkpoint — approximately 08:25 Pacific
+
+Task 4 is committed at `acfbfd2`; independent review and CI 40348673449 are in progress. Root completed one live three-dimension request through the rendered application using only synthetic test material. Jev 1.14.0 returned answer support 98%, ambiguity 2% and objective alignment 38%, with 465 input / 59 output tokens. The UI presents fixed advisory values and no invented explanation or correctness guarantee. Nine content, history and accounting collections remained byte-identical. Reload recovered the same cached receipt, and restoring the quiz marked its previous review stale without an automatic external call. This is feature connectivity evidence, not accuracy calibration.
+
+Independent review found a recovery issue when a same-module edit removes the selected objective/question or shortens the lesson. Existing React selection state can remain invalid after accepting current material. The implementation owner is repairing that case and adding regressions before acceptance. Final onboarding, mobile hierarchy, quota clarity, operating documentation and product-wide review remain.
+
+
+The selection recovery repair `06b17dc` is independently approved. Actual two-tab CUA confirmed a shortened lesson and removal of the selected question first mark the result stale, then explicit acceptance resets the excerpt and question before a successful new controlled review. Additional controlled UI cases cover provider 503, malformed probability data, explicit retry and review of unapplied staged material. Live and mocked evidence are labeled separately. Final repaired-commit CI remains pending; Task 5 proceeds against the reviewed interfaces while that gate runs.

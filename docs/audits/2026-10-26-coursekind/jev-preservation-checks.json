@@ -1,0 +1,11 @@
+{
+  "activities": true,
+  "courses": true,
+  "flashcard_ratings": true,
+  "generation_operations": true,
+  "learning_paths": true,
+  "module_progress": true,
+  "modules": true,
+  "token_transactions": true,
+  "users": true
+}
