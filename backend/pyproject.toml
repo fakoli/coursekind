@@ -1,7 +1,7 @@
 [project]
-name = "study-buddy-backend"
-version = "0.1.0"
-description = "Study Buddy - A learning platform for visual learners"
+name = "coursekind-backend"
+version = "1.0.0"
+description = "Coursekind - A learning platform for visual learners"
 requires-python = ">=3.11"
 dependencies = [
     "fastapi>=0.109.0",
@@ -17,6 +17,7 @@ dependencies = [
     "aiosqlite>=0.22.1",
     "aiohttp>=3.13.3",
     "cryptography>=42.0.0",
+    "pillow>=12.0.0",
 ]
 
 [project.optional-dependencies]

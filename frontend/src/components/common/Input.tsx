@@ -1,4 +1,4 @@
-import { InputHTMLAttributes, forwardRef } from 'react';
+import { InputHTMLAttributes, forwardRef, useId } from 'react';
 import { CheckCircle, AlertCircle } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -12,15 +12,17 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
   ({ className, label, error, success, hint, showValidationIcon = false, id, required, ...props }, ref) => {
-    const errorId = id ? `${id}-error` : undefined;
-    const hintId = id ? `${id}-hint` : undefined;
+    const generatedId = useId();
+    const fieldId = id || generatedId;
+    const errorId = fieldId ? `${fieldId}-error` : undefined;
+    const hintId = fieldId ? `${fieldId}-hint` : undefined;
     const describedBy = [error && errorId, hint && !error && hintId].filter(Boolean).join(' ') || undefined;
 
     return (
       <div className="space-y-1">
         {label && (
           <label
-            htmlFor={id}
+            htmlFor={fieldId}
             className="block text-sm font-medium text-gray-700"
           >
             {label}
@@ -30,7 +32,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         <div className="relative">
           <input
             ref={ref}
-            id={id}
+            id={fieldId}
             required={required}
             aria-invalid={error ? true : undefined}
             aria-describedby={describedBy}

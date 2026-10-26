@@ -115,16 +115,22 @@ class AnvilClient:
                     logger.error(
                         "Anvil router error",
                         status_code=response.status_code,
-                        body=response.text[:500],
                         duration_ms=round(duration_ms, 2),
                     )
                     raise AIServiceException(
-                        f"AI service error (HTTP {response.status_code}): {response.text[:300]}",
+                        f"AI service error (HTTP {response.status_code})",
                         code=ErrorCode.AI_SERVICE_ERROR,
                     )
 
                 data = response.json()
                 content = data["choices"][0]["message"]["content"] or ""
+
+                if (
+                    not isinstance(content, str)
+                    or not content.strip()
+                    or data["choices"][0].get("finish_reason") in ("length", "content_filter")
+                ):
+                    raise AIServiceException("AI service returned empty or incomplete output")
 
                 usage = data.get("usage") or {}
                 logger.info(
@@ -139,20 +145,20 @@ class AnvilClient:
         except httpx.ConnectError as e:
             logger.error(
                 "Failed to connect to Anvil router",
-                error_message=str(e),
+                error_type=type(e).__name__,
                 base_url=self.settings.anvil_router_base_url,
             )
             raise AIServiceException(
-                f"Failed to connect to AI service: {e}",
+                "Failed to connect to AI service",
                 code=ErrorCode.AI_SERVICE_UNAVAILABLE,
             )
         except (httpx.TimeoutException, httpx.HTTPError) as e:
-            logger.error("Anvil router request failed", error_message=str(e))
-            raise AIServiceException(f"AI service request failed: {e}")
+            logger.error("Anvil router request failed", error_type=type(e).__name__)
+            raise AIServiceException("AI service request failed")
         except (KeyError, IndexError, ValueError) as e:
-            logger.error("Unexpected Anvil response shape", error_message=str(e))
+            logger.error("Unexpected Anvil response shape", error_type=type(e).__name__)
             raise AIServiceException(
-                f"AI service returned an unexpected response: {e}",
+                "AI service returned an unexpected response",
                 code=ErrorCode.AI_SERVICE_ERROR,
             )
 
@@ -200,12 +206,11 @@ class AnvilClient:
                     logger.error(
                         "Anvil vision call failed",
                         status_code=response.status_code,
-                        body=response.text[:500],
                         duration_ms=round(duration_ms, 2),
                     )
                     raise AIServiceException(
                         "Image generation failed (HTTP "
-                        f"{response.status_code}): {response.text[:300]}",
+                        f"{response.status_code})",
                         code=ErrorCode.AI_SERVICE_ERROR,
                     )
                 data = response.json()
@@ -221,8 +226,8 @@ class AnvilClient:
                     )
                 return content or ""
         except httpx.HTTPError as e:
-            logger.error("Anvil vision request failed", error_message=str(e))
-            raise AIServiceException(f"Image generation request failed: {e}")
+            logger.error("Anvil vision request failed", error_type=type(e).__name__)
+            raise AIServiceException("Image generation request failed")
 
 
 _client_instance: AnvilClient | None = None
@@ -231,6 +236,8 @@ _client_instance: AnvilClient | None = None
 def get_anvil_client(settings: Settings | None = None) -> AnvilClient:
     """Get (or create) the shared Anvil client instance."""
     global _client_instance
+    if settings is not None:
+        return AnvilClient(settings)
     if _client_instance is None:
         from config import get_settings
 
@@ -258,8 +265,8 @@ async def check_anvil_health(settings: Settings) -> tuple[bool, str]:
             return False, f"Anvil router rejected credentials (HTTP {response.status_code})"
         return False, f"Anvil router returned HTTP {response.status_code}"
     except httpx.HTTPError as e:
-        logger.error("Anvil health check failed", error_message=str(e))
-        return False, f"Anvil router unreachable: {e}"
+        logger.error("Anvil health check failed", error_type=type(e).__name__)
+        return False, "Anvil router unreachable"
 
 
 __all__ = ["AnvilClient", "get_anvil_client", "check_anvil_health"]

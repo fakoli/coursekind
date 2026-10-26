@@ -1,0 +1,598 @@
+[
+  {
+    "id": "AUTH-01",
+    "outcome": "completed",
+    "wall_seconds": 70,
+    "notes": "UI registration auto-signs in and shows correct author identity. Observation includes fixture setup pause; not a human benchmark."
+  },
+  {
+    "id": "COURSE-01",
+    "outcome": "completed",
+    "wall_seconds": 44,
+    "notes": "Created manual course with two ordered titled/described modules through wizard; detail shows2modules."
+  },
+  {
+    "id": "SHARE-02",
+    "outcome": "completed",
+    "wall_seconds": null,
+    "notes": "A grants B private course access in UI; B finds Shared with me and opens module with no author controls. A revokes; B reload shows Module not found. Duration interrupted by model changes; clean timing retest pending."
+  },
+  {
+    "id": "PATH-01",
+    "outcome": "completed",
+    "wall_seconds": 50,
+    "notes": "Created goal path with hours, edited description/hours, reloaded and confirmed persistence."
+  },
+  {
+    "id": "PATH-02",
+    "outcome": "completed",
+    "wall_seconds": 58,
+    "notes": "Added own private and another author public course via path picker; original IDs/authors and2module counts shown. Already-added course excluded from picker."
+  },
+  {
+    "id": "PATH-03",
+    "outcome": "partial",
+    "wall_seconds": 26,
+    "notes": "Reorder succeeds without navigation and persists after reload; removal/delete branches pending dedicated fixture."
+  },
+  {
+    "id": "SHARE-03",
+    "outcome": "completed",
+    "wall_seconds": 84,
+    "notes": "Named private path appears in recipient discovery. Recipient can follow but has no author controls; path sharing does not reveal revoked private course title."
+  },
+  {
+    "id": "PATH-04",
+    "outcome": "completed",
+    "wall_seconds": 33,
+    "notes": "Follow persisted across reload, appeared in Following, and unfollow removed it. Source path remained accessible and unchanged."
+  },
+  {
+    "journey": "SHARE-02 media extension",
+    "status": "completed",
+    "elapsed_seconds": 8,
+    "notes": "Owner grant exposes protected lesson image to recipient; revocation then recipient reload denies module. Screenshot06 captures authorized image. Private direct image API checked separately."
+  },
+  {
+    "journey": "PATH-02 discovery add and contribution counts",
+    "status": "completed",
+    "elapsed_seconds": 14,
+    "notes": "Discover→Add to Path→learner path; cards and author detail show2references:1by author,1by other owners."
+  },
+  {
+    "journey": "PATH-03 remove and cancel",
+    "status": "completed",
+    "elapsed_seconds": 15,
+    "notes": "Cancel retained course. Confirm removal persisted empty path; sourcecourse remains2modules; reusecount falls2→1,otherowner1→0. Path deletion not part of this run."
+  },
+  {
+    "journey": "MODULE-02 create and reorder",
+    "status": "completed",
+    "elapsed_seconds": 20,
+    "notes": "Created2cards, reorderedsecondtofirst,saved/reloaded;deckcountandorderpersist. Stableidentity/deletioncreditawaitTask3."
+  },
+  {
+    "journey": "MODULE-03 manual quiz",
+    "status": "partial",
+    "elapsed_seconds": 40,
+    "notes": "Question/options/explanationandBcorrectkeysavedreload. Correctchoicehadonlyvisualclicktarget,noAXradio;Task3fixandkeyboardretestneeded."
+  },
+  {
+    "journey": "MODULE-04 configure practice",
+    "status": "completed",
+    "elapsed_seconds": 21,
+    "notes": "EnabledPythonpractice,instructions/starter/solutionsavedandpersistafterreload. Timeoutandremove/readdvalidationpending."
+  },
+  {
+    "id": "COURSE-02",
+    "outcome": "completed",
+    "wall_seconds": 71,
+    "notes": "Edited existing outline description; added and saved a temporary third module; reopened editor to verify persisted values; removed temporary module and saved. Two original module IDs, order and authored activities preserved. Course description also persisted. Initial harness reload occurred before save completed, so removal was repeated and confirmed on the resulting detail screen before final reload."
+  },
+  {
+    "id": "PATH-03",
+    "subflow": "Delete disposable empty path",
+    "outcome": "completed",
+    "wall_seconds": 17,
+    "notes": "Cancel kept the path. Confirmed deletion returned to My Paths empty state and persisted after reload. Other author path and source courses remain."
+  },
+  {
+    "id": "STATS-03",
+    "outcome": "failed before Task3",
+    "wall_seconds": null,
+    "notes": "Fresh student follows a shared path but Dashboard still shows only start-learning empty state, no selected-path count or recommendation. Saved screenshot07. No lesson/study actions taken by this account."
+  },
+  {
+    "id": "SHARE-04",
+    "subflow": "Source edit and deletion",
+    "outcome": "completed",
+    "wall_seconds": 34,
+    "notes": "API-created disposable public course/path fixture. UI title edit reflected in student path after reload; cancel deletion retained source; confirmed deletion removed source and left generic unavailable-course placeholder. Student has no author controls."
+  },
+  {
+    "id": "STUDY-05",
+    "subflow": "Real Python worker timeout and recovery",
+    "outcome": "completed",
+    "wall_seconds": null,
+    "execution_times_ms": {
+      "infinite_loop": 5485,
+      "recovery": 483,
+      "isolated_name_error": 487,
+      "changed_output": 484,
+      "syntax_error": 500,
+      "runtime_error": 484
+    },
+    "notes": "Actual browser Pyodide worker: infinite loop stopped at5s execution limit plus startup; fresh run printed5; next run could not see previous_value; changed output only7; syntax/runtime errors visible; reset restored starter; solution reveal/hide worked; starter printedHello afterward. Personal draft/time persistence remains pending Task3 viewer integration."
+  },
+  {
+    "id": "STATS-01",
+    "subflow": "Passive versus meaningful activity",
+    "outcome": "completed",
+    "wall_seconds": 49,
+    "notes": "Fresh student following1path had0sessions/0startedcourses. Content open+reload did not change totals. Mark content read created1session,1in-progresscourse,current/longeststreak1,RecentActivity,0completedmodules. Session/time-boundaryhistoricalcases covered by controlled-clock tests."
+  },
+  {
+    "id": "STUDY-02",
+    "subflow": "Distinct reviews and final card",
+    "outcome": "completed",
+    "wall_seconds": 117,
+    "notes": "Enter and Space flip cards. Re-reviewing first card across reload kept1/2 progress; reviewing final card then leaving without Next card yields2/2. Ratings Hard→Medium→Unhelpful and Easy persisted; filters and empty states behaved correctly."
+  },
+  {
+    "id": "STUDY-03",
+    "subflow": "Ratings and stable card identity",
+    "outcome": "completed",
+    "wall_seconds": null,
+    "notes": "All four ratings and empty filters exercised. Author reordered the deck: ratings followed the same card. Author replaced the rated print card with a new concatenation card: learner had Unrated1/Easy1/Unhelpful0 and distinct review count1/2. Historical events remained separate from current deck completion."
+  },
+  {
+    "id": "STUDY-05",
+    "subflow": "Personal draft and run persistence",
+    "outcome": "completed",
+    "wall_seconds": 40,
+    "notes": "Changed draft without running, immediately switched toContent and reloaded; personal code restored. Run printedSavedstudentdraft and showed1savedrun. Reset restoredstarter afterreload while runhistoryremained1."
+  },
+  {
+    "id": "STUDY-01",
+    "subflow": "Editable embedded JavaScript and recovery",
+    "outcome": "completed",
+    "wall_seconds": null,
+    "execution_times_ms": {
+      "original": 15,
+      "edited": 5,
+      "timeout": 5010,
+      "syntax_error": 10,
+      "runtime_error": 11
+    },
+    "notes": "Original2+3→5; local Editcode2+7→9; infinitewhileloopstopped5s;syntax/runtimeerrorsshown;Resetoriginalcode→5. Sourceauthorcontentunchanged. First browserwaittoolhititsownshorterdeadlinebefore5stimeout; subsequentstateconfirmedcorrectappresult."
+  },
+  {
+    "id": "STUDY-04",
+    "subflow": "Scoring, retry, and saved history",
+    "outcome": "completed",
+    "wall_seconds": 28,
+    "notes": "Submit disabled with an unanswered question. Firstattempt1correct/1wrong→50%with explanations; Retry clearedanswers; keyboardchosen2correct→100%; reloadretained2attemptsandlatestscore100. ExtraAIquestionsvalidatedinTask4cycle separately."
+  },
+  {
+    "id": "STUDY-06",
+    "subflow": "Completion and path summaries",
+    "outcome": "completed",
+    "wall_seconds": 140,
+    "notes": "Next completedfirstmodule andopenedsecond;course50%,followedpathcard/detail25%;Finishcompletedcourse100%. ResumedothercoursefromDashboardandfinishedbothmodules. Reloadretainedselected1/active0/completed1,coursesinprogress0,4modulesweek,1session. EmptyContinueLearningcopyincorrectlysaidneverstarted; fixrequested."
+  },
+  {
+    "id": "STATS-02",
+    "subflow": "Timezone preference validation",
+    "outcome": "completed",
+    "wall_seconds": null,
+    "notes": "OpeningSettingskeptUTCdefault;invalidMars/OlympusrejectedwithIANAexample;America/Los_AngelespersistedreloadandDashboardusedit;restoredUTC. Historicaldayboundaries/longeststreaktestedwithcontrolledclock,notrealelapsedmultidaywaiting."
+  },
+  {
+    "id": "PATH-05",
+    "subflow": "Revocation and retained personal history",
+    "outcome": "completed",
+    "wall_seconds": null,
+    "notes": "Afterfourmodulecompletion,path100%. OwnerchangedAcoursepublic→privatewithoutstudentgrant: Dashboardkept4weeklycompletions/1session/streak1/time2.5m,redactedprivatetitles,andselectedpathbecameactive. Pathdetail50%,1unavailable,genericplaceholderwithoutprivatecounts/title. Namedcoursegrantrestoredpath100%andpersonalprogress."
+  },
+  {
+    "journey": "STATS-03",
+    "status": "pass-subflow",
+    "elapsed_seconds": null,
+    "notes": "Latest Task3 commit: completed selected path shows 1 selected, 0 active, 1 completed, no unfinished courses guidance. No false never-started claim."
+  },
+  {
+    "journey": "MODULE-04",
+    "status": "pass-subflow",
+    "elapsed_seconds": 12.449,
+    "notes": "Remove Sandbox → Save → reload → No Code Sandbox persisted."
+  },
+  {
+    "journey": "AUTH-02",
+    "status": "fail-subflow",
+    "elapsed_seconds": null,
+    "notes": "Logout Baseline Student→login Baseline History without reload: greeting changes but dashboard shows Student private lesson titles, completed path, quiz and activity. Concrete Task5 cache-isolation reproduction."
+  },
+  {
+    "journey": "STATS-01/STATS-02",
+    "status": "pass-subflow",
+    "elapsed_seconds": null,
+    "notes": "Controlled synthetic history for same module at today and 4/5/6/8 days ago: rendered weekly sessions4, current streak1, longest3, lifetime5min, startedcourse1; oldest event excluded weekly. API/isolated storage setup, actual UI rendering. NextUp misses directly studied nonowned course; reported Task3 fix."
+  },
+  {
+    "journey": "STUDY-06/STATS-03",
+    "status": "pass-subflow",
+    "elapsed_seconds": null,
+    "notes": "After fix, History dashboard recommends directly studied public Fixture lesson1 despite owning no courses and following no paths."
+  },
+  {
+    "journey": "STUDY-02/STUDY-03",
+    "status": "pass-subflow",
+    "elapsed_seconds": 45.97,
+    "notes": "Flip first card→rate Easy→Next→Previous→Space flip: visible reviewed1/2 throughout; secondary stored check exactly2 review events for1 stable cardID. Rating+Next same encounter deduplicated; genuine revisit retained."
+  },
+  {
+    "journey": "MODULE-02",
+    "status": "fail-subflow",
+    "elapsed_seconds": 25.422,
+    "notes": "Adding third flashcard with nonempty front and empty back then Save silently removes entered card and shows Module updated successfully. Need explicit validation and draft preservation. Original two cards preserved."
+  },
+  {
+    "journey": "MODULE-03",
+    "status": "fail-subflow",
+    "elapsed_seconds": null,
+    "notes": "Author can save quiz question with only one nonempty answer and three empty answer strings; success reported. UI has no add/remove option controls required by catalog. Need validation preserving draft and safe option-index editing."
+  },
+  {
+    "journey": "COURSE-02",
+    "status": "pass-subflow",
+    "elapsed_seconds": 27.226,
+    "notes": "Stopped disposable API before Save: explicit save error, outline draft retained. Restarted API, retried same Save, reload/reopen confirms edited description and original two modules without duplicates."
+  },
+  {
+    "journey": "COURSE-04",
+    "status": "pass-subflow",
+    "elapsed_seconds": 51.292,
+    "notes": "Discover→no-match search shows helpful empty state→Fixture+Intermediate+A-Z finds public course→open verifies author,2modules,own/other reuse→Back retains Discover tab (filters reset). Only one public result: cross-item sort order not yet exercised."
+  },
+  {
+    "journey": "AI-02",
+    "status": "pass-subflow",
+    "elapsed_seconds": 22.789,
+    "notes": "Selected llm.secondary from live hosted catalog→Save→reload: Selected anvil/llm.secondary persisted. Preference persistence only; generation on secondary not yet tested."
+  },
+  {
+    "journey": "COURSE-05/AI-01/AI-05",
+    "status": "blocked-live-provider",
+    "elapsed_seconds": 252.595,
+    "notes": "Live llm.primary outline request and one UI retry failed HTTP503. Direct minimal chat request confirms configured model service unavailable in0.09s; model catalog reachable. Draft retained, no modules written, balance100 unchanged. Elapsed includes diagnosis, not generation latency. No fallback used."
+  },
+  {
+    "journey": "AI-03",
+    "status": "pass-mocked-provider-subflow",
+    "elapsed_seconds": 34.866,
+    "notes": "External HTTP transport mocked: OpenAI invalid credential401 rejected; synthetic valid credential discoversgpt-test, Save/reload retains provider/model and masked key with empty input. No real vendor call; balance100."
+  },
+  {
+    "journey": "COURSE-05/MODULE-05/AI-03",
+    "status": "pass-mocked-provider-subflow",
+    "elapsed_seconds": 51.336,
+    "notes": "Mocked external HTTP through actual OpenAI adapter: suggest8→select1→2cards+2quiz→create→Savecourse→editgeneratedlesson→save/refinement→reload. One module with2cards/2quiz persisted, description+2objectives preserved, ledger records openai/gpt-test, balance100 unchanged. Not live vendor validation."
+  },
+  {
+    "journey": "MODULE-05",
+    "status": "fail-subflow",
+    "elapsed_seconds": null,
+    "notes": "Mocked provider returned15cards; close X in Replace Flashcards dialog appended them to existing2 (17draftcards) instead of cancelling. Reported Task4 worker; reload discards unsaved change."
+  },
+  {
+    "journey": "AI-04",
+    "status": "pass-mocked-provider-subflow",
+    "elapsed_seconds": 119.499,
+    "notes": "Replaced synthetic OpenAI key v1→v2; subsequent actual adapter card generation used v2 in two mocked requests. Removed key→reload shows credentialnotconfigured/unavailablemodel without fallback. Explicitly selected Anvil+llm.primary and saved. No real external calls. Time includes card-dialog defect investigation."
+  },
+  {
+    "journey": "COURSE-05/AI-01",
+    "status": "pass-live-anvil-subflow",
+    "elapsed_seconds": 63.422,
+    "notes": "After model restoration, real llm.primary returned8 coherent Python collection suggestions with descriptions and objectives; existing mocked lesson preserved. Timing includes result inspection."
+  },
+  {
+    "journey": "COURSE-05/MODULE-05/AI-01/AI-05",
+    "status": "pass-live-anvil-subflow",
+    "elapsed_seconds": 191.273,
+    "notes": "Real llm.primary staged module retry completed: content22.548s, cards1.988s, quiz5.193s HTTP durations. Allfinishstop; prior rejected attempt uncharged. CreatingYourFirstList saved with2cards,2validquizquestions,description+2objectives; manually appended authornote,Save/reload verified. Originalmockmodule retained. Balance100→90outline→65successfulmodule; ledgerexact-10/-25, nofaileddebit. Elapsed includes inspection/manualedit. ExternalvendorHTTPmock remainsenabled but Anvilrequestspassthroughlive."
+  },
+  {
+    "journey": "MODULE-05",
+    "scenario": "Generated card dialog Close and Escape discard; explicit Append and Replace persist",
+    "status": "pass",
+    "duration_ms": 31168,
+    "evidence": "31-generated-card-dismissal-fixed.png",
+    "notes": "External HTTP mocked. Close+Save+reload and Escape+Save+reload both preserve2; Append saves17; Replace saves15. No live vendor inference."
+  },
+  {
+    "journey": "COURSE-05 / AI-05",
+    "scenario": "Replace All fails after staged lesson, retry atomically replaces only selected module",
+    "status": "pass",
+    "duration_ms": 30269,
+    "evidence": "32-ai-replacement-failure-preserves-draft.png",
+    "notes": "External provider HTTP mocked; forced second stage503. Original2module IDs/content preserved on failure, selected draft retained. Explicit retry succeeded, Save/reload shows exactly1 selected module. Prior synthetic AI course modules intentionally replaced."
+  },
+  {
+    "journey": "STUDY-04 / MODULE-05",
+    "scenario": "Personal generated questions persist through reload",
+    "status": "pass",
+    "duration_ms": 9691,
+    "evidence": "33-personal-extra-quiz-persisted.png",
+    "notes": "Submitted2-question fixture100%, generated10 mocked questions; reload shows12 and savedattempt1. Mock transport repeats question labels acrossbatches; this is fixture behavior."
+  },
+  {
+    "journey": "AI-03 / AI-04",
+    "scenario": "Gemini and Claude select/validate/save/generate; explicit return to Anvil",
+    "status": "pass",
+    "duration_ms": null,
+    "notes": "Mocked external HTTP only. Both catalog and generated15card requests use selected adapter; dismiss preserved2savedcards. Claude reload persisted. Balance remains65. Anvilprimary explicitly reselected. Timing not separately measured."
+  },
+  {
+    "journey": "STUDY-01 / STUDY-02 / STUDY-04 / STUDY-05",
+    "scenario": "Optional content-only, card-only, quiz-only, practice-only variants",
+    "status": "partial",
+    "duration_ms": 52061,
+    "evidence": "34-empty-content-tab-before-fix.png",
+    "notes": "Availableactivities: contentread/next; singlecardflip/next; singlequiz100%. Cards/quiz/practice-only default to emptyContenttab with Markcontentread, reportedTask5. First standaloneJSrun storedhistory1 but outputreset to initialinstruction instead of5; also reportedTask5. Fixture APIseeded; actualUI performed activities."
+  },
+  {
+    "journey": "COURSE-04",
+    "scenario": "Discovery sorting with three public fixtures and distinct reuse counts",
+    "status": "pass",
+    "duration_ms": 19610,
+    "notes": "MostPopular SharedEngineering1reference first; Newest ZZZ first; A-Z AAA→Fixture→ZZZ; Advanced onlyZZZ; restoredAllLevels/MostPopular. Privatecoursesabsent. APIseededpublicsortingfixtures, actualUIcontrols."
+  },
+  {
+    "journey": "AUTH-02",
+    "scenario": "Student to History account switch without reload",
+    "status": "pass",
+    "duration_ms": 8110,
+    "evidence": "36-account-switch-cache-isolated.png",
+    "notes": "Student private dashboard populated first; Logout→HistorySignIn immediate dashboard shows History selected0/weekly4/longest3, no Studentprivatecourse or completion/quiz data. No reload between identities."
+  },
+  {
+    "journey": "AUTH-02",
+    "scenario": "Cross-tab sign-out and browser Back",
+    "status": "pass",
+    "duration_ms": null,
+    "notes": "Secondlocalhosttab loggedout; existingdashboard immediatelyredirectedlogin and browserBack remainedlogin. No fullpagereload required; testtabclosed. Separate AnvilAuthor127originunaffected."
+  },
+  {
+    "journey": "AUTH-03",
+    "scenario": "Ordinary user direct admin route",
+    "status": "pass",
+    "duration_ms": 16146,
+    "evidence": "37-nonadmin-guard.png",
+    "notes": "One access-denied message and ReturntoDashboard; no adminscreen/toastflood. Before-querybehavior coveredfocusedtests."
+  },
+  {
+    "journey": "MODULE-02",
+    "scenario": "Partial card rejected without draft loss, repaired card persists",
+    "status": "pass",
+    "duration_ms": 17915,
+    "evidence": "38-incomplete-card-validation-fixed.png",
+    "notes": "FrontonlythirdcardSave shows clearfront/backerror and retains3draftcards. Fillback→Save/reload3; removeonlytestcard→Save/reload2. Existingcards/content/quiz preserved."
+  },
+  {
+    "journey": "MODULE-03",
+    "scenario": "Invalid quiz, add/remove options, answer-key remapping and reselection",
+    "status": "pass",
+    "duration_ms": 61858,
+    "evidence": "39-quiz-validation-fixed.png",
+    "notes": "Onefilledoption rejectsSave andpreservesdraft. CorrectD8→removeB remapsC8; removecorrectC requiresreselection andblocksSave; minimum2removaldisabled. Add/removeoptionworks. SelectA5→Save/reload correct2-optionquestion. Removedonlytestquestion andrestoredoriginal2."
+  },
+  {
+    "journey": "STUDY-05",
+    "scenario": "Fresh practice first run keeps output after history save",
+    "status": "pass",
+    "duration_ms": 8419,
+    "evidence": "40-first-practice-output-fixed.png",
+    "notes": "Fresh modulewithnopersonalprogress opensPractice directly (noemptyContent). FirstRunconsole.log2+3 displays5 and Savedruns1 simultaneously. Priorresetbugfixed."
+  },
+  {
+    "journey": "MODULE-01 / STUDY-01",
+    "scenario": "Optional activity tabs and empty outline recovery",
+    "status": "pass",
+    "duration_ms": null,
+    "notes": "Cards-only opensFlashcards, quiz-only opensQuiz, practice-only opensPractice; absentContent/readcredit hidden. FullyemptyNumbersoutline has truthful noactivitiesyet guidance and explicitnavigation. Content-only earlier opensreadingnormally."
+  },
+  {
+    "journey": "SUPPORT-01",
+    "scenario": "Notification availability, E164 validation and saved toggles",
+    "status": "pass",
+    "duration_ms": 48414,
+    "evidence": "41-notifications-unavailable-and-saved.png",
+    "notes": "Unconfiguredemail/SMS explicitlyunavailable; testbuttonsdisabled. Invalid555 rejectedwithE164guidance; reservedsynthetic+12025550123 saves. Email/dailyquiz/SMS togglesoff persistafterreload, checkedstateexposed. No realdelivery; capturedadapters testedbackend."
+  },
+  {
+    "journey": "SUPPORT-01",
+    "scenario": "Captured delivery success and failure feedback",
+    "status": "pass",
+    "duration_ms": null,
+    "evidence": "42-captured-notification-feedback.png",
+    "notes": "Disposablecapture-onlyadapters/noexternalmessages: UIemail success, SMSsuccess, forcedemailfailure displayedaccurately. Safeadapterlog confirms3calls. Captureavailabilitydisabledafterward; email/SMSoffrestored, dailyoffunchanged."
+  },
+  {
+    "journey": "AUTH-02 / SUPPORT-02",
+    "scenario": "API outage while resuming session, private gate and recovery",
+    "status": "pass",
+    "duration_ms": 19114,
+    "evidence": "43-session-outage-retry-gate.png",
+    "notes": "StoppeddisposableAPI,reloadedSettings: onlyverificationerror/Retry/Signout visible,noprivatecontent. RestartAPI→Retry restoresAuthorSettings withoutreenteringcredentials. ExpiredJWT/401coveredfocusedtests."
+  },
+  {
+    "journey": "AUTH-01",
+    "scenario": "Account-created recovery after failed automatic sign-in",
+    "status": "pass",
+    "duration_ms": 16858,
+    "evidence": "45-registration-recovery-fixed.png",
+    "notes": "Successfulregistration+injectedloginautomaticfailure showsaccountcreatedmessage andonlySigninlink(noresubmit). SigninwithsamecredentialopenscorrectfreshRecoveryVerifieddashboard, zeroactivities/paths/privatecontent. DuplicateemailseparatelyshowedEmailalreadyregistered."
+  },
+  {
+    "journey": "COURSE-03",
+    "status": "pass-subflow",
+    "elapsed_seconds": 28.859,
+    "steps": "Edited disposable unreferenced course title/description/difficulty, saved and reloaded; Delete→Cancel retained it; Delete→confirm removed list card; old direct URL recovers gracefully.",
+    "notes": "Synthetic AAA discovery fixture intentionally deleted after prior sorting checks. Timing includes tool inspection."
+  },
+  {
+    "journey": "SUPPORT-02",
+    "status": "pass-subflow",
+    "elapsed_seconds": 23.676,
+    "steps": "390 CSSpx viewport retest: course cards, pathdetailactions, moduleactivitytabs and editortabs now have documentwidth390/scrollWidth390. Practice click opens exercise; keyboardTab fromQuiz thenSpace opensSandbox. Creation,discovery,pathlist,coursedetail,settings also fit.",
+    "notes": "DOM-backed actual browser geometry and real interactions. IAB screenshot compositor does not reliably reflect device override; not claiming screenshot-based phone visual audit."
+  },
+  {
+    "journey": "MODULE-01 / STUDY-01",
+    "scenario": "Manual rich Markdown and embedded example",
+    "status": "pass",
+    "duration_ms": 39998,
+    "notes": "Added heading/list/bold/documentation link/JavaScript code to existing protected-image lesson. Preview rendered; Save/reload retained Markdown. Empty title rejected with retained content. Restored title/saved; learner view renders all content and Run code prints Hello, learner!. Existing cards/quiz/practice retained."
+  },
+  {
+    "journey": "SHARE-01 / AUTH-03",
+    "scenario": "Public discovery, unlisted direct lesson, private denial",
+    "status": "pass",
+    "duration_ms": 41911,
+    "notes": "Owner UI Private→Public; unrelated fresh learner found course in Discover and saw two modules without author controls. Unlisted survived reload/directlesson including protectedimage while disappearing from Discover. Restored Private with original Student grant intact; unrelated direct lesson now Module not found. No normal userdata changed."
+  },
+  {
+    "journey": "SHARE-05 / PATH-02 / PATH-03",
+    "scenario": "Distinct references and deleting a curator path",
+    "status": "pass",
+    "duration_ms": 42562,
+    "notes": "Createddisposablelearnerpath, added publicotherauthorcourse. Samecourse excludedfromsecondAddpicker; otheraccountcoursedetailreferences1→2,author0/otherowners2. Deletedonlydisposablepath; sourcecourseand2modulesremain, countsreturn1,total0author/1other. Syntheticpathsneverimplyfollow."
+  },
+  {
+    "journey": "STATS-04 / STATS-01 / STATS-03 / STUDY-04",
+    "scenario": "Read and quiz history survive dashboard navigation and reload",
+    "status": "pass",
+    "duration_ms": 48517,
+    "notes": "FreshRecoverylearnerexplicitread+2correctquizanswers recordsone100%attempt. Dashboardnavigation+reloadretain1session,1courseinprogress,0selectedpaths,0completedmodules,100%quiz,read+quizactivity. ContinueLearningopenssamecourse/module; contentreadstateandonequizhistoryattemptpersist. Passiveadditionalnavigationdoesnotaddattempt."
+  },
+  {
+    "journey": "MODULE-01 / STUDY-01",
+    "scenario": "Sanitized lesson retains rich Markdown, protected image, Mermaid diagram and executable code",
+    "status": "pass",
+    "duration_ms": 34467,
+    "notes": "On20c9c59 source/dependencies, author appended Mermaid Learn→Practice and benign strong HTML through editor; saved, reloaded course and opened lesson. RealSVG135.56×162 rendered withbothlabels, protectedimagecomplete300px, boldtextpreserved; embeddedJSprintsHello,learner! Screenshot51. Durationincludesbrowserinspection/toolcoordination,notuninterruptedhumanbenchmark."
+  },
+  {
+    "journey": "AI-06",
+    "scenario": "Select local subscription and inspect existing ChatGPT sign-in",
+    "status": "fail",
+    "duration_ms": 41541,
+    "notes": "First integration checkpoint incorrectly reports ChatGPT sign-in required despite verified CLI sign-in. Provider remains saved as Anvil; no inference or debit. Investigating command compatibility. Screenshot52; interval includes diagnosis and coordination."
+  },
+  {
+    "journey": "AI-06",
+    "scenario": "Select, live validate and persist local Codex subscription",
+    "status": "pass",
+    "duration_ms": 22812,
+    "notes": "Actual Codex CLI0.162.1 with existing ChatGPT sign-in and gpt-6-luna: inference check succeeds, selection saves and reloads;65Anvil application credits unchanged. No API key entered. Retests raw70 missing-login integration failure."
+  },
+  {
+    "journey": "AI-06 / COURSE-05",
+    "scenario": "Generate course outlines through Codex subscription",
+    "status": "fail",
+    "duration_ms": 53989,
+    "notes": "Actual gpt-6-luna request rejected after two structured-output validation attempts; server503 with no application-credit charge and no modules created. Inference connection check had passed. Root investigating with implementer; durationincludesinspection."
+  },
+  {
+    "journey": "AI-06 / AUTH-02",
+    "scenario": "Other learner cannot select the host Codex subscription",
+    "status": "pass",
+    "duration_ms": 15753,
+    "notes": "Actual separate localhost origin signed into Baseline Student; Settings remains Anvil/llm.primary and Provider choices omit Codex subscription. Author on127 origin remains selected Codex. API denial independently covered by backend tests."
+  },
+  {
+    "journey": "AI-06 / COURSE-05",
+    "scenario": "Generate eight valid outlines through live Codex subscription",
+    "status": "pass",
+    "duration_ms": 45316,
+    "notes": "Actual gpt-6-luna returned8 coherent dictionary modules, each2objectives, displayed in selection modal. Prompt explicitly states2–4objectives after reproduced earlier failure; validator unchanged. Zero application-credit cost shown. Screenshot54."
+  },
+  {
+    "journey": "AI-06 / COURSE-05 / MODULE-05",
+    "scenario": "Generate lesson, two cards and two quiz questions; refine, save and reopen",
+    "status": "pass",
+    "duration_ms": 127285,
+    "notes": "Actual Codex gpt-6-luna generated Create a Dictionary module4f8f1bfa-dd6b-46c9-a0da-7e9030310419 with coherent Markdown,2cards,2quizquestions/correct answer keys/explanations. Saved course and appended Author refinement through editor; saved/reloaded/navigated learner view confirms refinement and2activitycounts; quizrenders. Screenshot55. Durationincludesinspection/refinement/toolcoordination."
+  },
+  {
+    "journey": "AI-06",
+    "scenario": "Return explicitly to Anvil and verify zero subscription debit",
+    "status": "pass",
+    "duration_ms": 16885,
+    "notes": "After live subscription validation/outlines/module and failed outline, Settingsstill65credits. Explicitly selectAnvil/llm.primary,save,reload verified; Codex remains an availableoptionalchoice. GlobalCodexauthunchanged."
+  },
+  {
+    "journey": "COURSE-02",
+    "scenario": "Older course editor save must preserve a module added in another tab",
+    "status": "fail",
+    "duration_ms": 17001,
+    "notes": "Actual2tabrepro: oldcourseeditorheld1module; other tabcreatedConcurrent outline must survive239036cb-797c-45bd-9f59-b1899c212b93; savingolderunchangeddraftdeletednewmodule, coursecountback1, newmoduleURLreloadModuleNotFound. Onlynewsyntheticmoduleaffected; existinggeneratedmodule4f8f preserved. Finalreviewfinding; pendingfix."
+  },
+  {
+    "journey": "STUDY-02",
+    "scenario": "Finish must not discard a failed earlier flashcard review",
+    "status": "fail",
+    "duration_ms": 28388,
+    "notes": "Actual UI withdisposablemiddleware2targeted503reviewevents: flipcardAfailed;NextretriedAfailedbutadvanced;flipcardBsaved;Finishnavigatedcourseandmarked100%completewith1/2cards, earlierAunsaved. Screenshot57. Syntheticmodule4f8f nowAuthorcompleted; requestfailurecounter0. Pendingfinalreviewfix."
+  },
+  {
+    "journey": "STUDY-02",
+    "scenario": "Retain earlier failed flashcard reviews through Finish and recover",
+    "status": "pass",
+    "duration_ms": 352099,
+    "notes": "Post-fix fe99812 actual UI: targeted card-A 503 persisted through Next; card B saved; Finish stayed on module with unsaved-action error. Restored disposable service; Retry study save showed 2/2; Finish returned to course with 2/2. Re-study of already-completed synthetic module; timing includes compaction/coordination pause, not human benchmark. Screenshots58/59."
+  },
+  {
+    "journey": "PATH-04",
+    "scenario": "Owner explicitly follows and unfollows own path with dashboard count",
+    "status": "pass",
+    "duration_ms": 21911,
+    "notes": "fe99812 actual UI: owner Follow path -> Unfollow; Dashboard Selected Paths 1 and Active 1; Unfollow -> Dashboard Selected Paths 0 and Active 0. Ownership preserved. Screenshot60."
+  },
+  {
+    "journey": "COURSE-02",
+    "scenario": "Stale course outline preserves concurrently added module",
+    "status": "pass",
+    "duration_ms": 21709,
+    "notes": "5c1cf7a actual two-tab UI: original editor held one module; second tab created4278bbb8 with lesson content. Old Save Changes returns explicit conflict and retains draft; new module remains readable after reload; My Courses shows2. Screenshot61."
+  },
+  {
+    "journey": "SHARE-01",
+    "scenario": "Signed-in public course and protected raster remain usable",
+    "status": "pass",
+    "duration_ms": 21371,
+    "notes": "5c1cf7a actual UI: Student logout/direct public course -> Login; sign in -> public course readable with own progress. Author private module retains protected PNG and rich content. Backend anonymous/media/import negative boundaries independently covered by regression tests. Screenshot62."
+  },
+  {
+    "journey": "COURSE-03",
+    "scenario": "Warmed course card count immediately updates after module deletion",
+    "status": "pass",
+    "duration_ms": 24083,
+    "notes": "d304db6 actual UI: My Courses warmed3modules; open course/delete disposable Fresh count module; return My Courses without reload ->2modules. Preserved original generated lesson and concurrent-outline regression lesson. Screenshot63. Earlier creation3 observed; final backend warmed-cache/create/batch/generation coverage automated."
+  },
+  {
+    "journey": "STUDY-04",
+    "scenario": "Lost committed quiz response, answer edit, immutable retry then distinct submission",
+    "status": "pass",
+    "duration_ms": 14876,
+    "notes": "cfe5b21 actualUI with disposable middleware commit-then-503: initial0% saved but responsefailed; edited answer toHello; Retry preserved exacteventID/answers/studytime and showed1savedattempt0% while draftHello retained; explicitSubmit then2attempts latest100%. No duplicate originalattempt. Screen64. Further resolve-first gating for precommitfail/newsubmit pending followup."
+  },
+  {
+    "journey": "STUDY-04",
+    "scenario": "Resolve failed older quiz before allowing newer edited submission",
+    "status": "pass",
+    "duration_ms": 21628,
+    "notes": "af5d483 actualUI: failbeforecommit on0% attempt; editHello retained butSubmitdisabled with Retry guidance; recoveroriginal ->count3/latest0%;newSubmit ->count4/latest100%; reloadpersists. Priorcount2fromseparatelostresponsecase; exactly2newattempts. Screenshot65blockedstate."
+  }
+]

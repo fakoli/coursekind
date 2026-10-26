@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 class FlashcardData(BaseModel):
@@ -39,7 +39,21 @@ class SandboxData(BaseModel):
 
 class ModuleBase(BaseModel):
     title: str = Field(..., min_length=1, max_length=200)
+    description: str = ""
+    objectives: list[str] = Field(default_factory=list)
     order_index: int = Field(..., ge=0)
+
+
+def validate_activity_write(flashcards, quiz):
+    """Strict new writes; legacy read models remain repairable."""
+    for index, card in enumerate(flashcards or []):
+        if not card.front.strip() or not card.back.strip():
+            raise ValueError(f"Flashcard {index + 1}: enter both a front and a back")
+    for index, question in enumerate(quiz.questions if quiz else []):
+        if not question.question.strip() or any(not option.strip() for option in question.options):
+            raise ValueError(f"Question {index + 1}: question and options must not be blank")
+        if not 0 <= question.correct_index < len(question.options):
+            raise ValueError(f"Question {index + 1}: select a valid correct answer")
 
 
 class ModuleCreate(ModuleBase):
@@ -48,14 +62,26 @@ class ModuleCreate(ModuleBase):
     quiz: QuizData | None = None
     sandbox: SandboxData | None = None
 
+    @model_validator(mode="after")
+    def valid_activities(self):
+        validate_activity_write(self.flashcards, self.quiz)
+        return self
+
 
 class ModuleUpdate(BaseModel):
     title: str | None = None
+    description: str | None = None
+    objectives: list[str] | None = None
     order_index: int | None = None
     content_markdown: str | None = None
     flashcards: list[FlashcardData] | None = None
     quiz: QuizData | None = None
     sandbox: SandboxData | None = None
+
+    @model_validator(mode="after")
+    def valid_activities(self):
+        validate_activity_write(self.flashcards, self.quiz)
+        return self
 
 
 class Module(ModuleBase):
@@ -80,9 +106,12 @@ class ModuleSummary(BaseModel):
 
     id: str
     title: str
+    description: str = ""
+    objectives: list[str] = Field(default_factory=list)
     order_index: int
     flashcard_count: int = 0
     has_quiz: bool = False
+    updated_at: datetime | None = None
 
 
 class GenerateModuleRequest(BaseModel):
@@ -105,3 +134,15 @@ class ModuleSuggestion(BaseModel):
     description: str
     objectives: list[str]
     suggested: bool = True  # True if AI suggested, False if user-added
+
+
+class OutlineDraft(BaseModel):
+    id: str = Field(min_length=1, max_length=200)
+    title: str = Field(min_length=1, max_length=200)
+    description: str = ""
+
+
+class ReconcileOutlinesRequest(BaseModel):
+    initial: list[ModuleSummary]
+    outlines: list[OutlineDraft]
+    request_id: str = Field(min_length=1, max_length=100)

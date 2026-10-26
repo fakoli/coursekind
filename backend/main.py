@@ -1,6 +1,8 @@
 import time
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
@@ -14,10 +16,29 @@ settings = get_settings()
 setup_logging(debug=settings.debug)
 logger = get_logger(__name__)
 
+
+@asynccontextmanager
+async def lifespan(app):
+    from dependencies import get_storage
+    from services.workspace_runner import WorkspaceRunner
+    from storage import get_storage_backend
+
+    current_settings = get_settings()
+    override = app.dependency_overrides.get(get_storage)
+    storage = override() if override else get_storage_backend(current_settings)
+    runner = WorkspaceRunner(storage, current_settings)
+    await runner.recover_interrupted()
+    try:
+        yield
+    finally:
+        await runner.shutdown()
+
+
 app = FastAPI(
+    lifespan=lifespan,
     title=settings.app_name,
     description="A learning platform for visual learners who learn by doing",
-    version="0.1.0",
+    version="1.0.0",
 )
 
 # CORS middleware
@@ -82,6 +103,49 @@ async def request_logging_middleware(request: Request, call_next):
         # We must NOT swallow it here: a response built inside this
         # middleware's except would short-circuit the error contract.
         raise e
+
+
+@app.exception_handler(RequestValidationError)
+async def request_validation_exception_handler(request: Request, exc: RequestValidationError):
+    """Retain field diagnostics without echoing unvalidated credentials or request bodies."""
+    # SecretStr cannot protect a missing sibling field's raw input object. Rebuild
+    # the public errors instead of serializing exc/errors/body. Even custom
+    # validator messages can interpolate secrets, so use input-independent text.
+    messages = {
+        "missing": "Field required",
+        "string_type": "Input should be a valid string",
+        "string_too_short": "Text is shorter than the allowed minimum",
+        "string_too_long": "Text exceeds the allowed maximum",
+        "string_pattern_mismatch": "Text does not match the required format",
+        "literal_error": "Select a supported value",
+        "enum": "Select a supported value",
+        "json_invalid": "Request body must be valid JSON",
+        "model_attributes_type": "Input should be a valid object",
+        "dict_type": "Input should be a valid object",
+        "list_type": "Input should be a valid list",
+        "int_type": "Input should be a valid integer",
+        "int_parsing": "Input should be a valid integer",
+        "bool_type": "Input should be a valid boolean",
+        "bool_parsing": "Input should be a valid boolean",
+    }
+    errors = [
+        {
+            "loc": error["loc"],
+            "type": error["type"],
+            "msg": messages.get(error["type"], "Input does not satisfy this field's validation rules"),
+        }
+        for error in exc.errors()
+    ]
+    logger.warning(
+        "Request validation failed",
+        status_code=422,
+        error_code=ErrorCode.VALIDATION_ERROR.value,
+        error_count=len(errors),
+        path=request.url.path,
+        method=request.method,
+    )
+    # Preserve FastAPI's detail-list shape; omit input, ctx, body and exception text.
+    return JSONResponse(status_code=422, content={"detail": errors})
 
 
 @app.exception_handler(StudyBuddyException)
@@ -188,7 +252,7 @@ async def force_500():
 # Import and register routers
 from api.routes import auth, progress, references, ai, notifications
 from api.routes import courses, learning_paths, modules, uploads, generation
-from api.routes import user_settings, admin, flashcard_ratings
+from api.routes import user_settings, admin, flashcard_ratings, workspaces
 
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
 app.include_router(user_settings.router, prefix="/api/v1/auth", tags=["auth"])
@@ -210,3 +274,5 @@ app.include_router(admin.router, prefix="/api/v1/admin", tags=["admin"])
 # Flashcard ratings routes
 app.include_router(flashcard_ratings.router, prefix="/api/v1", tags=["flashcard-ratings"])
 app.include_router(flashcard_ratings.feedback_router, prefix="/api/v1", tags=["flashcard-ratings"])
+
+app.include_router(workspaces.router, prefix="/api/v1/workspaces", tags=["workspaces"])

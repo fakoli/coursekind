@@ -1,3 +1,4 @@
+import { ApiError } from '../api/client';
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { authApi } from '../api/auth';
@@ -63,7 +64,7 @@ describe('useAuth', () => {
 
   it('clears the token when it is stale/invalid', async () => {
     setToken('stale-token');
-    mockAuthApi.me.mockRejectedValue(new Error('401') as never);
+    mockAuthApi.me.mockRejectedValue(new ApiError('401', 401) as never);
 
     const { result } = renderHook(() => useAuth());
     await waitFor(() => expect(result.current.isAuthenticated).toBe(false));
@@ -87,7 +88,7 @@ describe('useAuth', () => {
 
   it('login removes the token and throws if /auth/me fails', async () => {
     mockAuthApi.login.mockResolvedValue({ access_token: 'new-token' } as never);
-    mockAuthApi.me.mockRejectedValue(new Error('boom') as never);
+    mockAuthApi.me.mockRejectedValue(new ApiError('Invalid token', 401) as never);
 
     const { result } = renderHook(() => useAuth());
     await act(async () => {
@@ -119,7 +120,7 @@ describe('useAuth', () => {
     // -> old code removed B (the fresh session). The new code must leave B alone.
     setToken('token-A');
     const staleMe = vi.fn();
-    staleMe.mockReturnValue(new Promise((_, reject) => setTimeout(() => reject(new Error('401')), 20)));
+    staleMe.mockReturnValue(new Promise((_, reject) => setTimeout(() => reject(new ApiError('401', 401)), 20)));
     mockAuthApi.me.mockImplementationOnce(staleMe as never);
 
     const { result } = renderHook(() => useAuth());

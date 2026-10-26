@@ -1,4 +1,6 @@
-import { useEffect } from 'react';
+import { useAuthContext } from '../components/common/AuthContext';
+import { useEffect, useRef, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, ChevronRight, ChevronLeft } from 'lucide-react';
 import { Card, CardContent } from '../components/common/Card';
@@ -17,15 +19,26 @@ import { useCourseSteps } from '../hooks/useCourseSteps';
 import { useModuleOutlines } from '../hooks/useModuleOutlines';
 import { useModuleSuggestions } from '../hooks/useModuleSuggestions';
 import { useToast } from '../hooks/useToast';
+import type { ModuleSummary } from '../types';
+import { saveModuleOutlines } from '../services/saveModuleOutlines';
 
 export function CourseEditor() {
+  const { user, isLoading: authLoading } = useAuthContext();
   const { courseId } = useParams<{ courseId: string }>();
   const navigate = useNavigate();
   const { success, error: showError } = useToast();
   const isEditing = !!courseId;
+  const queryClient = useQueryClient();
+  const initializedCourse = useRef<string | null>(null);
+  const createdCourseId = useRef<string | null>(null);
+  const initialOutlines = useRef<ModuleSummary[]>([]);
+  const outlineSave = useRef<{signature:string;id:string} | null>(null);
+  const [outlineConflict, setOutlineConflict] = useState('');
+  const [savingOutlines, setSavingOutlines] = useState(false);
 
   // Data fetching
-  const { data: existingCourse, isLoading: loadingCourse } = useCourse(courseId || '');
+  const { data: existingCourse, isLoading: loadingCourse, isFetching: refreshingCourse,
+    error: courseLoadError, refetch: reloadCourse } = useCourse(courseId || '');
   const { data: existingModules } = useModules(courseId || '');
 
   // Mutations
@@ -37,14 +50,20 @@ export function CourseEditor() {
   const steps = useCourseSteps(form.formState.aiEnabled);
   const outlines = useModuleOutlines();
   const suggestions = useModuleSuggestions();
+  const { populateFromCourse } = form;
+  const { populateFromModules } = outlines;
 
   // Populate form when editing
   useEffect(() => {
-    if (existingCourse && isEditing) {
-      form.populateFromCourse(existingCourse.course);
-      outlines.populateFromModules(existingCourse.modules);
+    if (existingCourse && isEditing && !refreshingCourse && !courseLoadError
+      && initializedCourse.current !== courseId) {
+      populateFromCourse(existingCourse.course);
+      populateFromModules(existingCourse.modules);
+      initialOutlines.current = existingCourse.modules.map(module => ({...module}));
+      initializedCourse.current = courseId!;
     }
-  }, [existingCourse, isEditing]);
+  }, [existingCourse, isEditing, refreshingCourse, courseLoadError, courseId,
+    populateFromCourse, populateFromModules]);
 
   // Validation
   const isStepValid = (step: string): boolean => {
@@ -66,28 +85,55 @@ export function CourseEditor() {
   };
 
   const canProceed = isStepValid(steps.currentStep);
-  const isSaving = createCourse.isPending || updateCourse.isPending;
+  const isSaving = createCourse.isPending || updateCourse.isPending || savingOutlines;
 
   // Save handler
   const handleSave = async () => {
+    if (isSaving) return;
     if (!form.formState.title.trim()) {
       showError('Please enter a course title');
       return;
     }
 
+    const desiredOutlines = outlines.outlines.map(outline => ({ ...outline }));
+    if (desiredOutlines.some(outline => !outline.title.trim())) {
+      showError('Please enter a title for every module');
+      return;
+    }
+
+    setSavingOutlines(true);
     try {
-      if (isEditing && courseId) {
-        await updateCourse.mutateAsync({ courseId, data: form.getUpdateData() });
-        success('Course updated successfully');
-        navigate(`/courses/${courseId}`);
+      let targetId = courseId || createdCourseId.current;
+      if (targetId) {
+        await updateCourse.mutateAsync({ courseId: targetId, data: form.getUpdateData() });
       } else {
         const newCourse = await createCourse.mutateAsync(form.getCreateData());
-        success('Course created successfully');
-        navigate(`/courses/${newCourse.id}`);
+        targetId = newCourse.id;
+        createdCourseId.current = targetId;
       }
+      const signature = JSON.stringify(desiredOutlines);
+      if (outlineSave.current?.signature !== signature) {
+        outlineSave.current = {signature, id:crypto.randomUUID()};
+      }
+      await saveModuleOutlines(targetId, desiredOutlines, initialOutlines.current, outlineSave.current.id);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['course', targetId] }),
+        queryClient.invalidateQueries({ queryKey: ['modules', targetId] }),
+        queryClient.invalidateQueries({ queryKey: ['module', targetId] }),
+        queryClient.invalidateQueries({ queryKey: ['progress'] }),
+        queryClient.invalidateQueries({ queryKey: ['courses'] }),
+        queryClient.invalidateQueries({ queryKey: ['paths'] }),
+        queryClient.invalidateQueries({ queryKey: ['path'] }),
+      ]);
+      success(isEditing ? 'Course updated successfully' : 'Course created successfully');
+      navigate(`/courses/${targetId}`);
     } catch (err) {
       console.error('Failed to save course:', err);
-      showError('Failed to save course. Please try again.');
+      if (err instanceof Error && err.message.includes('outline changed')) setOutlineConflict(err.message);
+      showError(err instanceof Error && err.message.includes('outline changed')
+        ? err.message : 'Failed to save course. Please try again.');
+    } finally {
+      setSavingOutlines(false);
     }
   };
 
@@ -108,6 +154,13 @@ export function CourseEditor() {
       existingModules,
       outlines.outlines,
       (newOutlines, isReplace) => {
+        // Only acknowledge modules created by this explicit generation operation.
+        // Never adopt unfamiliar server additions into a stale destructive draft.
+        const generatedIds = new Set(newOutlines.map(outline => outline.id));
+        const refreshed = queryClient.getQueryData<ModuleSummary[]>(['modules', courseId]) || [];
+        const generated = refreshed.filter(module => generatedIds.has(module.id));
+        initialOutlines.current = isReplace ? generated : [...initialOutlines.current, ...generated];
+        outlineSave.current = null;
         if (isReplace) {
           outlines.replaceOutlines(newOutlines);
         } else {
@@ -117,7 +170,19 @@ export function CourseEditor() {
     );
   };
 
-  if (isEditing && loadingCourse) {
+  if (isEditing && authLoading) return <p>Checking editing access…</p>;
+  if (isEditing && existingCourse && (existingCourse.course.source !== 'database' || existingCourse.course.author_id !== user?.id)) {
+    return <p role="alert">Only the course author can edit this course.</p>;
+  }
+
+  if (isEditing && courseLoadError && initializedCourse.current !== courseId) {
+    return <div role="alert">
+      <p>Could not load the latest course. Please try again.</p>
+      <Button onClick={() => reloadCourse()}>Retry</Button>
+    </div>;
+  }
+
+  if (isEditing && (loadingCourse || initializedCourse.current !== courseId)) {
     return (
       <div className="space-y-6 page-enter">
         <div className="animate-pulse">
@@ -134,7 +199,8 @@ export function CourseEditor() {
       {/* Header */}
       <div className="flex items-center gap-4">
         <button
-          onClick={() => navigate(-1)}
+          aria-label="Back"
+            onClick={() => navigate(-1)}
           className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
         >
           <ArrowLeft className="w-5 h-5" />
@@ -149,6 +215,9 @@ export function CourseEditor() {
         </div>
       </div>
 
+      {outlineConflict && <div role="alert"><p>{outlineConflict}</p>
+        <a href={`/courses/${courseId || createdCourseId.current}/edit`} target="_blank" rel="noopener noreferrer" className="underline">Open latest course in a new tab</a>
+      </div>}
       {/* Stepper */}
       <CourseStepper
         steps={steps.visibleSteps}

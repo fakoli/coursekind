@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useAdjustTokens } from './useAdmin';
-import { useToast } from '../components/common/ToastProvider';
+import { useToast } from './useToast';
 import { getErrorMessage } from '../utils/errors';
 import { LIMITS } from '../utils/constants';
 import type { User } from '../types';

@@ -15,6 +15,8 @@ export interface QuizTabProps {
     value: string | number | string[] | undefined
   ) => void;
   onUpdateOption: (questionIndex: number, optionIndex: number, value: string) => void;
+  onAddOption: (index: number) => void;
+  onRemoveOption: (index: number, optionIndex: number) => void;
   onRemove: (index: number) => void;
   onGenerate: () => void;
 }
@@ -27,6 +29,8 @@ export function QuizTab({
   onAdd,
   onUpdateQuestion,
   onUpdateOption,
+  onAddOption,
+  onRemoveOption,
   onRemove,
   onGenerate,
 }: QuizTabProps) {
@@ -78,6 +82,8 @@ export function QuizTab({
               onUpdateOption={(optionIndex, value) =>
                 onUpdateOption(qIndex, optionIndex, value)
               }
+              onAddOption={() => onAddOption(qIndex)}
+              onRemoveOption={optionIndex => onRemoveOption(qIndex, optionIndex)}
               onRemove={() => onRemove(qIndex)}
             />
           ))}

@@ -1,4 +1,4 @@
-import { Trash2, Check } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import { Textarea } from '../common/Textarea';
 import { Card, CardContent } from '../common/Card';
 import type { QuizQuestionData } from '../../types';
@@ -8,6 +8,8 @@ export interface QuizQuestionItemProps {
   index: number;
   onUpdateQuestion: (field: keyof QuizQuestionData, value: string | number | string[] | undefined) => void;
   onUpdateOption: (optionIndex: number, value: string) => void;
+  onAddOption?: () => void;
+  onRemoveOption?: (optionIndex: number) => void;
   onRemove: () => void;
 }
 
@@ -16,6 +18,8 @@ export function QuizQuestionItem({
   index,
   onUpdateQuestion,
   onUpdateOption,
+  onAddOption,
+  onRemoveOption,
   onRemove,
 }: QuizQuestionItemProps) {
   return (
@@ -40,6 +44,7 @@ export function QuizQuestionItem({
           </div>
 
           <Textarea
+            aria-label={`Question ${index + 1}`}
             value={question.question}
             onChange={(e) => onUpdateQuestion('question', e.target.value)}
             placeholder="Enter your question..."
@@ -61,21 +66,17 @@ export function QuizQuestionItem({
                       ? 'bg-green-50 border-2 border-green-200'
                       : 'bg-gray-50 border-2 border-transparent hover:border-gray-200'
                   }`}
-                  onClick={() => onUpdateQuestion('correct_index', oIndex)}
+
                 >
-                  <div
-                    className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
-                      isCorrect
-                        ? 'bg-green-500 text-white'
-                        : 'bg-white border-2 border-gray-300'
-                    }`}
-                  >
-                    {isCorrect && <Check className="w-4 h-4" />}
-                  </div>
+                  <input type="radio" name={`correct-answer-${index}`} checked={isCorrect}
+                    aria-label={`Correct answer ${String.fromCharCode(65 + oIndex)}`}
+                    onChange={() => onUpdateQuestion('correct_index', oIndex)}
+                    className="w-5 h-5 accent-green-600" />
                   <span className={`w-6 font-medium text-sm ${isCorrect ? 'text-green-700' : 'text-gray-500'}`}>
                     {String.fromCharCode(65 + oIndex)}.
                   </span>
                   <input
+                    aria-label={`Question ${index + 1} option ${String.fromCharCode(65 + oIndex)}`}
                     type="text"
                     value={option}
                     onChange={(e) => {
@@ -90,6 +91,7 @@ export function QuizQuestionItem({
                         : 'border-gray-300 bg-white'
                     }`}
                   />
+                  <button type="button" aria-label={`Remove option ${String.fromCharCode(65 + oIndex)} from question ${index + 1}`} disabled={question.options.length <= 2} onClick={() => onRemoveOption?.(oIndex)}><Trash2 className="w-4 h-4" /></button>
                   {isCorrect && (
                     <span className="text-xs font-medium text-green-600 px-2 py-1 bg-green-100 rounded-full">
                       Correct
@@ -98,6 +100,8 @@ export function QuizQuestionItem({
                 </div>
               );
             })}
+            <button type="button" className="text-indigo-700" disabled={question.options.length >= 6} onClick={onAddOption}>Add option</button>
+            {question.correct_index < 0 && <p role="alert">Select a correct answer.</p>}
           </div>
 
           <Textarea

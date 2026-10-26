@@ -16,6 +16,10 @@ function getActivityIcon(type: ActivityType) {
       return <FileText className="w-4 h-4 text-purple-500" />;
     case 'content_read':
       return <BookOpen className="w-4 h-4 text-orange-500" />;
+    case 'practice':
+      return <PlayCircle className="w-4 h-4 text-blue-500" />;
+    case 'flashcard_reviewed':
+      return <FileText className="w-4 h-4 text-blue-500" />;
   }
 }
 
@@ -29,6 +33,10 @@ function getActivityLabel(type: ActivityType): string {
       return 'Quiz submitted';
     case 'content_read':
       return 'Read content';
+    case 'practice':
+      return 'Practiced code';
+    case 'flashcard_reviewed':
+      return 'Reviewed flashcards';
   }
 }
 

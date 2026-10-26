@@ -1,5 +1,5 @@
 import { useContext } from 'react';
-import { LiveRegionContext } from '../components/common/LiveRegion';
+import { LiveRegionContext } from '../components/common/LiveRegionContext';
 
 export function useLiveRegion() {
   const context = useContext(LiveRegionContext);

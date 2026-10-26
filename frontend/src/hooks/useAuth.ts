@@ -1,138 +1,139 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import type { QueryClient } from '@tanstack/react-query';
+import { ApiError } from '../api/client';
 import { authApi } from '../api/auth';
 import type { User, UserCreate, UserLogin } from '../types';
 
-interface AuthState {
-  user: User | null;
-  isLoading: boolean;
-  isAuthenticated: boolean;
-}
+interface AuthState { verificationError: string | null; user: User | null; isLoading: boolean; isAuthenticated: boolean }
+const signedOut: AuthState = { verificationError: null, user: null, isLoading: false, isAuthenticated: false };
 
-const TOKEN_KEY = 'token';
+export function useAuth(queryClient?: QueryClient) {
+  const [registrationRecovery, setRegistrationRecovery] = useState(false);
+  const [state, setState] = useState<AuthState>({ ...signedOut, isLoading: true });
+  const identity = useRef<string | null>(null);
+  const revision = useRef(0);
+  const clearPrivateState = useCallback((token: string | null) => {
+    revision.current += 1;
+    identity.current = token;
+    // Cancellation detaches even query functions that ignore AbortSignal.
+    // Clear synchronously before exposing the next identity to descendants.
+    void queryClient?.cancelQueries();
+    queryClient?.clear();
+    setState({ ...signedOut, isLoading: !!token });
+  }, [queryClient]);
 
-/** Subscribe to token changes from other tabs */
-function subscribeToStorageChanges(callback: () => void) {
-  const handleStorageChange = (event: StorageEvent) => {
-    if (event.key === TOKEN_KEY) {
-      callback();
-    }
-  };
-  window.addEventListener('storage', handleStorageChange);
-  return () => window.removeEventListener('storage', handleStorageChange);
-}
-
-export function useAuth() {
-  const [state, setState] = useState<AuthState>({
-    user: null,
-    isLoading: true,
-    isAuthenticated: false,
-  });
-
-  // Always read the token fresh from localStorage — never capture it in a
-  // closure. A stale captured value is what used to wipe valid sessions on
-  // re-render (token verified OK by /auth/me, then removed moments later).
   const checkAuth = useCallback(async () => {
-    const currentToken = localStorage.getItem(TOKEN_KEY);
-    if (!currentToken) {
-      setState({ user: null, isLoading: false, isAuthenticated: false });
-      return;
-    }
-
+    const token = localStorage.getItem('token');
+    if (identity.current !== token || !token) clearPrivateState(token);
+    if (!token) return;
+    const currentRevision = revision.current;
     try {
       const user = await authApi.me();
-      // Only mark authenticated if the token is still the one we verified.
-      // A concurrent login may have replaced it (and set its own state).
-      if (localStorage.getItem(TOKEN_KEY) === currentToken) {
-        setState({ user, isLoading: false, isAuthenticated: true });
+      if (localStorage.getItem('token') === token && revision.current === currentRevision) {
+        setRegistrationRecovery(false);
+        setState({ user, isLoading: false, isAuthenticated: true, verificationError: null });
       }
-    } catch {
-      // Only clear the token if it is still the one we verified. If a
-      // concurrent login replaced it in the meantime, leave the new token
-      // alone and re-check it instead of destroying a fresh session.
-      const latest = localStorage.getItem(TOKEN_KEY);
-      if (latest === currentToken) {
-        localStorage.removeItem(TOKEN_KEY);
-        // Always settle isLoading, even if a concurrent login is mid-flight
-        // (its own me() will set state when it resolves). Use a functional
-        // update so we never clobber a state another call already set.
-        setState((s) =>
-          s.isAuthenticated
-            ? s
-            : { user: null, isLoading: false, isAuthenticated: false }
-        );
+    } catch (error) {
+      if (localStorage.getItem('token') === token && revision.current === currentRevision) {
+        if (error instanceof ApiError && error.status === 401) {
+          localStorage.removeItem('token');
+          clearPrivateState(null);
+        } else {
+          clearPrivateState(token);
+          setState({ ...signedOut, verificationError: 'Could not verify your session. Check your connection and retry.' });
+        }
       }
     }
-  }, []);
+  }, [clearPrivateState]);
 
-  // Re-check on mount and whenever the token in storage changes (including
-  // from other tabs). checkAuth is stable, so this effect cannot re-fire in
-  // a loop.
   useEffect(() => {
-    checkAuth();
+    // Synchronize the external session store before any authenticated descendants mount.
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Auth boundary must clear caches synchronously before identity rendering.
+    void checkAuth();
+    const storage = (event: StorageEvent) => {
+      if (event.key === 'token' || event.key === null) void checkAuth();
+    };
+    const expired = () => { void checkAuth(); };
+    window.addEventListener('storage', storage);
+    window.addEventListener('auth-expired', expired);
+    return () => {
+      window.removeEventListener('storage', storage);
+      window.removeEventListener('auth-expired', expired);
+    };
   }, [checkAuth]);
 
-  // Cross-tab session sync: when another tab logs in or out (which writes or
-  // removes the token in shared localStorage), the browser fires a `storage`
-  // event in this tab. Re-run the same fresh-read checkAuth so both tabs
-  // converge on the same session state. checkAuth is stable, so this effect
-  // attaches once and cleans up its listener on unmount.
-  useEffect(() => subscribeToStorageChanges(checkAuth), [checkAuth]);
+  useEffect(() => {
+    if (!state.isAuthenticated) return;
+    const token = localStorage.getItem('token');
+    let expiresAt: number;
+    try {
+      const payload = JSON.parse(atob((token?.split('.')[1] || '').replace(/-/g, '+').replace(/_/g, '/')));
+      if (typeof payload.exp !== 'number' || !Number.isFinite(payload.exp)) return;
+      expiresAt = payload.exp * 1000;
+    } catch { return; }
+    let timer: ReturnType<typeof setTimeout>;
+    const checkExpiry = () => {
+      clearTimeout(timer);
+      if (localStorage.getItem('token') !== token) return;
+      const remaining = expiresAt - Date.now();
+      if (remaining <= 0) {
+        localStorage.removeItem('token');
+        clearPrivateState(null);
+      } else timer = setTimeout(checkExpiry, Math.min(remaining, 2147483647));
+    };
+    timer = setTimeout(checkExpiry, Math.max(0, Math.min(expiresAt - Date.now(), 2147483647)));
+    window.addEventListener('focus', checkExpiry);
+    return () => { clearTimeout(timer); window.removeEventListener('focus', checkExpiry); };
+  }, [state.isAuthenticated, state.user, clearPrivateState]);
 
   const login = async (credentials: UserLogin) => {
+    const attempt = ++revision.current;
     const response = await authApi.login(credentials);
-    localStorage.setItem(TOKEN_KEY, response.access_token);
-    const ourToken = response.access_token;
-    // Set state directly from the verified token; do not round-trip through
-    // checkAuth here so a stale concurrent call cannot race us.
+    if (attempt !== revision.current) return;
+    localStorage.setItem('token', response.access_token);
+    clearPrivateState(response.access_token);
+    const currentRevision = revision.current;
     try {
       const user = await authApi.me();
-      // Only claim authenticated if our token is still current. If a
-      // concurrent logout or another login replaced/removed it, do not
-      // resurrect a dead session (logout-resurrection race) or overwrite
-      // the newer session's user (concurrent-login mismatch).
-      if (localStorage.getItem(TOKEN_KEY) === ourToken) {
-        setState({ user, isLoading: false, isAuthenticated: true });
-      } else if (!localStorage.getItem(TOKEN_KEY)) {
-        // Our token was removed by a concurrent logout: settle loading.
-        setState({ user: null, isLoading: false, isAuthenticated: false });
+      if (localStorage.getItem('token') === response.access_token && currentRevision === revision.current) {
+        setRegistrationRecovery(false);
+        setState({ user, isLoading: false, isAuthenticated: true, verificationError: null });
       }
-    } catch {
-      // Only remove the token if it is still ours (a concurrent logout may
-      // have already removed it; a concurrent login may have replaced it).
-      if (localStorage.getItem(TOKEN_KEY) === ourToken) {
-        localStorage.removeItem(TOKEN_KEY);
+    } catch (error) {
+      if (localStorage.getItem('token') === response.access_token && currentRevision === revision.current) {
+        if (error instanceof ApiError && error.status === 401) {
+          localStorage.removeItem('token');
+          clearPrivateState(null);
+        } else {
+          setState({ ...signedOut, verificationError: 'Could not verify your session. Check your connection and retry.' });
+        }
       }
-      // Sign out only if no other session is live: a concurrent login that
-      // completed while our me() was failing left a valid token + state, and
-      // our failure must not paint signed-out over it (OX Alpha #9).
-      setState((s) =>
-        localStorage.getItem(TOKEN_KEY) === null
-          ? { user: null, isLoading: false, isAuthenticated: false }
-          : s
-      );
       throw new Error('Login failed');
     }
   };
 
   const register = async (data: UserCreate) => {
     await authApi.register(data);
-    await login({ email: data.email, password: data.password });
-  };
-
-  const logout = async () => {
     try {
-      await authApi.logout();
-    } finally {
-      localStorage.removeItem(TOKEN_KEY);
-      setState({ user: null, isLoading: false, isAuthenticated: false });
+      await login({ email: data.email, password: data.password });
+    } catch {
+      // Keep partial success above the page lifetime: verification can unmount
+      // Register while a new token is checked, so page-local state is insufficient.
+      setRegistrationRecovery(true);
+      throw new Error('Your account was created, but automatic sign-in failed. Please sign in.');
     }
   };
-
-  return {
-    ...state,
-    login,
-    register,
-    logout,
-    checkAuth,
+  const logout = async () => {
+    // Capture the authenticated request first, then end the local session immediately.
+    const pending = authApi.logout();
+    localStorage.removeItem('token');
+    clearPrivateState(null);
+    await pending;
   };
+  const continueToSignIn = () => {
+    localStorage.removeItem('token');
+    clearPrivateState(null);
+    setRegistrationRecovery(false);
+  };
+  return { ...state, login, register, logout, checkAuth, registrationRecovery, continueToSignIn };
 }

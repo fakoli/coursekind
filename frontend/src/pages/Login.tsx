@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuthContext } from '../components/common/AuthProvider';
+import { useAuthContext } from '../components/common/AuthContext';
 import { Button } from '../components/common/Button';
 import { Input } from '../components/common/Input';
 import { Card, CardContent, CardHeader } from '../components/common/Card';
@@ -39,8 +39,8 @@ export function Login() {
         />
         <div className="absolute inset-0 bg-indigo-900/30" />
         <div className="relative z-10 flex flex-col justify-end p-12 text-white">
-          <h2 className="text-3xl font-bold mb-2">Study Buddy</h2>
-          <p className="text-indigo-100">Your personal learning companion</p>
+          <h2 className="text-3xl font-bold mb-2">Coursekind</h2>
+          <p className="text-indigo-100">Turn a goal into a course you can keep improving.</p>
         </div>
       </div>
 
@@ -49,6 +49,7 @@ export function Login() {
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <h1 className="text-2xl font-bold text-gray-900">Welcome back</h1>
+            <p className="font-semibold text-indigo-700 lg:hidden">Coursekind</p>
             <p className="text-gray-500 mt-1">Sign in to your account</p>
           </CardHeader>
           <CardContent>

@@ -1,12 +1,13 @@
 """Upload API routes for images and files."""
 
-from fastapi import APIRouter, Depends, UploadFile, File, HTTPException
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 from dependencies import CurrentUser, StorageDep
-from services.image_service import ImageService
+from services.access_service import AccessService
 from services.course_service import CourseService
+from services.image_service import MAX_IMAGE_SIZE, ImageService, validate_raster
 
 router = APIRouter()
 
@@ -48,7 +49,7 @@ async def upload_image(
     await course_service._get_editable_course(course_id, user.id)
 
     # Read file content
-    content = await file.read()
+    content = await file.read(MAX_IMAGE_SIZE + 1)
 
     # Upload image
     filename = file.filename or "image.jpg"
@@ -87,27 +88,64 @@ async def upload_image_from_url(
 async def get_image(
     course_id: str,
     filename: str,
+    user: CurrentUser,
+    storage: StorageDep,
     image_service: ImageService = Depends(get_image_service),
 ):
-    """Serve an uploaded image.
-
-    This endpoint is public to allow image display in markdown content.
-    """
+    """Serve uploaded images under the same live policy as their course."""
+    await AccessService(storage).require_course(course_id, user.id if user else None)
     file_path = image_service.get_image_path(course_id, filename)
 
     if not file_path:
         raise HTTPException(status_code=404, detail="Image not found")
 
-    # Determine media type
-    media_types = {
-        ".png": "image/png",
-        ".jpg": "image/jpeg",
-        ".jpeg": "image/jpeg",
-        ".gif": "image/gif",
-        ".svg": "image/svg+xml",
-        ".webp": "image/webp",
-    }
-    ext = file_path.suffix.lower()
-    media_type = media_types.get(ext, "application/octet-stream")
+    return safe_raster_response(file_path)
 
-    return FileResponse(file_path, media_type=media_type)
+
+def safe_raster_response(path):
+    # Keep legacy bytes on disk, but never serve SVG/HTML inline or to a blob consumer.
+    if path.stat().st_size > MAX_IMAGE_SIZE:
+        raise HTTPException(status_code=404, detail="Image unavailable")
+    try:
+        _, media_type = validate_raster(path.read_bytes())
+    except Exception as error:
+        from exceptions import StudyBuddyException
+
+        if not isinstance(error, StudyBuddyException):
+            raise
+        raise HTTPException(status_code=404, detail="Image unavailable") from None
+    return FileResponse(
+        path,
+        media_type=media_type,
+        headers={
+            "Cache-Control": "no-store",
+            "X-Content-Type-Options": "nosniff",
+            "Content-Security-Policy": "default-src 'none'; sandbox",
+        },
+    )
+
+
+@router.get("/courses/{course_id}/{module_id}/visuals/{filename}")
+async def get_generated_visual(
+    course_id: str,
+    module_id: str,
+    filename: str,
+    user: CurrentUser,
+    storage: StorageDep,
+    image_service: ImageService = Depends(get_image_service),
+):
+    """Serve generated visuals, including author drafts, using course access."""
+    from pathlib import Path
+
+    await AccessService(storage).require_course(course_id, user.id if user else None)
+    if any(Path(value).name != value or value in (".", "..") for value in (module_id, filename)):
+        raise HTTPException(status_code=404, detail="Image not found")
+    root = (image_service.uploads_path / "courses" / course_id).resolve()
+    file = (root / module_id / "visuals" / filename).resolve()
+    if (
+        not file.is_relative_to(root)
+        or not file.is_file()
+        or file.suffix.lower() not in {".png", ".jpg", ".jpeg", ".webp", ".gif", ".svg"}
+    ):
+        raise HTTPException(status_code=404, detail="Image not found")
+    return safe_raster_response(file)

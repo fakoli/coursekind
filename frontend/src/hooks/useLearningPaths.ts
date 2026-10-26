@@ -1,6 +1,14 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { learningPathsApi } from '../api/learningPaths';
 import type { LearningPathCreate, LearningPathUpdate } from '../types';
+
+// A path's live membership also defines its workspaces' current editable links.
+function invalidateWorkspaceLinks(client: QueryClient) {
+  void client.invalidateQueries({
+    predicate: (query) => typeof query.queryKey[0] === 'string'
+      && query.queryKey[0].startsWith('workspace'),
+  });
+}
 
 /** Fetch all learning paths accessible to the current user */
 export function useLearningPaths() {
@@ -34,7 +42,12 @@ export function useCreateLearningPath() {
   return useMutation({
     mutationFn: (data: LearningPathCreate) => learningPathsApi.create(data),
     onSuccess: () => {
+      invalidateWorkspaceLinks(queryClient);
       queryClient.invalidateQueries({ queryKey: ['paths'] });
+      queryClient.invalidateQueries({ queryKey: ['courses'] });
+      queryClient.invalidateQueries({ queryKey: ['course'] });
+      queryClient.invalidateQueries({ queryKey: ['path'] });
+      queryClient.invalidateQueries({ queryKey: ['progress'] });
     },
   });
 }
@@ -47,7 +60,12 @@ export function useUpdateLearningPath() {
     mutationFn: ({ pathId, data }: { pathId: string; data: LearningPathUpdate }) =>
       learningPathsApi.update(pathId, data),
     onSuccess: (_, { pathId }) => {
+      invalidateWorkspaceLinks(queryClient);
       queryClient.invalidateQueries({ queryKey: ['paths'] });
+      queryClient.invalidateQueries({ queryKey: ['courses'] });
+      queryClient.invalidateQueries({ queryKey: ['course'] });
+      queryClient.invalidateQueries({ queryKey: ['path'] });
+      queryClient.invalidateQueries({ queryKey: ['progress'] });
       queryClient.invalidateQueries({ queryKey: ['path', pathId] });
     },
   });
@@ -60,7 +78,12 @@ export function useDeleteLearningPath() {
   return useMutation({
     mutationFn: (pathId: string) => learningPathsApi.delete(pathId),
     onSuccess: () => {
+      invalidateWorkspaceLinks(queryClient);
       queryClient.invalidateQueries({ queryKey: ['paths'] });
+      queryClient.invalidateQueries({ queryKey: ['courses'] });
+      queryClient.invalidateQueries({ queryKey: ['course'] });
+      queryClient.invalidateQueries({ queryKey: ['path'] });
+      queryClient.invalidateQueries({ queryKey: ['progress'] });
     },
   });
 }
@@ -73,7 +96,12 @@ export function useAddCourseToPath() {
     mutationFn: ({ pathId, courseId }: { pathId: string; courseId: string }) =>
       learningPathsApi.addCourse(pathId, courseId),
     onSuccess: (_, { pathId }) => {
+      invalidateWorkspaceLinks(queryClient);
       queryClient.invalidateQueries({ queryKey: ['paths'] });
+      queryClient.invalidateQueries({ queryKey: ['courses'] });
+      queryClient.invalidateQueries({ queryKey: ['course'] });
+      queryClient.invalidateQueries({ queryKey: ['path'] });
+      queryClient.invalidateQueries({ queryKey: ['progress'] });
       queryClient.invalidateQueries({ queryKey: ['path', pathId] });
       // Also invalidate course discovery since times_added may have changed
       queryClient.invalidateQueries({ queryKey: ['courses', 'discover'] });
@@ -89,7 +117,12 @@ export function useRemoveCourseFromPath() {
     mutationFn: ({ pathId, courseId }: { pathId: string; courseId: string }) =>
       learningPathsApi.removeCourse(pathId, courseId),
     onSuccess: (_, { pathId }) => {
+      invalidateWorkspaceLinks(queryClient);
       queryClient.invalidateQueries({ queryKey: ['paths'] });
+      queryClient.invalidateQueries({ queryKey: ['courses'] });
+      queryClient.invalidateQueries({ queryKey: ['course'] });
+      queryClient.invalidateQueries({ queryKey: ['path'] });
+      queryClient.invalidateQueries({ queryKey: ['progress'] });
       queryClient.invalidateQueries({ queryKey: ['path', pathId] });
       queryClient.invalidateQueries({ queryKey: ['courses', 'discover'] });
     },
@@ -104,7 +137,25 @@ export function useReorderCoursesInPath() {
     mutationFn: ({ pathId, courseIds }: { pathId: string; courseIds: string[] }) =>
       learningPathsApi.reorderCourses(pathId, courseIds),
     onSuccess: (_, { pathId }) => {
+      invalidateWorkspaceLinks(queryClient);
       queryClient.invalidateQueries({ queryKey: ['path', pathId] });
+    },
+  });
+}
+
+export function useFollowingPaths() {
+  return useQuery({ queryKey: ['paths', 'following'], queryFn: learningPathsApi.listFollowing });
+}
+
+export function useFollowPath() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: ({ pathId, following }: { pathId: string; following: boolean }) =>
+      following ? learningPathsApi.follow(pathId) : learningPathsApi.unfollow(pathId),
+    onSuccess: () => {
+      client.invalidateQueries({ queryKey: ['paths'] });
+      client.invalidateQueries({ queryKey: ['path'] });
+      client.invalidateQueries({ queryKey: ['progress'] });
     },
   });
 }

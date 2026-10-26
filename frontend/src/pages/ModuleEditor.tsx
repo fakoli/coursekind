@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useAuthContext } from '../components/common/AuthContext';
+import { useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Save, Sparkles } from 'lucide-react';
 import { Button } from '../components/common/Button';
@@ -19,14 +20,21 @@ import { useQuizEditor } from '../hooks/useQuizEditor';
 import { useMarkdownEditor } from '../hooks/useMarkdownEditor';
 import { useModuleGeneration } from '../hooks/useModuleGeneration';
 import { useToast } from '../hooks/useToast';
-import type { FlashcardData, SandboxData } from '../types';
+import type { Module, FlashcardData, SandboxData } from '../types';
 
 export function ModuleEditor() {
+  const { courseId, moduleId } = useParams();
+  return <ModuleEditorDraft key={`${courseId}/${moduleId || 'new'}`} />;
+}
+
+function ModuleEditorDraft() {
+  const { user, isLoading: authLoading } = useAuthContext();
   const { courseId, moduleId } = useParams<{ courseId: string; moduleId: string }>();
   const navigate = useNavigate();
   const { success, error: showError } = useToast();
 
   const isEditing = moduleId !== 'new' && !!moduleId;
+  const [acceptedModule, setAcceptedModule] = useState<Module | null>(null);
 
   // Data fetching
   const { data: courseData, isLoading: loadingCourse } = useCourse(courseId || '');
@@ -46,8 +54,16 @@ export function ModuleEditor() {
   const markdownEditor = useMarkdownEditor(form.contentMarkdown, form.updateContent);
   const generation = useModuleGeneration();
 
-  // Sandbox state
-  const [sandbox, setSandbox] = useState<SandboxData | null>(null);
+  // Use the loaded sandbox until the learner edits it. A refetch must not
+  // overwrite an in-progress draft, including an explicit sandbox removal.
+  const editorKey = `${courseId}/${moduleId || 'new'}`;
+  const [sandboxDraft, setSandboxDraft] = useState<{
+    editorKey: string;
+    value: SandboxData | null;
+  } | null>(null);
+  const sandbox = sandboxDraft?.editorKey === editorKey
+    ? sandboxDraft.value
+    : acceptedModule?.sandbox ?? null;
 
   // Confirm modal for flashcard replacement
   const [showReplaceConfirm, setShowReplaceConfirm] = useState(false);
@@ -55,22 +71,31 @@ export function ModuleEditor() {
 
   // Track sandbox changes
   const handleSandboxChange = useCallback((newSandbox: SandboxData | null) => {
-    setSandbox(newSandbox);
-    if (form.hasUnsavedChanges === false) {
-      // This doesn't exist in the form hook, so we need to trigger unsaved changes manually
-      // The form.updateContent or form.updateTitle will trigger this, but we also need sandbox
-    }
-  }, [form.hasUnsavedChanges]);
+    setSandboxDraft({ editorKey, value: newSandbox });
+  }, [editorKey]);
 
-  // Populate form when editing
-  useEffect(() => {
-    if (existingModule && isEditing) {
-      form.populateFromModule(existingModule);
-      flashcards.setAll(existingModule.flashcards || []);
-      quiz.setAll(existingModule.quiz?.questions || []);
-      setSandbox(existingModule.sandbox || null);
-    }
-  }, [existingModule, isEditing]);
+  const { populateFromModule } = form;
+  const { setAll: setFlashcards } = flashcards;
+  const { setAll: setQuizQuestions } = quiz;
+
+  // Initialize once for this keyed editor, before rendering any editable fields.
+  if (existingModule && isEditing && !acceptedModule) {
+      setAcceptedModule(existingModule);
+      populateFromModule(existingModule);
+      setFlashcards(existingModule.flashcards || []);
+      setQuizQuestions(existingModule.quiz?.questions || []);
+  }
+
+  const serverChanged = !!(acceptedModule && existingModule
+    && JSON.stringify(acceptedModule) !== JSON.stringify(existingModule));
+  const reloadServer = () => {
+    if (!existingModule) return;
+    populateFromModule(existingModule);
+    setFlashcards(existingModule.flashcards || []);
+    setQuizQuestions(existingModule.quiz?.questions || []);
+    setSandboxDraft(null);
+    setAcceptedModule(existingModule);
+  };
 
   const isAiEnabled = courseData?.course.ai_enabled ?? false;
   const isSaving = createModule.isPending || updateModule.isPending;
@@ -137,14 +162,15 @@ export function ModuleEditor() {
 
     try {
       if (isEditing && moduleId) {
-        await updateModule.mutateAsync({
+        const saved = await updateModule.mutateAsync({
           courseId,
           moduleId,
           data: {
             ...form.getUpdateData(flashcards.flashcards, quiz.questions),
-            sandbox: sandbox || undefined,
+            sandbox,
           },
         });
+        setAcceptedModule(saved);
         success('Module updated successfully');
         form.markAsSaved();
       } else {
@@ -162,9 +188,14 @@ export function ModuleEditor() {
       }
     } catch (err) {
       console.error('Failed to save module:', err);
-      showError('Failed to save module. Please try again.');
+      showError(err instanceof Error ? err.message : 'Failed to save module. Please try again.');
     }
   };
+
+  if (authLoading) return <p>Checking editing access…</p>;
+  if (courseData && (courseData.course.source !== 'database' || courseData.course.author_id !== user?.id)) {
+    return <p role="alert">Only the course author can edit modules.</p>;
+  }
 
   if (isLoading) {
     return (
@@ -194,6 +225,7 @@ export function ModuleEditor() {
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-start gap-4 min-w-0 flex-1">
           <button
+            aria-label="Back"
             onClick={() => navigate(`/courses/${courseId}`)}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
           >
@@ -212,12 +244,17 @@ export function ModuleEditor() {
             </h1>
           </div>
         </div>
-        <Button onClick={handleSave} isLoading={isSaving} className="flex-shrink-0">
+        <Button onClick={handleSave} disabled={serverChanged} isLoading={isSaving} className="flex-shrink-0">
           <Save className="w-4 h-4 mr-2" />
           Save
         </Button>
       </div>
 
+      {serverChanged && <div role="alert" className="rounded border p-3 space-y-2">
+        <p>This module changed on the server. Your local draft has been kept. Reload to discard it, or keep your draft to save over the server version.</p>
+        <Button variant="secondary" onClick={reloadServer}>Reload server version</Button>{' '}
+        <Button variant="secondary" onClick={() => setAcceptedModule(existingModule!)}>Keep my draft</Button>
+      </div>}
       {/* Module Title */}
       <Input
         id="module-title"
@@ -280,6 +317,8 @@ export function ModuleEditor() {
           onAdd={quiz.addQuestion}
           onUpdateQuestion={quiz.updateQuestion}
           onUpdateOption={quiz.updateQuestionOption}
+          onAddOption={quiz.addOption}
+          onRemoveOption={quiz.removeOption}
           onRemove={quiz.removeQuestion}
           onGenerate={handleGenerateQuiz}
         />
@@ -300,11 +339,13 @@ export function ModuleEditor() {
       <ConfirmModal
         isOpen={showReplaceConfirm}
         onClose={() => {
-          handleAppendFlashcards();
+          setPendingFlashcards([]);
+          setShowReplaceConfirm(false);
         }}
         onConfirm={handleConfirmReplaceFlashcards}
+        onSecondaryAction={handleAppendFlashcards}
         title="Replace Flashcards?"
-        message="Do you want to replace existing flashcards with the newly generated ones? Click Cancel to append them instead."
+        message="Choose Append to keep existing cards or Replace to use only the generated cards. Close this dialog to discard the generated cards."
         confirmLabel="Replace"
         cancelLabel="Append"
         variant="default"

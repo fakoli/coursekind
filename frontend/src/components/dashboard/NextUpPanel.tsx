@@ -16,8 +16,8 @@ export function NextUpPanel({ items }: NextUpPanelProps) {
         </CardHeader>
         <CardContent>
           <p className="text-sm text-gray-600">
-            You haven't started any courses yet. Browse available courses to begin
-            your learning journey.
+            No unfinished courses right now. Browse available courses whenever
+            you're ready to learn something new.
           </p>
           <Link
             to="/courses"

@@ -1,0 +1,8 @@
+Spec compliance: ✅ Compatibility fix accepted. Scoped quality: Approved.
+
+- `backend/services/workspace_job_service.py:3` and `backend/services/workspace_plan_service.py:3`: postponed annotations avoid eager class-body evaluation against the previously defined `list` method on Python 3.12. Later `get_type_hints` resolution uses the method's module globals, where the builtin `list` remains available. No generation, access, cancellation, persistence or accounting logic changes.
+- `backend/tests/test_workspace_jobs.py:28–46`: the regression evaluates all public functions declared by the five workspace service classes. It exercises actual annotation resolution and raises on the original shadowing defect even when the interpreter otherwise defers annotation evaluation.
+- Verified diff scope: exactly two future imports and one regression test; three files, 25 added lines.
+- Read `/tmp/coursekind-task2-python312-full.txt`: **383 passed in 51.38s**, without warnings or failures. Worker report also records the Python 3.12 import failure and Python 3.14 regression failure before the fix, followed by passing imports/schemas and annotation regression after it. No tests were rerun.
+- No new findings. Prior T2-R1 remains closed; R2 stays assigned to Task 5 and R3 remains the documented existing build warning.
+- Review limits: static scoped rereview and recorded test evidence only; no production edits, browser actions or runtime changes. Root reports course-loop, mixed-reuse and partial-failure CUA success. Remote CI rerun remains controller-owned and is not represented here as completed.

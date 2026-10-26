@@ -11,6 +11,9 @@ export const modulesApi = {
   list: (courseId: string) =>
     api.get<ModuleSummary[]>(`/courses/${courseId}/modules`),
 
+  reconcileOutlines: (courseId: string, initial: ModuleSummary[], outlines: {id:string;title:string;description:string}[], request_id: string) =>
+    api.put<ModuleSummary[]>(`/courses/${courseId}/modules/outlines`, {initial, outlines, request_id}),
+
   /** Create a new module in a course */
   create: (courseId: string, data: ModuleCreate) =>
     api.post<Module>(`/courses/${courseId}/modules`, data),

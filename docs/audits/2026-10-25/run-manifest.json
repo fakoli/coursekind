@@ -1,0 +1,38 @@
+{
+  "audit_date_local": "2026-10-25",
+  "timezone": "America/Los_Angeles",
+  "source_commit": "9703fe7ab4f8b6be91c5e3aeed5397fbab9da8a7",
+  "source_state": "working tree including prior uncommitted journey fixes",
+  "frontend_source_copy_verified_identical_files": 123,
+  "frontend_url": "http://127.0.0.1:5174",
+  "backend_url": "http://127.0.0.1:8011",
+  "browser": "Codex in-app browser through CUA",
+  "viewports_css_pixels": [
+    [
+      1280,
+      720
+    ],
+    [
+      390,
+      700
+    ]
+  ],
+  "journeys": 40,
+  "outcomes": {
+    "completed": 19,
+    "partial": 8,
+    "blocked": 8,
+    "failed": 5
+  },
+  "timing": "Rounded observed walkthrough and browser-call time; overlapping scenarios, prewritten fixtures, not human usability/learning benchmarks",
+  "browser_suite_added": false,
+  "product_source_changed_in_this_audit": false,
+  "new_data": "isolated synthetic fixtures; public content and historical dates explicitly seeded through API/storage",
+  "fixture_repair": "Corrupt JSON preserved; valid prefix restored; one missing outline recreated for later independent activity-generation checks",
+  "generation_batch_failure_seconds": 80,
+  "failed_generation_application_credits": 50,
+  "documentation_local_links_verified": 278,
+  "finished_ui_checks_utc": "2026-10-26T04:43:46.112Z",
+  "temporary_services_stopped": true,
+  "normal_backend_health_after_audit": "healthy"
+}

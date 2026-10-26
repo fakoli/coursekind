@@ -6,6 +6,7 @@ export interface ConfirmModalProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: () => void;
+  onSecondaryAction?: () => void;
   title: string;
   message: string;
   confirmLabel?: string;
@@ -18,6 +19,7 @@ export function ConfirmModal({
   isOpen,
   onClose,
   onConfirm,
+  onSecondaryAction,
   title,
   message,
   confirmLabel = 'Confirm',
@@ -42,7 +44,7 @@ export function ConfirmModal({
         </div>
 
         <div className="flex gap-2 justify-end pt-2">
-          <Button variant="secondary" onClick={onClose} disabled={isLoading}>
+          <Button variant="secondary" onClick={onSecondaryAction || onClose} disabled={isLoading}>
             {cancelLabel}
           </Button>
           <Button

@@ -1,4 +1,4 @@
-import { api } from './client';
+import { generate } from './generation';
 import type {
   AIResponse,
   ExamplesRequest,
@@ -8,11 +8,11 @@ import type {
 } from '../types';
 
 export const aiApi = {
-  explain: (data: ExplainRequest) => api.post<AIResponse>('/ai/explain', data),
+  explain: (data: ExplainRequest) => generate<AIResponse>('/ai/explain', data),
 
-  hint: (data: HintRequest) => api.post<AIResponse>('/ai/hint', data),
+  hint: (data: HintRequest) => generate<AIResponse>('/ai/hint', data),
 
-  examples: (data: ExamplesRequest) => api.post<AIResponse>('/ai/examples', data),
+  examples: (data: ExamplesRequest) => generate<AIResponse>('/ai/examples', data),
 
-  simplify: (data: SimplifyRequest) => api.post<AIResponse>('/ai/simplify', data),
+  simplify: (data: SimplifyRequest) => generate<AIResponse>('/ai/simplify', data),
 };

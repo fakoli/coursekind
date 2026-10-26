@@ -1,24 +1,32 @@
-import { useEffect, useRef, useState } from 'react';
-import ReactMarkdown from 'react-markdown';
+import { CourseImage } from './CourseImage';
+import { useEffect, useRef, useState, useMemo } from 'react';
+import ReactMarkdown, { type Components } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
+import rehypeSanitize from 'rehype-sanitize';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import mermaid from 'mermaid';
 import { RunnableCodeBlock } from './RunnableCodeBlock';
+import type { ExecutionResult } from '../../services/codeExecution';
 import type { SandboxLanguage } from '../../types';
 
 interface MarkdownRendererProps {
   content: string;
   className?: string;
   enableRunnable?: boolean;
+  onCodeExecuted?: (code: string, result: ExecutionResult) => Promise<void>;
 }
 
 // Initialize mermaid with default config
 mermaid.initialize({
   startOnLoad: false,
   theme: 'default',
-  securityLevel: 'loose',
+  // Shared authored diagrams must not enable callbacks, raw HTML or unsafe URLs.
+  securityLevel: 'strict',
+  htmlLabels: false,
+  secure: ['secure', 'securityLevel', 'startOnLoad', 'maxTextSize', 'maxEdges',
+    'suppressErrorRendering', 'dompurifyConfig', 'themeCSS', 'htmlLabels'],
   fontFamily: 'inherit',
 });
 
@@ -70,13 +78,8 @@ function MermaidDiagram({ chart }: { chart: string }) {
 
 const RUNNABLE_LANGUAGES = ['python', 'javascript', 'js', 'py'];
 
-export function MarkdownRenderer({ content, className = '', enableRunnable = false }: MarkdownRendererProps) {
-  return (
-    <div className={`prose prose-indigo max-w-none ${className}`}>
-      <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
-        rehypePlugins={[rehypeRaw]}
-        components={{
+export function MarkdownRenderer({ content, className = '', enableRunnable = false, onCodeExecuted }: MarkdownRendererProps) {
+  const components = useMemo<Components>(() => ({
           // Handle code blocks - both inline and block
           code({ className, children, ...props }) {
             const match = /language-(\w+)/.exec(className || '');
@@ -95,7 +98,7 @@ export function MarkdownRenderer({ content, className = '', enableRunnable = fal
             if (enableRunnable && isCodeBlock && RUNNABLE_LANGUAGES.includes(language)) {
               const normalizedLanguage: SandboxLanguage =
                 language === 'js' || language === 'javascript' ? 'javascript' : 'python';
-              return <RunnableCodeBlock code={codeString} language={normalizedLanguage} />;
+              return <RunnableCodeBlock key={`${normalizedLanguage}:${codeString}`} code={codeString} language={normalizedLanguage} onExecuted={onCodeExecuted} />;
             }
 
             // Handle regular code blocks with syntax highlighting
@@ -194,7 +197,7 @@ export function MarkdownRenderer({ content, className = '', enableRunnable = fal
           // Enhanced image styling
           img({ src, alt }) {
             return (
-              <img
+              <CourseImage
                 src={src}
                 alt={alt || ''}
                 className="rounded-lg shadow-md max-w-full h-auto my-4"
@@ -206,7 +209,13 @@ export function MarkdownRenderer({ content, className = '', enableRunnable = fal
           hr() {
             return <hr className="my-8 border-t-2 border-gray-200" />;
           },
-        }}
+  }), [enableRunnable, onCodeExecuted]);
+  return (
+    <div className={`prose prose-indigo max-w-none ${className}`}>
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        rehypePlugins={[rehypeRaw, rehypeSanitize]}
+        components={components}
       >
         {content}
       </ReactMarkdown>

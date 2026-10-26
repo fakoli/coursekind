@@ -1,3 +1,4 @@
+import { CourseImage } from '../common/CourseImage';
 import { Link } from 'react-router-dom';
 import { Users, Sparkles, MoreVertical, Plus } from 'lucide-react';
 import { Card, CardContent } from '../common/Card';
@@ -26,20 +27,20 @@ export function CourseCard({ course, onOptions, onAddToPath, showAuthor = true }
   const colors = difficultyColors[course.difficulty];
 
   return (
-    <Link to={`/courses/${course.id}`} className="group">
+    <div className="group min-w-0">
       <Card className="card-interactive h-full hover:shadow-md transition-shadow">
         <CardContent className="flex flex-col h-full">
           <div className="flex items-start justify-between">
-            <div className="flex items-center gap-3">
-              <img
+            <div className="flex min-w-0 items-center gap-3">
+              <CourseImage
                 src={course.thumbnail_url || defaultThumbnails[course.difficulty]}
                 alt=""
-                className="w-10 h-10 rounded-lg object-cover"
+                className="w-10 h-10 shrink-0 rounded-lg object-cover"
               />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <h3 className="text-lg font-semibold text-gray-900 truncate group-hover:text-indigo-600 transition-colors">
-                    {course.title}
+                    <Link to={`/courses/${course.id}`} className="focus:underline">{course.title}</Link>
                   </h3>
                   {course.ai_enabled && (
                     <span title="AI-Assisted Course">
@@ -86,13 +87,13 @@ export function CourseCard({ course, onOptions, onAddToPath, showAuthor = true }
             )}
           </div>
 
-          <div className="mt-auto pt-4 flex items-center justify-between text-sm text-gray-500">
-            <div className="flex items-center gap-4">
+          <div className="mt-auto pt-4 flex flex-wrap items-center justify-between gap-2 text-sm text-gray-500">
+            <div className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2">
               <span>{course.module_count} {course.module_count === 1 ? 'module' : 'modules'}</span>
-              {course.times_added > 0 && (
-                <div className="flex items-center gap-1">
-                  <Users className="w-4 h-4" aria-hidden="true" />
-                  <span>{course.times_added}</span>
+              {(
+                <div className="flex min-w-0 items-start gap-1">
+                  <Users className="w-4 h-4 shrink-0" aria-hidden="true" />
+                  <span>{course.times_added} path references · {course.own_path_count ?? 0} by author · {course.other_path_count ?? 0} by others</span>
                 </div>
               )}
             </div>
@@ -115,6 +116,6 @@ export function CourseCard({ course, onOptions, onAddToPath, showAuthor = true }
           )}
         </CardContent>
       </Card>
-    </Link>
+    </div>
   );
 }

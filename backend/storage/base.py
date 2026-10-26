@@ -59,7 +59,7 @@ class StorageBackend(ABC):
                 await txn.create("collection", data2)
                 # Commits on successful exit, rolls back on exception
 
-        For backends that don't support transactions (like JSON), this provides
+        For backends that don't support transactions, this provides
         a pass-through that allows the same code to work, though without
         atomicity guarantees.
         """

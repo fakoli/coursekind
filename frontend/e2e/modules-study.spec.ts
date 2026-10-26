@@ -1,0 +1,316 @@
+import { test, expect, login, api, readLesson, saveModule, type Lesson } from './fixtures';
+
+test('MODULE-01 — edit Markdown, preview, reject empty title and persist learner rendering', async ({ page, world, request }) => {
+  await login(page, world.author);
+  const url = `/courses/${world.course.id}/modules/${world.lessons[0].id}`;
+  await page.goto(`${url}/edit`);
+  const markdown = "# Authored lesson\n\n- First item\n- Second item\n\n| A | B |\n| --- | --- |\n| 2 | 3 |\n\n[Example](https://example.com)\n\n<a href=\"javascript:alert(1)\" onclick=\"alert(1)\">Unsafe link</a>\n<iframe srcdoc=\"<script>alert(1)</script>\"></iframe>\n\n```javascript\nconsole.log(5);\n```\n\n```mermaid\n%%{init: {\"securityLevel\":\"loose\",\"secure\":[]}}%%\nflowchart LR\n  Read --> Practice\n  click Read \"javascript:alert(1)\"\n```";
+  await page.getByLabel('Module content Markdown').fill(markdown);
+  await expect(page.getByRole('heading', { name: 'Authored lesson' })).toBeVisible();
+  await page.getByLabel('Module Title').fill('');
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await expect(page.getByText('Please enter a module title')).toBeVisible();
+  await expect(page.getByLabel('Module content Markdown')).toHaveValue(markdown);
+  await page.getByLabel('Module Title').fill('Variables');
+  await saveModule(page);
+  await page.goto(url);
+  await page.reload();
+  await expect(page.getByRole('heading', { name: 'Authored lesson' })).toBeVisible();
+  await expect(page.getByRole('table')).toContainText('2');
+  await expect(page.locator('svg').filter({ hasText: 'Practice' })).toBeVisible();
+  await expect(page.getByText('Unsafe link', { exact: true })).not.toHaveAttribute('href');
+  await expect(page.locator('main iframe, main script, main [onclick], main svg a[href^="javascript:"]')).toHaveCount(0);
+  await page.goto(`${url}/edit`);
+  await expect(page.getByLabel('Module content Markdown')).toHaveValue(markdown);
+  await page.clock.install();
+  await page.getByLabel('Module Title').fill('Retained title draft');
+  await page.getByLabel('Module content Markdown').fill('Retained lesson draft');
+  await page.getByRole('button', {name:/^Flashcards/}).click();
+  await page.getByPlaceholder('What is the question?').first().fill('Retained card draft');
+  await page.getByRole('button', {name:/^Quiz/}).click();
+  await page.getByPlaceholder('Enter your question...').first().fill('Retained quiz draft');
+  await page.getByRole('button', {name:'Sandbox',exact:true}).click();
+  await page.getByPlaceholder(/Write your code here/).fill('console.log("draft");');
+  const other = await page.context().newPage();
+  await other.goto('/settings');
+  await api(request, world.author, `/courses/${world.course.id}/modules/${world.lessons[0].id}`, 'PUT', {title:'Concurrent server title'});
+  await page.clock.fastForward(6 * 60 * 1000);
+  const refreshedModule = page.waitForResponse(response =>
+    new URL(response.url()).pathname === `/api/v1${url}`
+    && response.request().method() === 'GET');
+  await page.bringToFront();
+  // TanStack listens on window. A synthetic document event does not bubble;
+  // headless Chromium does not reliably emit a native visibility transition.
+  // Deliver the same focus signal and require a real HTTP read of the new version.
+  await page.evaluate(() => window.dispatchEvent(new Event('visibilitychange')));
+  const refreshed = await refreshedModule;
+  expect(refreshed.ok()).toBe(true);
+  expect((await refreshed.json()).title).toBe('Concurrent server title');
+  await expect(page.getByText(/This module changed on the server/)).toBeVisible();
+  await expect(page.getByLabel('Module Title')).toHaveValue('Retained title draft');
+  await expect(page.getByPlaceholder(/Write your code here/)).toHaveValue('console.log("draft");');
+  await page.getByRole('button', {name:'Keep my draft',exact:true}).click();
+  await saveModule(page);
+  const draft = await api<Lesson & {quiz:{questions:{question:string}[]};sandbox:{starter_code:string}}>(request,world.author,`/courses/${world.course.id}/modules/${world.lessons[0].id}`);
+  expect(draft.content_markdown).toBe('Retained lesson draft');
+  expect(draft.flashcards[0].front).toBe('Retained card draft');
+  expect(draft.quiz.questions[0].question).toBe('Retained quiz draft');
+  await other.close();
+});
+
+test('MODULE-02 — add, edit, reorder and remove flashcards with saved learner order', async ({ page, world, request }) => {
+  await login(page, world.author);
+  const url = `/courses/${world.course.id}/modules/${world.lessons[0].id}`;
+  await page.goto(`${url}/edit`);
+  await page.getByRole('button', { name: /^Flashcards/ }).click();
+  await page.getByRole('button', { name: 'Add Flashcard', exact: true }).click();
+  await page.getByPlaceholder('What is the question?').last().fill('Disposable question');
+  await page.getByPlaceholder('What is the answer?').last().fill('Disposable answer');
+  await page.getByRole('button', { name: 'Remove flashcard 2' }).click();
+  await page.getByPlaceholder('What is the question?').first().fill('Edited first question');
+  await page.getByRole('button', { name: 'Move flashcard 2 up' }).click();
+  await saveModule(page);
+  await page.reload();
+  await page.getByRole('button', { name: /^Flashcards/ }).click();
+  await expect(page.getByPlaceholder('What is the question?').first()).toHaveValue('Disposable question');
+  const saved = await api<Lesson>(request, world.author, `/courses/${world.course.id}/modules/${world.lessons[0].id}`);
+  expect(saved.flashcards.map(c => c.front)).toEqual(['Disposable question', 'Edited first question']);
+  await page.goto(url);
+  await page.getByRole('button', { name: /^Flashcards/ }).click();
+  await expect(page.getByRole('button', { name: 'Flip flashcard' })).toContainText('Disposable question');
+});
+
+test('MODULE-03 — edit quiz options and answer key then verify learner scoring', async ({ page, world }) => {
+  await login(page, world.author);
+  const url = `/courses/${world.course.id}/modules/${world.lessons[0].id}`;
+  await page.goto(`${url}/edit`);
+  await page.getByRole('button', { name: /^Quiz/ }).click();
+  await page.getByLabel('Question 1 option A', { exact: true }).fill('Five (edited)');
+  await page.getByRole('button', { name: 'Add option', exact: true }).first().click();
+  await page.getByLabel('Question 1 option C', { exact: true }).fill('Disposable');
+  await page.getByRole('button', { name: 'Remove option C from question 1' }).click();
+  await page.getByRole('button', { name: 'Add Question', exact: true }).click();
+  await page.getByRole('button', { name: 'Remove question 3' }).click();
+  await saveModule(page);
+  await page.goto(url);
+  await page.reload();
+  await page.getByRole('button', { name: /^Quiz/ }).click();
+  await page.getByRole('button', { name: 'Five (edited)', exact: true }).click();
+  await page.getByRole('button', { name: 'Eight', exact: true }).click();
+  await page.getByRole('button', { name: 'Submit Quiz' }).click();
+  await expect(page.getByText('Score: 100%', { exact: true })).toBeVisible();
+  await expect(page.getByText('Adding two and three gives five.', { exact: false })).toBeVisible();
+});
+
+test('MODULE-04 — configure practice, execute, reload and explicitly remove it', async ({ page, world, request }) => {
+  await login(page, world.author);
+  const url = `/courses/${world.course.id}/modules/${world.lessons[0].id}`;
+  await page.goto(`${url}/edit`);
+  await page.getByRole('button', { name: 'Sandbox', exact: true }).click();
+  await page.getByRole('button', { name: 'JavaScript', exact: true }).click();
+  await page.getByPlaceholder(/Write your code here/).fill('console.log(9);');
+  await page.getByPlaceholder('Describe what the learner should accomplish in this exercise...').fill('Print nine.');
+  await page.getByRole('button', { name: 'Test', exact: true }).first().click();
+  await expect(page.locator('pre').filter({ hasText: /^9\s*$/ })).toBeVisible();
+  await saveModule(page);
+  await page.reload();
+  await page.getByRole('button', { name: 'Sandbox', exact: true }).click();
+  await expect(page.getByPlaceholder(/Write your code here/)).toHaveValue('console.log(9);');
+  await page.getByRole('button', { name: 'Remove Sandbox' }).click();
+  await saveModule(page);
+  await page.goto(url);
+  await expect(page.getByRole('button', { name: 'Practice', exact: true })).toHaveCount(0);
+  const saved = await api<Lesson & {sandbox: unknown}>(request, world.author, `/courses/${world.course.id}/modules/${world.lessons[0].id}`);
+  expect(saved.sandbox).toBeNull();
+});
+
+test('MODULE-05 — generate activities, cancel then append, refine and save', async ({ page, world, request }) => {
+  await login(page, world.author);
+  const url = `/courses/${world.course.id}/modules/${world.lessons[0].id}`;
+  await page.goto(`${url}/edit`);
+  await page.getByRole('button', { name: /^Flashcards/ }).click();
+  await page.getByRole('button', { name: 'Generate with AI', exact: true }).click();
+  await expect(page.getByRole('dialog', { name: 'Replace Flashcards?' })).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.getByPlaceholder('What is the question?')).toHaveCount(2);
+  await page.getByRole('button', { name: 'Generate with AI', exact: true }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Append', exact: true }).click();
+  await page.getByPlaceholder('What is the question?').last().fill('Manually refined generated card');
+  await saveModule(page);
+  await page.reload();
+  await page.getByRole('button', { name: /^Flashcards/ }).click();
+  await expect(page.getByPlaceholder('What is the question?').last()).toHaveValue('Manually refined generated card');
+  const saved = await api<Lesson>(request, world.author, `/courses/${world.course.id}/modules/${world.lessons[0].id}`);
+  expect(saved.flashcards.length).toBeGreaterThan(2);
+  expect(saved.flashcards[0].front).toBe('First question');
+  await page.getByRole('button', { name: 'Content', exact: true }).click();
+  await page.getByRole('button', { name: /AI Content Generation/ }).click();
+  await page.getByPlaceholder(/^e.g., Cover DataFrame basics/).fill('Teach addition with worked examples and a short exercise.');
+  await page.getByRole('button', { name: 'Generate All', exact: true }).click();
+  await expect(page.getByLabel('Module content Markdown')).toHaveValue(/Generated lesson/);
+  await page.getByLabel('Module content Markdown').fill('# Generated lesson\n\nManually refined explanation.');
+  await saveModule(page);
+  await page.goto(url);
+  await page.reload();
+  await expect(page.getByRole('heading', { name: 'Generated lesson' })).toBeVisible();
+  await expect(page.getByText('Manually refined explanation.')).toBeVisible();
+  const generated = await api<Lesson & {quiz: {questions: unknown[]}}>(request, world.author, `/courses/${world.course.id}/modules/${world.lessons[0].id}`);
+  expect(generated.flashcards).toHaveLength(15);
+  expect(generated.quiz.questions).toHaveLength(10);
+});
+
+test('STUDY-01 — read content, run embedded code and rerun changed code', async ({ page, world }) => {
+  await login(page, world.learner);
+  await readLesson(page, world.otherCourse, world.otherLesson);
+  await page.getByRole('button', { name: 'Run code', exact: true }).click();
+  await expect(page.locator('pre').filter({ hasText: /^5\s*$/ })).toBeVisible();
+  await page.getByRole('button', { name: 'Edit code', exact: true }).click();
+  await page.getByRole('textbox').fill('console.log(7);');
+  await page.getByRole('button', { name: 'Run code', exact: true }).click();
+  await expect(page.locator('pre').filter({ hasText: /^7\s*$/ })).toBeVisible();
+  await page.getByRole('textbox').fill('throw new Error("controlled error")');
+  await page.getByRole('button', { name: 'Run code', exact: true }).click();
+  await expect(page.getByText(/Error: controlled error/)).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole('button', { name: 'Content read — study again' })).toBeVisible();
+});
+
+test('STUDY-02 — flip and persist every card including the final card', async ({ page, world, request }) => {
+  await login(page, world.learner);
+  await page.goto(`/courses/${world.otherCourse.id}/modules/${world.otherLesson.id}`);
+  let denyFirst = true;
+  const firstAttempts: string[] = [];
+  await page.route('**/api/v1/progress/modules/**', async route => {
+    const request = route.request();
+    const body = request.method() === 'POST' ? request.postDataJSON() : {};
+    if (body.action === 'review_flashcard' && body.flashcard_id === world.otherLesson.flashcards[0].id) {
+      firstAttempts.push(body.event_id);
+      if (denyFirst) { await route.fulfill({status:503,json:{detail:'Synthetic review failure'}}); return; }
+    }
+    await route.continue();
+  });
+  await page.getByRole('button', { name: /^Flashcards/ }).click();
+  await page.getByRole('button', { name: 'Flip flashcard' }).click();
+  await expect(page.getByRole('button', { name: 'Flip flashcard' })).toContainText('First answer');
+  await page.getByRole('button', { name: 'Next flashcard' }).click();
+  await page.getByRole('button', { name: 'Flip flashcard' }).click();
+  await expect(page.getByRole('button', { name: 'Flip flashcard' })).toContainText('Last answer');
+  await expect(page.getByRole('button', {name:'Retry study save'})).toBeVisible();
+  await page.getByRole('button', { name: 'Finish', exact: true }).click();
+  await expect(page.getByText('Could not save your progress. Please try again.')).toBeVisible();
+  await expect(page).toHaveURL(`/courses/${world.otherCourse.id}/modules/${world.otherLesson.id}`);
+  denyFirst = false;
+  await page.getByRole('button', { name: 'Finish', exact: true }).click();
+  await expect(page).toHaveURL(`/courses/${world.otherCourse.id}`);
+  const saved = await api<{flashcards_reviewed: number}>(request, world.learner, `/progress/modules/${world.otherCourse.id}/${world.otherLesson.id}`);
+  expect(saved.flashcards_reviewed).toBe(2);
+  expect(new Set(firstAttempts).size).toBe(1);
+  await page.reload();
+  await expect(page.getByText(/2\/2 cards/)).toBeVisible();
+});
+
+test('STUDY-03 — rate cards, filter and retain personal ratings', async ({ page, world }) => {
+  await login(page, world.learner);
+  const url = `/courses/${world.otherCourse.id}/modules/${world.otherLesson.id}`;
+  await page.goto(url);
+  await page.getByRole('button', { name: /^Flashcards/ }).click();
+  await page.getByRole('button', { name: 'Flip flashcard' }).click();
+  await page.getByRole('button', { name: 'Easy', exact: true }).click();
+  await page.getByRole('combobox').selectOption('easy');
+  await expect(page.getByRole('button', { name: 'Flip flashcard' })).toContainText(/First (question|answer)/);
+  await page.getByRole('combobox').selectOption('hard');
+  await expect(page.getByText(/No flashcards match this filter/i)).toBeVisible();
+  await page.reload();
+  await page.getByRole('button', { name: /^Flashcards/ }).click();
+  await page.getByRole('combobox').selectOption('easy');
+  await expect(page.getByRole('button', { name: 'Flip flashcard' })).toContainText('First question');
+});
+
+test('STUDY-04 — incomplete quiz is blocked, score 50%, retry and persist 100%', async ({ page, world, request }) => {
+  await login(page, world.learner);
+  await page.goto(`/courses/${world.otherCourse.id}/modules/${world.otherLesson.id}`);
+  const quizRequests: {event_id:string;quiz_answers:Record<string,number>;quiz_score:number}[] = [];
+  await page.route('**/api/v1/progress/modules/**', async route => {
+    const request = route.request();
+    const body = request.method() === 'POST' ? request.postDataJSON() : {};
+    if (body.action === 'submit_quiz') {
+      quizRequests.push(body);
+      if (quizRequests.length === 1) {
+        await route.fulfill({status:503,json:{detail:'Synthetic failure before commit'}});
+        return;
+      }
+    }
+    await route.continue();
+  });
+  await page.getByRole('button', { name: /^Quiz/ }).click();
+  await expect(page.getByRole('button', { name: 'Submit Quiz' })).toBeDisabled();
+  await page.getByRole('button', { name: 'Five', exact: true }).click();
+  await page.getByRole('button', { name: 'Nine', exact: true }).click();
+  await page.getByRole('button', { name: 'Submit Quiz' }).click();
+  await expect(page.getByRole('button', {name:'Retry study save'})).toBeVisible();
+  await page.getByRole('button', {name:'Eight',exact:true}).click();
+  await expect(page.getByRole('button', {name:'Submit Quiz'})).toBeDisabled();
+  await expect(page.getByText(/Save your previous quiz attempt/)).toBeVisible();
+  expect(quizRequests).toHaveLength(1);
+  await page.getByRole('button', {name:'Retry study save'}).click();
+  await expect(page.getByRole('button', {name:'Submit Quiz'})).toBeEnabled();
+  await expect(page.getByRole('button', {name:'Eight',exact:true})).toHaveAttribute('aria-pressed','true');
+  const recovered = await api<{quiz_score:number;quiz_attempts:number}>(request,world.learner,
+    `/progress/modules/${world.otherCourse.id}/${world.otherLesson.id}`);
+  expect(recovered.quiz_score).toBe(50);
+  expect(recovered.quiz_attempts).toBe(1);
+  expect(quizRequests[1]).toEqual(quizRequests[0]);
+  await page.getByRole('button', {name:'Submit Quiz'}).click();
+  await expect(page.getByText('Score: 100%', { exact: true })).toBeVisible();
+  expect(quizRequests[2].event_id).not.toBe(quizRequests[0].event_id);
+  await expect(page.getByText(/Double four is eight/)).toBeVisible();
+  await page.getByRole('button', {name:'Retry Quiz'}).click();
+  await expect(page.getByRole('button', {name:'Submit Quiz'})).toBeDisabled();
+  await page.reload();
+  await page.getByRole('button', { name: /^Quiz/ }).click();
+  await expect(page.getByText(/Saved quiz attempts: 2/)).toBeVisible();
+  const saved = await api<{quiz_score: number; quiz_attempts: number}>(request, world.learner, `/progress/modules/${world.otherCourse.id}/${world.otherLesson.id}`);
+  expect(saved.quiz_score).toBe(100); expect(saved.quiz_attempts).toBe(2);
+});
+
+test('STUDY-05 — practice output, errors, timeout, reset, solution and saved code', async ({ page, world }) => {
+  await login(page, world.learner);
+  await page.goto(`/courses/${world.otherCourse.id}/modules/${world.otherLesson.id}`);
+  await page.getByRole('button', { name: 'Practice', exact: true }).click();
+  const code = page.getByLabel('Practice code');
+  await code.fill('console.log(11);');
+  await page.getByRole('button', { name: 'Run Code', exact: true }).click();
+  await expect(page.locator('pre').filter({ hasText: /^11\s*$/ }).first()).toBeVisible();
+  await code.fill('throw new Error("practice-error")');
+  await page.getByRole('button', { name: 'Run Code', exact: true }).click();
+  await expect(page.getByText(/Error: practice-error/).first()).toBeVisible();
+  await code.fill('while (true) {}');
+  await page.getByRole('button', { name: 'Run Code', exact: true }).click();
+  await expect(page.getByText(/Execution timed out/).first()).toBeVisible();
+  await page.getByRole('button', { name: 'Reset', exact: true }).click();
+  await expect(code).toHaveValue('console.log(2 + 3);');
+  await page.getByRole('button', { name: 'Solution Show', exact: true }).click();
+  await expect(page.locator('code').filter({ hasText: /^console\.log\(5\);$/ })).toBeVisible();
+  const saved = page.waitForResponse(r => r.url().includes('/progress/modules/') && r.request().method() === 'POST' && r.request().postData()?.includes('console.log(13)') === true);
+  await code.fill('console.log(13);');
+  await saved;
+  await page.reload();
+  await page.getByRole('button', { name: 'Practice', exact: true }).click();
+  await expect(page.getByLabel('Practice code')).toHaveValue('console.log(13);');
+});
+
+test('STUDY-06 — complete first module, resume, finish and reload 100% course', async ({ page, world }) => {
+  await login(page, world.author);
+  await readLesson(page, world.course, world.lessons[0]);
+  await page.getByRole('button', { name: 'Functions', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Functions', exact: true })).toBeVisible();
+  await page.goto(`/courses/${world.course.id}`);
+  await expect(page.getByText(/50%/).first()).toBeVisible();
+  await page.goto('/');
+  await page.getByRole('link', { name: /Functions/ }).first().click();
+  await expect(page.getByRole('heading', { name: 'Functions', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Finish', exact: true }).click();
+  await expect(page).toHaveURL(`/courses/${world.course.id}`);
+  await page.reload();
+  await expect(page.getByText(/100%/).first()).toBeVisible();
+});

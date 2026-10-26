@@ -202,6 +202,17 @@ export interface ModuleProgressStatus {
   time_spent_minutes: number;
 }
 
+export interface ModuleProgress extends Omit<ModuleProgressStatus, 'module_title' | 'flashcards_total'> {
+  id: string;
+  user_id: string;
+  course_id: string;
+  reviewed_card_ids: string[];
+  practice_code: string | null;
+  extra_quiz_questions: QuizQuestionData[];
+  quiz_history: { score: number; answers: Record<string, number>; created_at: string }[];
+  practice_history: { code: string; result: { success: boolean; output?: string; error?: string }; created_at: string }[];
+}
+
 export interface CourseProgressStatus {
   course_id: string;
   course_title: string;
@@ -232,6 +243,10 @@ export interface PathProgressStatus {
 export interface DashboardStats {
   user_id: string;
   active_paths: number;
+  selected_paths: number;
+  completed_selected_paths: number;
+  study_sessions_week: number;
+  timezone: string;
   courses_in_progress: number;
   courses_completed: number;
   modules_completed_week: number;
@@ -246,7 +261,7 @@ export interface DashboardStats {
   last_activity_date: string | null;
 }
 
-export type ActivityType = 'module_started' | 'module_completed' | 'quiz_submitted' | 'content_read';
+export type ActivityType = 'module_started' | 'module_completed' | 'quiz_submitted' | 'content_read' | 'flashcard_reviewed' | 'practice';
 
 export interface RecentActivity {
   id: string;
@@ -316,6 +331,8 @@ export type ReminderFrequency = 'daily' | 'every_other_day' | 'weekly' | 'none';
 export type SummaryDay = 'monday' | 'friday' | 'sunday';
 
 export interface NotificationPreferences {
+  email_available?: boolean;
+  sms_available?: boolean;
   user_id: string;
   email_enabled: boolean;
   email_address: string;
@@ -436,6 +453,8 @@ export interface Course {
   ai_enabled: boolean;
   instructions: CourseInstructions | null;
   times_added: number;
+  own_path_count?: number;
+  other_path_count?: number;
   created_at: string;
   updated_at: string;
 }
@@ -521,6 +540,7 @@ export interface Module {
   id: string;
   course_id: string;
   title: string;
+  description?: string;
   order_index: number;
   content_markdown: string;
   flashcards: FlashcardData[];
@@ -531,29 +551,35 @@ export interface Module {
 }
 
 export interface ModuleSummary {
+  objectives?: string[];
   id: string;
   title: string;
+  description?: string;
   order_index: number;
   flashcard_count: number;
   has_quiz: boolean;
+  updated_at?: string | null;
 }
 
 export interface ModuleCreate {
+  objectives?: string[];
   title: string;
+  description?: string;
   order_index: number;
   content_markdown?: string;
   flashcards?: FlashcardData[];
-  quiz?: QuizData;
+  quiz?: QuizData | null;
   sandbox?: SandboxData;
 }
 
 export interface ModuleUpdate {
   title?: string;
+  description?: string;
   order_index?: number;
   content_markdown?: string;
   flashcards?: FlashcardData[];
-  quiz?: QuizData;
-  sandbox?: SandboxData;
+  quiz?: QuizData | null;
+  sandbox?: SandboxData | null;
 }
 
 // Learning Path types
@@ -576,6 +602,8 @@ export interface LearningPathResponse extends LearningPath {
 }
 
 export interface LearningPathWithCoursesResponse {
+  is_following?: boolean;
+  unavailable_courses?: { id: string; reason: string }[];
   path: LearningPath;
   courses: CourseResponse[];
 }

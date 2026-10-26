@@ -60,7 +60,7 @@ export function ContentTab({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 border border-gray-300 rounded-b-lg overflow-hidden">
         {/* Editor */}
         <div className="border-r border-gray-300">
-          <textarea
+          <textarea aria-label="Module content Markdown"
             ref={textareaRef}
             value={contentMarkdown}
             onChange={(e) => onContentChange(e.target.value)}

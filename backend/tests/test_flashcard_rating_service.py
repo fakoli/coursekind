@@ -5,6 +5,7 @@ filtered flashcards, and unhelpful-cards feedback — the paths that were
 previously uncovered.
 """
 
+from contextlib import nullcontext
 from datetime import datetime, timezone
 from uuid import uuid4
 
@@ -20,6 +21,9 @@ class FakeStorage:
 
     def __init__(self):
         self.data: dict[str, dict] = {}
+
+    def transaction(self):
+        return nullcontext(self)
 
     async def get(self, collection, key):
         return self.data.get(collection, {}).get(key)
@@ -56,7 +60,9 @@ def _module_record(course_id, flashcards=None):
         "title": "Mod",
         "order_index": 0,
         "content_markdown": "c",
-        "flashcards": flashcards if flashcards is not None else [
+        "flashcards": flashcards
+        if flashcards is not None
+        else [
             {"id": "fc1", "front": "F1", "back": "B1"},
             {"id": "fc2", "front": "F2", "back": "B2"},
         ],
@@ -71,7 +77,7 @@ def _course_record(author_id="author-1"):
         "id": str(uuid4()),
         "title": "Course",
         "author_id": author_id,
-        "visibility": "private",
+        "visibility": "public",
         "source": "db",
     }
 
@@ -95,8 +101,12 @@ class TestRateFlashcard:
         await storage.create("modules", module)
 
         resp = await service.rate_flashcard(
-            "user-1", course["id"], module["id"],
-            RateFlashcardRequest(flashcard_index=0, rating=FlashcardRating.EASY, flashcard_id="fc1"),
+            "user-1",
+            course["id"],
+            module["id"],
+            RateFlashcardRequest(
+                flashcard_index=0, rating=FlashcardRating.EASY, flashcard_id="fc1"
+            ),
         )
         assert resp.updated is False
         assert resp.rating == FlashcardRating.EASY
@@ -111,13 +121,21 @@ class TestRateFlashcard:
         await storage.create("courses", course)
         await storage.create("modules", module)
         await service.rate_flashcard(
-            "user-1", course["id"], module["id"],
-            RateFlashcardRequest(flashcard_index=0, rating=FlashcardRating.EASY, flashcard_id="fc1"),
+            "user-1",
+            course["id"],
+            module["id"],
+            RateFlashcardRequest(
+                flashcard_index=0, rating=FlashcardRating.EASY, flashcard_id="fc1"
+            ),
         )
 
         resp = await service.rate_flashcard(
-            "user-1", course["id"], module["id"],
-            RateFlashcardRequest(flashcard_index=0, rating=FlashcardRating.HARD, flashcard_id="fc1"),
+            "user-1",
+            course["id"],
+            module["id"],
+            RateFlashcardRequest(
+                flashcard_index=0, rating=FlashcardRating.HARD, flashcard_id="fc1"
+            ),
         )
         assert resp.updated is True
         assert resp.rating == FlashcardRating.HARD
@@ -131,7 +149,9 @@ class TestRateFlashcard:
         await storage.create("courses", course)
         with pytest.raises(NotFoundException):
             await service.rate_flashcard(
-                "user-1", course["id"], "ghost-module",
+                "user-1",
+                course["id"],
+                "ghost-module",
                 RateFlashcardRequest(flashcard_index=0, rating=FlashcardRating.EASY),
             )
 
@@ -143,7 +163,9 @@ class TestRateFlashcard:
         await storage.create("modules", module)
         with pytest.raises(NotFoundException):
             await service.rate_flashcard(
-                "user-1", course["id"], module["id"],
+                "user-1",
+                course["id"],
+                module["id"],
                 RateFlashcardRequest(flashcard_index=5, rating=FlashcardRating.EASY),
             )
 
@@ -156,8 +178,12 @@ class TestGetUserRatings:
         await storage.create("courses", course)
         await storage.create("modules", module)
         await service.rate_flashcard(
-            "user-1", course["id"], module["id"],
-            RateFlashcardRequest(flashcard_index=1, rating=FlashcardRating.MEDIUM, flashcard_id="fc2"),
+            "user-1",
+            course["id"],
+            module["id"],
+            RateFlashcardRequest(
+                flashcard_index=1, rating=FlashcardRating.MEDIUM, flashcard_id="fc2"
+            ),
         )
 
         records = await service.get_user_ratings("user-1", module["id"])
@@ -167,7 +193,11 @@ class TestGetUserRatings:
 
     @pytest.mark.asyncio
     async def test_empty(self, storage, service):
-        assert await service.get_user_ratings("user-1", "module-x") == []
+        course = _course_record()
+        module = _module_record(course["id"])
+        await storage.create("courses", course)
+        await storage.create("modules", module)
+        assert await service.get_user_ratings("user-1", module["id"]) == []
 
 
 class TestRatingSummary:
@@ -177,8 +207,18 @@ class TestRatingSummary:
         module = _module_record(course["id"])  # 2 flashcards
         await storage.create("courses", course)
         await storage.create("modules", module)
-        await service.rate_flashcard("u1", course["id"], module["id"], RateFlashcardRequest(flashcard_index=0, rating=FlashcardRating.EASY))
-        await service.rate_flashcard("u1", course["id"], module["id"], RateFlashcardRequest(flashcard_index=1, rating=FlashcardRating.UNHELPFUL))
+        await service.rate_flashcard(
+            "u1",
+            course["id"],
+            module["id"],
+            RateFlashcardRequest(flashcard_index=0, rating=FlashcardRating.EASY),
+        )
+        await service.rate_flashcard(
+            "u1",
+            course["id"],
+            module["id"],
+            RateFlashcardRequest(flashcard_index=1, rating=FlashcardRating.UNHELPFUL),
+        )
 
         summary = await service.get_rating_summary("u1", course["id"], module["id"])
         assert summary.total == 2
@@ -201,7 +241,12 @@ class TestRatingsWithSummary:
         module = _module_record(course["id"])
         await storage.create("courses", course)
         await storage.create("modules", module)
-        await service.rate_flashcard("u1", course["id"], module["id"], RateFlashcardRequest(flashcard_index=0, rating=FlashcardRating.EASY))
+        await service.rate_flashcard(
+            "u1",
+            course["id"],
+            module["id"],
+            RateFlashcardRequest(flashcard_index=0, rating=FlashcardRating.EASY),
+        )
 
         records, summary = await service.get_ratings_with_summary("u1", course["id"], module["id"])
         assert len(records) == 1
@@ -216,7 +261,12 @@ class TestFilteredFlashcards:
         module = _module_record(course["id"])
         await storage.create("courses", course)
         await storage.create("modules", module)
-        await service.rate_flashcard("u1", course["id"], module["id"], RateFlashcardRequest(flashcard_index=0, rating=FlashcardRating.EASY))
+        await service.rate_flashcard(
+            "u1",
+            course["id"],
+            module["id"],
+            RateFlashcardRequest(flashcard_index=0, rating=FlashcardRating.EASY),
+        )
 
         resp = await service.get_filtered_flashcards("u1", course["id"], module["id"], "all")
         assert resp.total == 2
@@ -228,7 +278,12 @@ class TestFilteredFlashcards:
         module = _module_record(course["id"])
         await storage.create("courses", course)
         await storage.create("modules", module)
-        await service.rate_flashcard("u1", course["id"], module["id"], RateFlashcardRequest(flashcard_index=0, rating=FlashcardRating.EASY))
+        await service.rate_flashcard(
+            "u1",
+            course["id"],
+            module["id"],
+            RateFlashcardRequest(flashcard_index=0, rating=FlashcardRating.EASY),
+        )
 
         resp = await service.get_filtered_flashcards("u1", course["id"], module["id"], "unrated")
         assert resp.total == 1
@@ -240,7 +295,12 @@ class TestFilteredFlashcards:
         module = _module_record(course["id"])
         await storage.create("courses", course)
         await storage.create("modules", module)
-        await service.rate_flashcard("u1", course["id"], module["id"], RateFlashcardRequest(flashcard_index=0, rating=FlashcardRating.HARD))
+        await service.rate_flashcard(
+            "u1",
+            course["id"],
+            module["id"],
+            RateFlashcardRequest(flashcard_index=0, rating=FlashcardRating.HARD),
+        )
 
         resp = await service.get_filtered_flashcards("u1", course["id"], module["id"], "hard")
         assert resp.total == 1
@@ -265,7 +325,14 @@ class TestUnhelpfulCards:
         await storage.create("modules", module)
         # Two users mark card 0 unhelpful
         for u in ("u1", "u2"):
-            await service.rate_flashcard(u, course["id"], module["id"], RateFlashcardRequest(flashcard_index=0, rating=FlashcardRating.UNHELPFUL, flashcard_id="fc1"))
+            await service.rate_flashcard(
+                u,
+                course["id"],
+                module["id"],
+                RateFlashcardRequest(
+                    flashcard_index=0, rating=FlashcardRating.UNHELPFUL, flashcard_id="fc1"
+                ),
+            )
 
         resp = await service.get_unhelpful_cards("author-1", course["id"])
         assert resp.total == 1

@@ -30,6 +30,9 @@ export function useCreateModule() {
     onSuccess: (_, { courseId }) => {
       queryClient.invalidateQueries({ queryKey: ['modules', courseId] });
       queryClient.invalidateQueries({ queryKey: ['course', courseId] });
+      queryClient.invalidateQueries({ queryKey: ['path'] });
+      queryClient.invalidateQueries({ queryKey: ['courses'] });
+      queryClient.invalidateQueries({ queryKey: ['progress'] });
     },
   });
 }
@@ -44,6 +47,9 @@ export function useBatchCreateModules() {
     onSuccess: (_, { courseId }) => {
       queryClient.invalidateQueries({ queryKey: ['modules', courseId] });
       queryClient.invalidateQueries({ queryKey: ['course', courseId] });
+      queryClient.invalidateQueries({ queryKey: ['path'] });
+      queryClient.invalidateQueries({ queryKey: ['courses'] });
+      queryClient.invalidateQueries({ queryKey: ['progress'] });
     },
   });
 }
@@ -65,6 +71,8 @@ export function useUpdateModule() {
     onSuccess: (_, { courseId, moduleId }) => {
       queryClient.invalidateQueries({ queryKey: ['modules', courseId] });
       queryClient.invalidateQueries({ queryKey: ['module', courseId, moduleId] });
+      queryClient.invalidateQueries({ queryKey: ['course', courseId] });
+      queryClient.invalidateQueries({ queryKey: ['progress'] });
     },
   });
 }
@@ -79,6 +87,9 @@ export function useDeleteModule() {
     onSuccess: (_, { courseId }) => {
       queryClient.invalidateQueries({ queryKey: ['modules', courseId] });
       queryClient.invalidateQueries({ queryKey: ['course', courseId] });
+      queryClient.invalidateQueries({ queryKey: ['path'] });
+      queryClient.invalidateQueries({ queryKey: ['courses'] });
+      queryClient.invalidateQueries({ queryKey: ['progress'] });
     },
   });
 }
@@ -92,6 +103,7 @@ export function useReorderModules() {
       modulesApi.reorder(courseId, moduleIds),
     onSuccess: (_, { courseId }) => {
       queryClient.invalidateQueries({ queryKey: ['modules', courseId] });
+      queryClient.invalidateQueries({ queryKey: ['course', courseId] });
     },
   });
 }

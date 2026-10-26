@@ -1,0 +1,15 @@
+{
+  "content_markdown": true,
+  "flashcards": true,
+  "sandbox": true,
+  "quiz": true,
+  "quiz_attempts": 2,
+  "latest_score": 50.0,
+  "quiz_history_scores": [
+    100.0,
+    50.0
+  ],
+  "reviewed_card_ids_unchanged": true,
+  "ratings_unchanged": true,
+  "original_activity_records_retained": true
+}

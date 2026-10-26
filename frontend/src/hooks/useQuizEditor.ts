@@ -41,6 +41,18 @@ export function useQuizEditor(initialQuestions: QuizQuestionData[] = []) {
     []
   );
 
+  const addOption = useCallback((index: number) => {
+    setQuestions(prev => prev.map((question, i) => i !== index || question.options.length >= 6 ? question : { ...question, options: [...question.options, ''] }));
+  }, []);
+
+  const removeOption = useCallback((index: number, optionIndex: number) => {
+    setQuestions(prev => prev.map((question, i) => {
+      if (i !== index || question.options.length <= 2 || optionIndex < 0 || optionIndex >= question.options.length) return question;
+      return { ...question, options: question.options.filter((_, oi) => oi !== optionIndex),
+        correct_index: question.correct_index === optionIndex ? -1 : question.correct_index > optionIndex ? question.correct_index - 1 : question.correct_index };
+    }));
+  }, []);
+
   const removeQuestion = useCallback((index: number) => {
     setQuestions((prev) => removeItem(prev, index));
   }, []);
@@ -69,6 +81,8 @@ export function useQuizEditor(initialQuestions: QuizQuestionData[] = []) {
     updateQuestion,
     updateQuestionOption,
     removeQuestion,
+    addOption,
+    removeOption,
     replaceAll,
     setAll,
     appendQuestions,

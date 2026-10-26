@@ -8,9 +8,7 @@ class CourseInstructions(BaseModel):
     """AI instructions for generating course content."""
 
     purpose: str = Field(..., min_length=1, description="What is this course for?")
-    target_audience: str = Field(
-        ..., min_length=1, description="Who is this course for?"
-    )
+    target_audience: str = Field(..., min_length=1, description="Who is this course for?")
     learning_objectives: list[str] = Field(
         default_factory=list, description="What will learners achieve?"
     )
@@ -63,6 +61,8 @@ class Course(CourseBase):
 
     # Stats
     times_added: int = 0
+    own_path_count: int = 0
+    other_path_count: int = 0
 
     # Timestamps
     created_at: datetime

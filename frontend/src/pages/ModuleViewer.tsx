@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useAuthContext } from '../components/common/AuthContext';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -19,8 +20,12 @@ import { FlashcardFilter } from '../components/flashcards/FlashcardFilter';
 import { CodeSandbox } from '../components/module-editor/CodeSandbox';
 import { useModule, useModules } from '../hooks/useModules';
 import { useCourse } from '../hooks/useCourses';
-import { useUpdateModuleProgress } from '../hooks/useProgress';
+import { useUpdateModuleProgress, useModuleProgress } from '../hooks/useProgress';
+import { useActiveStudyTime } from '../hooks/useActiveStudyTime';
+import type { ExecutionResult } from '../services/codeExecution';
+import type { UpdateModuleProgressRequest } from '../api/progress';
 import { useModuleGeneration } from '../hooks/useModuleGeneration';
+import { useToast } from '../hooks/useToast';
 import {
   useFlashcardRatings,
   useFlashcardRatingSummary,
@@ -30,22 +35,106 @@ import type { FlashcardFilter as FilterType, FlashcardRating, QuizQuestionData }
 
 type ViewTab = 'content' | 'flashcards' | 'quiz' | 'practice';
 
+interface FlashcardReviewEncounter {
+  actionKey: string;
+  cardKey: string;
+  saved: boolean;
+  startedAt: number;
+}
+
 export function ModuleViewer() {
+  const { user } = useAuthContext();
+  const { courseId, moduleId } = useParams();
+  return <StudyModule key={`${user?.id}:${courseId}:${moduleId}`} />;
+}
+
+function StudyModule() {
+  const { user } = useAuthContext();
   const { courseId, moduleId } = useParams<{ courseId: string; moduleId: string }>();
   const navigate = useNavigate();
+  const { error: showError } = useToast();
+  const [isCompleting, setIsCompleting] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<ViewTab>('content');
+  const [requestedTab, setActiveTab] = useState<ViewTab>('content');
   const [currentFlashcardIndex, setCurrentFlashcardIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [quizAnswers, setQuizAnswers] = useState<Record<number, number>>({});
   const [quizSubmitted, setQuizSubmitted] = useState(false);
+  const [quizSubmissionPending, setQuizSubmissionPending] = useState(false);
+  const [submittedQuizAnswers, setSubmittedQuizAnswers] = useState<Record<number, number> | null>(null);
   const [flashcardFilter, setFlashcardFilter] = useState<FilterType>('all');
-  const [extraQuizQuestions, setExtraQuizQuestions] = useState<QuizQuestionData[]>([]);
+  const [localExtraQuestions, setExtraQuizQuestions] = useState<QuizQuestionData[] | null>(null);
+  const [localPracticeCode, setLocalPracticeCode] = useState<string | null>(null);
+  const [failedStudyActions, setFailedStudyActions] = useState(new Map<string, UpdateModuleProgressRequest>());
+  const hasFailedQuiz = [...failedStudyActions.values()].some(action => action.action === 'submit_quiz');
+  const unsavedStudyActions = useRef(new Map<string, UpdateModuleProgressRequest>());
+  const firstFailed = failedStudyActions.entries().next().value;
+  const failedStudyAction = firstFailed ? { key: firstFailed[0], data: firstFailed[1] } : null;
+  const [personalSaveError, setPersonalSaveError] = useState(false);
+  const personalDraft = useRef<UpdateModuleProgressRequest>({ action: 'save_state' });
+  const eventRequests = useRef(new Map<string, UpdateModuleProgressRequest>());
+  // The currently displayed quiz draft may start a new encounter. Previously
+  // submitted encounters stay immutable in the request/recovery maps.
+  const quizEncounterKey = useRef<string | null>(null);
+  const takeStudyTime = useActiveStudyTime();
 
   const { data: courseData } = useCourse(courseId || '');
   const { data: module, isLoading, error } = useModule(courseId || '', moduleId || '');
   const { data: modules } = useModules(courseId || '');
   const updateProgress = useUpdateModuleProgress();
+  const { data: personal, isLoading: personalLoading, error: personalError } = useModuleProgress(courseId || '', moduleId || '');
+  const extraQuizQuestions = useMemo(() => localExtraQuestions ?? personal?.extra_quiz_questions ?? [], [localExtraQuestions, personal?.extra_quiz_questions]);
+  const { mutateAsync: mutateProgress } = updateProgress;
+  const saveAction = useCallback(async (key: string, data: UpdateModuleProgressRequest) => {
+    let request = eventRequests.current.get(key);
+    if (!request) {
+      request = { ...data, event_id: crypto.randomUUID(), time_spent_seconds: takeStudyTime() };
+      eventRequests.current.set(key, request);
+    }
+    unsavedStudyActions.current.set(key, request);
+    try {
+      const result = await mutateProgress({ courseId: courseId!, moduleId: moduleId!, data: request });
+      unsavedStudyActions.current.delete(key);
+      setFailedStudyActions(previous => { const next = new Map(previous); next.delete(key); return next; });
+      return result;
+    } catch (error) {
+      setFailedStudyActions(previous => new Map(previous).set(key, request));
+      throw error;
+    }
+  }, [courseId, moduleId, mutateProgress, takeStudyTime]);
+  const handleExampleExecuted = useCallback(async (_code: string, result: ExecutionResult) => {
+    try {
+      await saveAction(`example:${crypto.randomUUID()}`, { action: 'practice', practice_result: { success: result.success, output: result.output, error: result.error } });
+    } catch { showError('Could not save your example run. Please try again.'); }
+  }, [saveAction, showError]);
+  const savePersonal = async (data: UpdateModuleProgressRequest) => {
+    personalDraft.current = { ...personalDraft.current, ...data, action: 'save_state' };
+    try {
+      await updateProgress.mutateAsync({ courseId: courseId!, moduleId: moduleId!, data: { ...personalDraft.current } });
+      setPersonalSaveError(false);
+    } catch { setPersonalSaveError(true); }
+  };
+  const retryFailedStudySave = async () => {
+    const failed = failedStudyAction;
+    if (!failed || quizSubmissionPending || isCompleting || updateProgress.isPending) return;
+    const isQuiz = failed.data.action === 'submit_quiz';
+    if (isQuiz) setQuizSubmissionPending(true);
+    try {
+      await saveAction(failed.key, failed.data);
+      if (isQuiz && failed.key === quizEncounterKey.current) {
+        const snapshot = Object.fromEntries(
+          Object.entries(failed.data.quiz_answers ?? {}).map(([index, answer]) => [Number(index), answer]),
+        );
+        setQuizAnswers(snapshot);
+        setSubmittedQuizAnswers(snapshot);
+        setQuizSubmitted(true);
+      }
+    } catch {
+      // The existing failed action and its idempotency key remain available.
+    } finally {
+      if (isQuiz) setQuizSubmissionPending(false);
+    }
+  };
 
   // Flashcard rating hooks
   const { data: ratingsData } = useFlashcardRatings(courseId || '', moduleId || '');
@@ -65,36 +154,23 @@ export function ModuleViewer() {
   }, [ratingsData]);
 
   const hasTrackedContentRead = useRef(false);
-  const trackedFlashcardReviews = useRef(new Set<number>());
-
-  // Track content read when content tab is viewed
-  useEffect(() => {
-    if (activeTab === 'content' && courseId && moduleId && !hasTrackedContentRead.current && module) {
-      hasTrackedContentRead.current = true;
-      updateProgress.mutate({
-        courseId,
-        moduleId,
-        data: { action: 'read_content' },
-      });
-    }
-  }, [activeTab, courseId, moduleId, module]);
-
-  // Reset tracking when module changes
-  useEffect(() => {
-    hasTrackedContentRead.current = false;
-    trackedFlashcardReviews.current = new Set();
-    setCurrentFlashcardIndex(0);
-    setFlashcardFilter('all');
-    setExtraQuizQuestions([]);
-    setQuizAnswers({});
-    setQuizSubmitted(false);
-  }, [moduleId]);
+  const flashcardReviewEncounter = useRef<FlashcardReviewEncounter | null>(null);
+  const flashcardReviewSequence = useRef(0);
+  const pendingFlashcardReviews = useRef(new Map<string, Promise<void>>());
 
   // Combine module quiz questions with extra generated questions
   const allQuizQuestions = useMemo(() => {
     const moduleQuestions = module?.quiz?.questions || [];
     return [...moduleQuestions, ...extraQuizQuestions];
   }, [module?.quiz?.questions, extraQuizQuestions]);
+
+  const availableTabs: ViewTab[] = [
+    ...(module?.content_markdown.trim() ? ['content' as const] : []),
+    ...(module?.flashcards.length ? ['flashcards' as const] : []),
+    ...(allQuizQuestions.length ? ['quiz' as const] : []),
+    ...(module?.sandbox ? ['practice' as const] : []),
+  ];
+  const activeTab = availableTabs.includes(requestedTab) ? requestedTab : availableTabs[0];
 
   // Filter flashcards based on selected filter
   const filteredFlashcards = useMemo(() => {
@@ -111,11 +187,62 @@ export function ModuleViewer() {
       });
   }, [module?.flashcards, flashcardFilter, ratingsMap]);
 
+  const safeFlashcardIndex = Math.min(currentFlashcardIndex, Math.max(0, filteredFlashcards.length - 1));
+
   // Handle rating a flashcard
+  const trackFlashcardReview = (): Promise<void> => {
+    const flashcard = filteredFlashcards[safeFlashcardIndex];
+    const cardKey = flashcard?.id ?? `index:${flashcard?.originalIndex}`;
+    if (!courseId || !moduleId || !flashcard) return Promise.resolve();
+    const now = Date.now();
+    let encounter = flashcardReviewEncounter.current;
+    if (encounter?.cardKey === cardKey) {
+      const pending = pendingFlashcardReviews.current.get(encounter.actionKey);
+      if (pending) return pending;
+      // An unsaved encounter always retries the same event ID. A saved encounter
+      // remains one interaction until the card is left or study resumes after 30m.
+      if (!encounter.saved || now - encounter.startedAt <= 30 * 60 * 1000) {
+        if (encounter.saved) return Promise.resolve();
+      } else {
+        encounter = null;
+      }
+    } else {
+      encounter = null;
+    }
+    if (!encounter) {
+      const sequence = ++flashcardReviewSequence.current;
+      encounter = {
+        actionKey: `card:${cardKey}:encounter:${sequence}`,
+        cardKey,
+        saved: false,
+        startedAt: now,
+      };
+      flashcardReviewEncounter.current = encounter;
+    }
+    const pending = pendingFlashcardReviews.current.get(encounter.actionKey);
+    if (pending) return pending;
+    const currentEncounter = encounter;
+    const saved = saveAction(encounter.actionKey, { action: 'review_flashcard', flashcard_id: flashcard.id })
+      .then(() => { currentEncounter.saved = true; })
+      .catch(error => {
+        showError('Could not save your flashcard review. Please try again.');
+        throw error;
+      })
+      .finally(() => { pendingFlashcardReviews.current.delete(currentEncounter.actionKey); });
+    pendingFlashcardReviews.current.set(currentEncounter.actionKey, saved);
+    return saved;
+  };
+
+  const handleFlipFlashcard = () => {
+    if (!isFlipped) void trackFlashcardReview().catch(() => {});
+    setIsFlipped(!isFlipped);
+  };
+
   const handleRateFlashcard = (rating: FlashcardRating) => {
     if (!courseId || !moduleId) return;
-    const flashcard = filteredFlashcards[currentFlashcardIndex];
+    const flashcard = filteredFlashcards[safeFlashcardIndex];
     if (!flashcard) return;
+    void trackFlashcardReview().catch(() => {});
 
     rateFlashcard.mutate({
       courseId,
@@ -130,6 +257,7 @@ export function ModuleViewer() {
   useEffect(() => {
     setCurrentFlashcardIndex(0);
     setIsFlipped(false);
+    flashcardReviewEncounter.current = null;
   }, [flashcardFilter]);
 
   if (isLoading) {
@@ -155,7 +283,7 @@ export function ModuleViewer() {
     );
   }
 
-  const isEditable = courseData?.course.source === 'database';
+  const isEditable = courseData?.course.source === 'database' && courseData.course.author_id === user?.id;
   const currentModuleIndex = modules?.findIndex((m) => m.id === moduleId) ?? -1;
   const prevModule = currentModuleIndex > 0 ? modules?.[currentModuleIndex - 1] : null;
   const nextModule = modules && currentModuleIndex < modules.length - 1
@@ -166,53 +294,47 @@ export function ModuleViewer() {
     setIsFlipped(false);
 
     // Track flashcard review when navigating to next card (indicates user reviewed current card)
-    const flashcard = filteredFlashcards[currentFlashcardIndex];
-    if (direction === 'next' && courseId && moduleId && flashcard && !trackedFlashcardReviews.current.has(flashcard.originalIndex)) {
-      trackedFlashcardReviews.current.add(flashcard.originalIndex);
-      updateProgress.mutate({
-        courseId,
-        moduleId,
-        data: { action: 'review_flashcard' },
-      });
-    }
+    if (direction === 'next') void trackFlashcardReview().catch(() => {});
 
-    if (direction === 'prev' && currentFlashcardIndex > 0) {
-      setCurrentFlashcardIndex(currentFlashcardIndex - 1);
-    } else if (direction === 'next' && currentFlashcardIndex < filteredFlashcards.length - 1) {
-      setCurrentFlashcardIndex(currentFlashcardIndex + 1);
+    if (direction === 'prev' && safeFlashcardIndex > 0) {
+      setCurrentFlashcardIndex(safeFlashcardIndex - 1);
+      flashcardReviewEncounter.current = null;
+    } else if (direction === 'next' && safeFlashcardIndex < filteredFlashcards.length - 1) {
+      setCurrentFlashcardIndex(safeFlashcardIndex + 1);
+      flashcardReviewEncounter.current = null;
     }
   };
 
   const handleQuizAnswer = (questionIndex: number, answerIndex: number) => {
-    if (!quizSubmitted) {
+    if (!quizSubmitted && !quizSubmissionPending) {
+      if (quizAnswers[questionIndex] !== answerIndex) quizEncounterKey.current = null;
+      // Editing the draft never deletes or changes a submitted encounter.
       setQuizAnswers({ ...quizAnswers, [questionIndex]: answerIndex });
     }
   };
 
-  const handleQuizSubmit = () => {
-    setQuizSubmitted(true);
-
-    // Track quiz submission with score
-    if (courseId && moduleId && allQuizQuestions.length > 0) {
-      let correct = 0;
-      allQuizQuestions.forEach((q, i) => {
-        if (quizAnswers[i] === q.correct_index) correct++;
-      });
-      const score = Math.round((correct / allQuizQuestions.length) * 100);
-
-      updateProgress.mutate({
-        courseId,
-        moduleId,
-        data: { action: 'submit_quiz', quiz_score: score },
-      });
-    }
+  const handleQuizSubmit = async () => {
+    if (!courseId || !moduleId || quizSubmissionPending || isCompleting
+      || [...unsavedStudyActions.current.values()].some(action => action.action === 'submit_quiz')) return;
+    const snapshot = { ...quizAnswers };
+    const score = Math.round(allQuizQuestions.filter((q, i) => snapshot[i] === q.correct_index).length / allQuizQuestions.length * 100);
+    const encounterKey = quizEncounterKey.current ?? `quiz:${crypto.randomUUID()}`;
+    quizEncounterKey.current = encounterKey;
+    setQuizSubmissionPending(true);
+    try {
+      await saveAction(encounterKey, { action: 'submit_quiz', quiz_score: score, quiz_answers: snapshot });
+      setSubmittedQuizAnswers(snapshot);
+      setQuizSubmitted(true);
+    } catch { showError('Could not save your quiz. Please try again.'); }
+    finally { setQuizSubmissionPending(false); }
   };
 
   const calculateQuizScore = () => {
     if (allQuizQuestions.length === 0) return 0;
+    const answers = submittedQuizAnswers ?? quizAnswers;
     let correct = 0;
     allQuizQuestions.forEach((q, i) => {
-      if (quizAnswers[i] === q.correct_index) correct++;
+      if (answers[i] === q.correct_index) correct++;
     });
     return Math.round((correct / allQuizQuestions.length) * 100);
   };
@@ -221,14 +343,37 @@ export function ModuleViewer() {
     if (!courseId || !moduleId) return;
     const newQuestions = await generateMoreQuizQuestions(courseId, moduleId);
     if (newQuestions) {
-      setExtraQuizQuestions((prev) => [...prev, ...newQuestions]);
+      const combined = [...extraQuizQuestions, ...newQuestions];
+      setExtraQuizQuestions(combined);
+      await savePersonal({ action: 'save_state', extra_quiz_questions: combined });
+      quizEncounterKey.current = null;
       setQuizSubmitted(false);
       // Keep existing answers
     }
   };
 
-  const currentFlashcard = filteredFlashcards[currentFlashcardIndex];
+  const currentFlashcard = filteredFlashcards[safeFlashcardIndex];
   const currentRating = currentFlashcard ? ratingsMap.get(currentFlashcard.originalIndex) : undefined;
+
+  const handleCompleteModule = async () => {
+    if (!courseId || !moduleId || isCompleting || quizSubmissionPending) return;
+    setIsCompleting(true);
+    try {
+      if (activeTab === 'flashcards') await trackFlashcardReview();
+      await Promise.all(pendingFlashcardReviews.current.values());
+      for (const [key, request] of [...unsavedStudyActions.current]) {
+        if (key !== 'complete') await saveAction(key, request);
+      }
+      await saveAction('complete', { action: 'complete' });
+      navigate(nextModule
+        ? `/courses/${courseId}/modules/${nextModule.id}`
+        : `/courses/${courseId}`);
+    } catch {
+      showError('Could not save your progress. Please try again.');
+    } finally {
+      setIsCompleting(false);
+    }
+  };
 
   return (
     <div className="space-y-6 page-enter">
@@ -236,6 +381,7 @@ export function ModuleViewer() {
       <div className="flex items-start justify-between">
         <div className="flex items-start gap-4 min-w-0 flex-1">
           <button
+            aria-label="Back"
             onClick={() => navigate(`/courses/${courseId}`)}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
           >
@@ -257,10 +403,16 @@ export function ModuleViewer() {
         )}
       </div>
 
+      {failedStudyAction && <div role="alert">{failedStudyActions.size} study action(s) have not been saved. <Button disabled={updateProgress.isPending || quizSubmissionPending} onClick={() => { void retryFailedStudySave(); }}>Retry study save</Button></div>}
+      {personalSaveError && <div role="alert">Could not save your personal changes. <Button onClick={() => savePersonal(personalDraft.current)}>Retry save</Button></div>}
+      {personalError && <p role="alert">Could not load saved study state. Reload before editing your personal practice.</p>}
+      {personal?.quiz_attempts ? <p>Saved quiz attempts: {personal.quiz_attempts} · Latest score: {personal.quiz_score}%</p> : null}
+      {personal?.quiz_history?.length ? <details><summary>Quiz history</summary><ul>{personal.quiz_history.map((attempt, i) => <li key={i}>{new Date(attempt.created_at).toLocaleString()}: {attempt.score}%</li>)}</ul></details> : null}
       {/* Tabs */}
       <div className="border-b border-gray-200">
-        <nav className="-mb-px flex space-x-8">
-          <button
+        <nav aria-label="Module study activities" className="-mb-px flex flex-wrap gap-x-4 sm:gap-x-8">
+          {module.content_markdown.trim() && <button
+            aria-pressed={activeTab === 'content'}
             onClick={() => setActiveTab('content')}
             className={`py-2 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${
               activeTab === 'content'
@@ -270,9 +422,10 @@ export function ModuleViewer() {
           >
             <BookOpen className="w-4 h-4" />
             Content
-          </button>
+          </button>}
           {module.flashcards.length > 0 && (
             <button
+              aria-pressed={activeTab === 'flashcards'}
               onClick={() => setActiveTab('flashcards')}
               className={`py-2 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${
                 activeTab === 'flashcards'
@@ -286,6 +439,7 @@ export function ModuleViewer() {
           )}
           {allQuizQuestions.length > 0 && (
             <button
+              aria-pressed={activeTab === 'quiz'}
               onClick={() => setActiveTab('quiz')}
               className={`py-2 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${
                 activeTab === 'quiz'
@@ -299,6 +453,7 @@ export function ModuleViewer() {
           )}
           {module.sandbox && (
             <button
+              aria-pressed={activeTab === 'practice'}
               onClick={() => setActiveTab('practice')}
               className={`py-2 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${
                 activeTab === 'practice'
@@ -314,13 +469,22 @@ export function ModuleViewer() {
       </div>
 
       {/* Content */}
-      {activeTab === 'content' && (
+      {availableTabs.length === 0 && <p>This module has no study activities yet. You can return later or explicitly finish it.</p>}
+      {activeTab === 'content' && module.content_markdown.trim() && (
         <Card>
           <CardContent>
             <MarkdownRenderer
               content={module.content_markdown || '*No content yet*'}
               enableRunnable
+              onCodeExecuted={handleExampleExecuted}
             />
+            <Button className="mt-4" disabled={updateProgress.isPending} onClick={async () => {
+              try {
+                await saveAction('read', { action: 'read_content' });
+                hasTrackedContentRead.current = true;
+                eventRequests.current.delete('read');
+              } catch { showError('Could not save your reading. Please try again.'); }
+            }}>{personal?.content_read || hasTrackedContentRead.current ? 'Content read — study again' : 'Mark content read'}</Button>
           </CardContent>
         </Card>
       )}
@@ -352,8 +516,11 @@ export function ModuleViewer() {
             </Card>
           ) : (
             <>
-              <div
-                onClick={() => setIsFlipped(!isFlipped)}
+              <button
+                type="button"
+                aria-label="Flip flashcard"
+                aria-pressed={isFlipped}
+                onClick={handleFlipFlashcard}
                 className="w-full max-w-2xl h-72 cursor-pointer"
                 style={{ perspective: '1000px' }}
               >
@@ -377,38 +544,34 @@ export function ModuleViewer() {
                     style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
                   >
                     <p className="text-lg text-center mb-4">{currentFlashcard?.back}</p>
-                    <div onClick={(e) => e.stopPropagation()}>
-                      <RatingButtons
-                        onRate={handleRateFlashcard}
-                        currentRating={currentRating}
-                        isLoading={rateFlashcard.isPending}
-                      />
-                    </div>
                   </Card>
                 </div>
-              </div>
+              </button>
+              {isFlipped && <RatingButtons onRate={handleRateFlashcard} currentRating={currentRating} isLoading={rateFlashcard.isPending} />}
 
               <div className="flex items-center gap-4">
                 <Button
                   variant="secondary"
                   onClick={() => handleFlashcardNav('prev')}
-                  disabled={currentFlashcardIndex === 0}
+                  aria-label="Previous flashcard"
+                  disabled={safeFlashcardIndex === 0}
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </Button>
                 <span className="text-gray-500">
-                  {currentFlashcardIndex + 1} / {filteredFlashcards.length}
+                  {safeFlashcardIndex + 1} / {filteredFlashcards.length}
                 </span>
                 <Button
                   variant="secondary"
                   onClick={() => handleFlashcardNav('next')}
-                  disabled={currentFlashcardIndex === filteredFlashcards.length - 1}
+                  aria-label="Next flashcard"
+                  disabled={safeFlashcardIndex === filteredFlashcards.length - 1}
                 >
                   <ChevronRight className="w-4 h-4" />
                 </Button>
               </div>
 
-              <p className="text-sm text-gray-500">Click the card to flip</p>
+              <p className="text-sm text-gray-500">Click or press Enter/Space to flip · Reviewed {module.flashcards.filter(c => c.id && personal?.reviewed_card_ids?.includes(c.id)).length} of {module.flashcards.length} cards</p>
             </>
           )}
         </div>
@@ -431,7 +594,9 @@ export function ModuleViewer() {
                     <Button
                       variant="secondary"
                       onClick={() => {
+                        quizEncounterKey.current = null;
                         setQuizAnswers({});
+                        setSubmittedQuizAnswers(null);
                         setQuizSubmitted(false);
                       }}
                     >
@@ -461,7 +626,10 @@ export function ModuleViewer() {
                 </p>
                 <div className="space-y-2">
                   {question.options.map((option, oIndex) => {
-                    const isSelected = quizAnswers[qIndex] === oIndex;
+                    const displayedAnswers = quizSubmitted && submittedQuizAnswers
+                      ? submittedQuizAnswers
+                      : quizAnswers;
+                    const isSelected = displayedAnswers[qIndex] === oIndex;
                     const isCorrect = question.correct_index === oIndex;
                     let optionClass = 'border-gray-200 hover:border-indigo-300';
 
@@ -478,9 +646,10 @@ export function ModuleViewer() {
                     return (
                       <button
                         key={oIndex}
+                        aria-pressed={quizAnswers[qIndex] === oIndex}
                         onClick={() => handleQuizAnswer(qIndex, oIndex)}
                         className={`w-full text-left p-3 rounded-lg border transition-colors ${optionClass}`}
-                        disabled={quizSubmitted}
+                        disabled={quizSubmitted || quizSubmissionPending}
                       >
                         {option}
                       </button>
@@ -496,10 +665,12 @@ export function ModuleViewer() {
             </Card>
           ))}
 
+          {hasFailedQuiz && <p role="status">Save your previous quiz attempt before submitting again. Your edited answers are kept. Use Retry study save.</p>}
           {!quizSubmitted && (
             <Button
               onClick={handleQuizSubmit}
-              disabled={Object.keys(quizAnswers).length !== allQuizQuestions.length}
+              disabled={quizSubmissionPending || isCompleting || hasFailedQuiz || Object.keys(quizAnswers).length !== allQuizQuestions.length}
+              isLoading={quizSubmissionPending}
             >
               Submit Quiz
             </Button>
@@ -511,7 +682,22 @@ export function ModuleViewer() {
       {activeTab === 'practice' && module.sandbox && (
         <Card>
           <CardContent>
-            <CodeSandbox sandbox={module.sandbox} />
+            {personalLoading ? <p>Loading saved practice…</p> : personalError ? null : <CodeSandbox
+              key={`${courseId}:${moduleId}`}
+              sandbox={module.sandbox}
+              savedCode={localPracticeCode ?? personal?.practice_code ?? undefined}
+              onCodeChange={code => {
+                setLocalPracticeCode(code);
+                void savePersonal({ action: 'save_state', practice_code: code });
+              }}
+              onExecuted={async (code, result) => {
+                try {
+                  await saveAction(`practice:${crypto.randomUUID()}`, { action: 'practice', practice_code: code,
+                    practice_result: { success: result.success, output: result.output, error: result.error } });
+                } catch { showError('Could not save your practice run. Please try again.'); }
+              }}
+            />}
+            {personal?.practice_history?.length ? <details><summary>Saved practice runs: {personal.practice_history.length}</summary><ol className="space-y-3">{personal.practice_history.map((attempt, index) => <li key={index}><p>{new Date(attempt.created_at).toLocaleString()} · {attempt.result.success ? 'Executed' : 'Execution error'}</p><pre className="text-sm whitespace-pre-wrap">{attempt.result.output || attempt.result.error}</pre></li>)}</ol></details> : null}
           </CardContent>
         </Card>
       )}
@@ -531,13 +717,15 @@ export function ModuleViewer() {
         )}
         {nextModule ? (
           <Button
-            onClick={() => navigate(`/courses/${courseId}/modules/${nextModule.id}`)}
+            onClick={handleCompleteModule}
+            disabled={quizSubmissionPending}
+            isLoading={isCompleting}
           >
             {nextModule.title}
             <ChevronRight className="w-4 h-4 ml-2" />
           </Button>
         ) : (
-          <Button onClick={() => navigate(`/courses/${courseId}`)}>
+          <Button onClick={handleCompleteModule} disabled={quizSubmissionPending} isLoading={isCompleting}>
             Finish
           </Button>
         )}

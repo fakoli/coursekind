@@ -10,6 +10,10 @@ class EmailService:
         self.settings = settings
         self.templates_path = Path(__file__).parent / "templates"
 
+    @property
+    def is_configured(self) -> bool:
+        return bool(self.settings.mailgun_api_key and self.settings.mailgun_domain)
+
     def _load_template(self, template_name: str, context: dict) -> str:
         """Load and render an email template."""
         template_path = self.templates_path / f"{template_name}.html"
@@ -37,7 +41,8 @@ class EmailService:
             <style>
                 body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
                 .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
-                .header {{ background-color: #4F46E5; color: white; padding: 20px; text-align: center; }}
+                .header {{ background-color: #4F46E5; color: white;
+                    padding: 20px; text-align: center; }}
                 .content {{ padding: 20px; background-color: #f9f9f9; }}
                 .footer {{ padding: 20px; text-align: center; font-size: 12px; color: #666; }}
             </style>
@@ -45,7 +50,7 @@ class EmailService:
         <body>
             <div class="container">
                 <div class="header">
-                    <h1>Study Buddy</h1>
+                    <h1>Coursekind</h1>
                 </div>
                 <div class="content">
                     <p>Hi {user_name},</p>
@@ -53,7 +58,7 @@ class EmailService:
                 </div>
                 <div class="footer">
                     <p>Happy learning!</p>
-                    <p>The Study Buddy Team</p>
+                    <p>The Coursekind Team</p>
                 </div>
             </div>
         </body>
@@ -68,9 +73,8 @@ class EmailService:
         context: dict,
     ) -> bool:
         """Send an email using Mailgun."""
-        if not self.settings.mailgun_api_key or not self.settings.mailgun_domain:
-            print(f"[Email Mock] To: {to}, Subject: {subject}")
-            return True
+        if not self.is_configured:
+            return False
 
         html_content = self._load_template(template, context)
 
@@ -80,7 +84,7 @@ class EmailService:
                     f"https://api.mailgun.net/v3/{self.settings.mailgun_domain}/messages",
                     auth=("api", self.settings.mailgun_api_key),
                     data={
-                        "from": f"Study Buddy <noreply@{self.settings.mailgun_domain}>",
+                        "from": f"Coursekind <noreply@{self.settings.mailgun_domain}>",
                         "to": to,
                         "subject": subject,
                         "html": html_content,

@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate, Outlet, Link, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { AuthProvider, useAuthContext } from './components/common/AuthProvider';
+import { AuthProvider } from './components/common/AuthProvider';
+import { useAuthContext } from './components/common/AuthContext';
 import { ToastProvider } from './components/common/ToastProvider';
 import { LiveRegionProvider } from './components/common/LiveRegion';
 import { Login } from './pages/Login';
@@ -9,13 +10,15 @@ import { Dashboard } from './pages/Dashboard';
 import { Settings } from './pages/Settings';
 import { LearningPaths } from './pages/LearningPaths';
 import { LearningPathDetail } from './pages/LearningPathDetail';
+import { Workspaces } from './pages/Workspaces';
+import { Workspace } from './pages/Workspace';
 import { Courses } from './pages/Courses';
 import { CourseDetail } from './pages/CourseDetail';
 import { CourseEditor } from './pages/CourseEditor';
 import { ModuleViewer } from './pages/ModuleViewer';
 import { ModuleEditor } from './pages/ModuleEditor';
 import { AdminDashboard } from './pages/admin/AdminDashboard';
-import { Home, BookOpen, Settings as SettingsIcon, LogOut, Map, Library, Shield } from 'lucide-react';
+import { Home, BookOpen, Settings as SettingsIcon, LogOut, Map, Library, Shield, Folder } from 'lucide-react';
 import clsx from 'clsx';
 import './index.css';
 
@@ -53,9 +56,10 @@ function Layout() {
   const isAdmin = user?.role === 'admin';
 
   const navItems = [
-    { to: '/', icon: Home, label: 'Dashboard' },
-    { to: '/paths', icon: Map, label: 'Paths' },
+    { to: '/', icon: Home, label: 'Home' },
+    { to: '/workspaces', icon: Folder, label: 'Workspaces' },
     { to: '/courses', icon: Library, label: 'Courses' },
+    { to: '/paths', icon: Map, label: 'Paths' },
     { to: '/settings', icon: SettingsIcon, label: 'Settings' },
     ...(isAdmin ? [{ to: '/admin', icon: Shield, label: 'Admin' }] : []),
   ];
@@ -82,7 +86,7 @@ function Layout() {
                 <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center group-hover:bg-indigo-700 transition-colors">
                   <BookOpen className="w-5 h-5 text-white" />
                 </div>
-                <span className="font-bold text-gray-900">Study Buddy</span>
+                <span className="font-bold text-gray-900">Coursekind</span>
               </Link>
             </div>
             <div className="hidden sm:flex sm:items-center sm:gap-1">
@@ -120,13 +124,13 @@ function Layout() {
 
       {/* Mobile bottom navigation */}
       <nav className="sm:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40 safe-area-pb" aria-label="Mobile navigation">
-        <div className="flex justify-around px-2">
+        <div className="flex justify-around px-2 overflow-x-auto">
           {navItems.map(({ to, icon: Icon, label }) => (
             <Link
               key={to}
               to={to}
               className={clsx(
-                'flex flex-col items-center gap-0.5 py-2 px-3 min-w-0 flex-1 transition-all',
+                'flex flex-col items-center gap-0.5 py-2 px-3 min-w-16 shrink-0 flex-1 transition-all',
                 isActive(to)
                   ? 'text-indigo-600'
                   : 'text-gray-500'
@@ -164,6 +168,8 @@ function App() {
             <Route path="/register" element={<Register />} />
             <Route element={<ProtectedRoute />}>
               <Route path="/" element={<Dashboard />} />
+              <Route path="/workspaces" element={<Workspaces />} />
+              <Route path="/workspaces/:workspaceId" element={<Workspace />} />
               {/* Learning Paths */}
               <Route path="/paths" element={<LearningPaths />} />
               <Route path="/paths/:pathId" element={<LearningPathDetail />} />

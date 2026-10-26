@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
+import { useState, useCallback, useEffect, ReactNode } from 'react';
+import { ToastContext } from './ToastContext';
 import { useLocation } from 'react-router-dom';
 import { Toast, ToastVariant } from './Toast';
 
@@ -8,15 +9,6 @@ interface ToastItem {
   variant: ToastVariant;
   duration: number;
 }
-
-export interface ToastContextValue {
-  toast: (message: string, variant?: ToastVariant, duration?: number) => void;
-  success: (message: string, duration?: number) => void;
-  error: (message: string, duration?: number) => void;
-  info: (message: string, duration?: number) => void;
-}
-
-export const ToastContext = createContext<ToastContextValue | null>(null);
 
 interface ToastProviderProps {
   children: ReactNode;
@@ -80,21 +72,5 @@ export function ToastProvider({ children }: ToastProviderProps) {
       </div>
     </ToastContext.Provider>
   );
-}
-
-export function useToast() {
-  const context = useContext(ToastContext);
-  if (!context) {
-    throw new Error('useToast must be used within a ToastProvider');
-  }
-
-  const showToast = useCallback(
-    (message: string, variant: ToastVariant = 'info') => {
-      context.toast(message, variant);
-    },
-    [context]
-  );
-
-  return { showToast, ...context };
 }
 

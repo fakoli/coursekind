@@ -3,6 +3,8 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from models.module import QuizQuestionData
+
 
 class ModuleProgressStatus(BaseModel):
     """Progress status for a single module."""
@@ -17,7 +19,7 @@ class ModuleProgressStatus(BaseModel):
     flashcards_total: int = 0
     quiz_score: float | None = None
     quiz_attempts: int = 0
-    time_spent_minutes: int = 0
+    time_spent_minutes: float = 0
 
 
 class ModuleProgress(BaseModel):
@@ -35,7 +37,12 @@ class ModuleProgress(BaseModel):
     quiz_score: float | None = None
     quiz_attempts: int = 0
     last_quiz_at: datetime | None = None
-    time_spent_minutes: int = 0
+    time_spent_minutes: float = 0
+    reviewed_card_ids: list[str] = Field(default_factory=list)
+    practice_code: str | None = None
+    extra_quiz_questions: list[QuizQuestionData] = Field(default_factory=list)
+    quiz_history: list[dict] = Field(default_factory=list)
+    practice_history: list[dict] = Field(default_factory=list)
     created_at: datetime
     updated_at: datetime
 
@@ -43,9 +50,24 @@ class ModuleProgress(BaseModel):
 class ModuleProgressCreate(BaseModel):
     """Request to start/update module progress."""
 
-    action: Literal["start", "complete", "read_content", "review_flashcard", "submit_quiz"]
+    action: Literal[
+        "start",
+        "complete",
+        "read_content",
+        "review_flashcard",
+        "submit_quiz",
+        "practice",
+        "save_state",
+    ]
     quiz_score: float | None = Field(None, ge=0, le=100)
-    time_spent_minutes: int = Field(0, ge=0)
+    time_spent_minutes: float = Field(0, ge=0, le=30)
+    time_spent_seconds: float = Field(0, ge=0, le=1800)
+    event_id: str | None = Field(None, min_length=1, max_length=200)
+    flashcard_id: str | None = None
+    quiz_answers: dict[str, int] | None = None
+    practice_code: str | None = None
+    practice_result: dict | None = None
+    extra_quiz_questions: list[QuizQuestionData] | None = None
 
 
 class CourseProgressStatus(BaseModel):
@@ -58,7 +80,7 @@ class CourseProgressStatus(BaseModel):
     in_progress_modules: int = 0
     completion_percentage: float = 0.0
     average_quiz_score: float | None = None
-    total_time_spent_minutes: int = 0
+    total_time_spent_minutes: float = 0
     started_at: datetime | None = None
     last_activity_at: datetime | None = None
     modules: list[ModuleProgressStatus] = Field(default_factory=list)
@@ -73,7 +95,7 @@ class PathProgressStatus(BaseModel):
     completed_courses: int = 0
     in_progress_courses: int = 0
     completion_percentage: float = 0.0
-    total_time_spent_minutes: int = 0
+    total_time_spent_minutes: float = 0
     started_at: datetime | None = None
     last_activity_at: datetime | None = None
     courses: list[CourseProgressStatus] = Field(default_factory=list)
@@ -86,6 +108,10 @@ class DashboardStats(BaseModel):
 
     # Activity counts
     active_paths: int = 0
+    selected_paths: int = 0
+    completed_selected_paths: int = 0
+    study_sessions_week: int = 0
+    timezone: str = "UTC"
     courses_in_progress: int = 0
     courses_completed: int = 0
     modules_completed_week: int = 0
@@ -97,8 +123,8 @@ class DashboardStats(BaseModel):
     total_quizzes_taken: int = 0
 
     # Time
-    total_study_time_minutes: int = 0
-    study_time_this_week_minutes: int = 0
+    total_study_time_minutes: float = 0
+    study_time_this_week_minutes: float = 0
 
     # Streaks
     current_streak: int = 0
@@ -111,7 +137,14 @@ class RecentActivity(BaseModel):
 
     id: str
     user_id: str
-    activity_type: Literal["module_started", "module_completed", "quiz_submitted", "content_read"]
+    activity_type: Literal[
+        "module_started",
+        "module_completed",
+        "quiz_submitted",
+        "content_read",
+        "flashcard_reviewed",
+        "practice",
+    ]
     module_id: str | None = None
     module_title: str | None = None
     course_id: str | None = None
@@ -170,17 +203,19 @@ class SessionsResponse(BaseModel):
 # Legacy - kept for any remaining references but deprecated
 class ProgressStats(BaseModel):
     """DEPRECATED: Use DashboardStats instead."""
+
     user_id: str
     total_cards_reviewed: int = 0
     total_quizzes_completed: int = 0
     accuracy_rate: float = 0.0
     current_streak: int = 0
     longest_streak: int = 0
-    time_spent_minutes: int = 0
+    time_spent_minutes: float = 0
 
 
 class TopicMastery(BaseModel):
     """DEPRECATED: Mastery is now tracked per module."""
+
     topic: str
     deck_id: str | None = None
     total_cards: int = 0
@@ -191,4 +226,5 @@ class TopicMastery(BaseModel):
 
 class TopicMasteryResponse(BaseModel):
     """DEPRECATED: Use module/course progress instead."""
+
     topics: list[TopicMastery] = Field(default_factory=list)

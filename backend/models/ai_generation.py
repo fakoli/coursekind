@@ -16,8 +16,14 @@ class ModuleSuggestion(BaseModel):
     suggested: bool = True  # True if AI suggested, False if user-added
 
 
-class SuggestModulesRequest(BaseModel):
+class GenerationRequest(BaseModel):
+    request_id: str | None = Field(default=None, min_length=1, max_length=128)
+
+
+class SuggestModulesRequest(GenerationRequest):
     """Request to generate module suggestions for a course."""
+
+    module_count: int = Field(default=8, ge=1, le=20)
 
     course_id: str = Field(..., description="Course ID to suggest modules for")
 
@@ -29,7 +35,7 @@ class SuggestModulesResponse(BaseModel):
     tokens_used: int
 
 
-class GenerateModuleContentRequest(BaseModel):
+class GenerateModuleContentRequest(GenerationRequest):
     """Request to generate full module content."""
 
     course_id: str = Field(..., description="Course ID the module belongs to")
@@ -55,7 +61,7 @@ class GeneratedModuleContent(BaseModel):
     tokens_used: int
 
 
-class GenerateFlashcardsRequest(BaseModel):
+class GenerateFlashcardsRequest(GenerationRequest):
     """Request to generate flashcards from module content."""
 
     course_id: str = Field(..., description="Course ID for context")
@@ -70,7 +76,7 @@ class GenerateFlashcardsResponse(BaseModel):
     tokens_used: int
 
 
-class GenerateQuizRequest(BaseModel):
+class GenerateQuizRequest(GenerationRequest):
     """Request to generate a quiz from module content."""
 
     course_id: str = Field(..., description="Course ID for context")
@@ -85,14 +91,12 @@ class GenerateQuizResponse(BaseModel):
     tokens_used: int
 
 
-class GenerateVisualRequest(BaseModel):
+class GenerateVisualRequest(GenerationRequest):
     """Request to generate a visual/image using AI."""
 
     course_id: str = Field(..., description="Course ID for storage path")
     module_id: str = Field(..., description="Module ID for storage path")
-    description: str = Field(
-        ..., min_length=10, description="Description of the image to generate"
-    )
+    description: str = Field(..., min_length=10, description="Description of the image to generate")
     style: Literal[
         "educational_diagram",
         "technical_illustration",
@@ -116,11 +120,14 @@ class GeneratedVisual(BaseModel):
     tokens_used: int
 
 
-class GenerateFullCourseRequest(BaseModel):
+class GenerateFullCourseRequest(GenerationRequest):
     """Request to generate a complete course with all content.
 
     Uses the course orchestrator to execute a multi-phase generation pipeline.
     """
+
+    replace_existing: bool = False
+    expected_module_ids: list[str] | None = None
 
     course_id: str = Field(..., description="Course ID to generate content for")
 
@@ -128,9 +135,7 @@ class GenerateFullCourseRequest(BaseModel):
     suggest_modules: bool = Field(
         default=True, description="Generate module structure from course instructions"
     )
-    module_count: int = Field(
-        default=8, ge=1, le=20, description="Target number of modules"
-    )
+    module_count: int = Field(default=8, ge=1, le=20, description="Target number of modules")
 
     # Content generation options
     generate_content: bool = Field(default=True, description="Generate markdown content")
@@ -150,11 +155,9 @@ class GenerateFullCourseRequest(BaseModel):
 
     # Visual generation options
     generate_visuals: bool = Field(
-        default=False, description="Generate educational images (uses Gemini)"
+        default=False, description="Generate educational images (currently unavailable)"
     )
-    max_visuals_per_module: int = Field(
-        default=2, ge=0, le=5, description="Max visuals per module"
-    )
+    max_visuals_per_module: int = Field(default=2, ge=0, le=5, description="Max visuals per module")
 
     # Optional pre-existing suggestions (skip planning phase)
     module_suggestions: list[ModuleSuggestion] | None = Field(

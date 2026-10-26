@@ -6,8 +6,7 @@ const fetchMock = vi.fn();
 
 beforeEach(() => {
   localStorage.clear();
-  // @ts-expect-error assign fetch stub
-  global.fetch = fetchMock;
+  globalThis.fetch = fetchMock;
   fetchMock.mockReset();
 });
 
@@ -88,4 +87,42 @@ describe('ApiError', () => {
     expect(e.name).toBe('ApiError');
     expect(e.status).toBe(404);
   });
+});
+
+it('renders FastAPI validation messages without object coercion', async () => {
+  fetchMock.mockResolvedValue(new Response(JSON.stringify({ detail: [{ loc: ['body','phone_number'], msg: 'Use E.164', type: 'value_error' }] }), { status: 422 }));
+  await expect(api.put('/preferences', {})).rejects.toThrow('phone_number: Use E.164');
+});
+it('rejects a response from a previous identity', async () => {
+  localStorage.setItem('token', 'a');
+  let resolve!: (value: Response) => void;
+  fetchMock.mockReturnValue(new Promise<Response>(r => { resolve = r; }));
+  const pending = api.get('/private');
+  localStorage.setItem('token', 'b'); resolve(new Response('{"secret":"a"}'));
+  await expect(pending).rejects.toThrow('Session changed');
+});
+it('expires the current identity on 401 but never clears a replacement token for an old 401', async () => {
+  localStorage.setItem('token', 'a');
+  fetchMock.mockResolvedValue(new Response(JSON.stringify({ error: { code: 'INVALID_TOKEN', message: 'Please sign in again' } }), { status: 401 }));
+  await expect(api.get('/private')).rejects.toThrow('Please sign in again');
+  expect(localStorage.getItem('token')).toBeNull();
+  localStorage.setItem('token', 'a');
+  let resolve!: (value: Response) => void;
+  fetchMock.mockReturnValue(new Promise<Response>(r => { resolve = r; }));
+  const pending = api.get('/private');
+  localStorage.setItem('token', 'b');
+  resolve(new Response('{}', { status: 401 }));
+  await expect(pending).rejects.toThrow('Session changed');
+  expect(localStorage.getItem('token')).toBe('b');
+});
+
+it.each(['sign-out', 'account-switch'])('rejects late workspace mutation after %s', async (event) => {
+  localStorage.setItem('token', 'synthetic-a');
+  let resolve!: (value: Response) => void;
+  fetchMock.mockReturnValue(new Promise<Response>(done => { resolve = done; }));
+  const pending = api.post('/workspaces', { request_id: 'synthetic', brief: { goal: 'Private goal' } });
+  if (event === 'sign-out') localStorage.removeItem('token');
+  else localStorage.setItem('token', 'synthetic-b');
+  resolve(new Response(JSON.stringify({ id: 'private-workspace', owner_id: 'a' })));
+  await expect(pending).rejects.toThrow('Session changed');
 });

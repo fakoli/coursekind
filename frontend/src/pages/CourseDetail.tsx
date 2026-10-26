@@ -1,3 +1,6 @@
+import { OpenInWorkspace } from '../components/workspace/OpenInWorkspace';
+import { SharingPanel } from '../components/courses/SharingPanel';
+import { useAuthContext } from '../components/common/AuthContext';
 import { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
@@ -9,7 +12,6 @@ import {
   Plus,
   FileText,
   HelpCircle,
-  GripVertical,
   CheckCircle2,
   Circle,
   Clock,
@@ -18,7 +20,7 @@ import { Card, CardContent, CardHeader } from '../components/common/Card';
 import { Button } from '../components/common/Button';
 import { Modal } from '../components/common/Modal';
 import { useCourse, useDeleteCourse } from '../hooks/useCourses';
-import { useDeleteModule } from '../hooks/useModules';
+import { useDeleteModule, useReorderModules } from '../hooks/useModules';
 import { useCourseProgress } from '../hooks/useProgress';
 import { useToast } from '../hooks/useToast';
 import type { ModuleSummary, CourseDifficulty, ModuleProgressStatus } from '../types';
@@ -30,6 +32,7 @@ const difficultyColors: Record<CourseDifficulty, { bg: string; text: string }> =
 };
 
 export function CourseDetail() {
+  const { user } = useAuthContext();
   const { courseId } = useParams<{ courseId: string }>();
   const navigate = useNavigate();
   const { success, error: showError } = useToast();
@@ -38,6 +41,7 @@ export function CourseDetail() {
   const { data: progressData } = useCourseProgress(courseId || '');
   const deleteCourse = useDeleteCourse();
   const deleteModule = useDeleteModule();
+  const reorderModules = useReorderModules();
 
   // Create a map of module progress for easy lookup
   const moduleProgressMap = new Map<string, ModuleProgressStatus>();
@@ -104,14 +108,15 @@ export function CourseDetail() {
 
   const { course, modules } = data;
   const colors = difficultyColors[course.difficulty];
-  const isEditable = course.source === 'database';
+  const isEditable = course.source === 'database' && course.author_id === user?.id;
 
   return (
     <div className="space-y-6 page-enter">
       {/* Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex flex-wrap gap-4 items-start justify-between">
         <div className="flex items-start gap-4 min-w-0 flex-1">
           <button
+            aria-label="Back"
             onClick={() => navigate(-1)}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
           >
@@ -131,12 +136,13 @@ export function CourseDetail() {
               )}
             </div>
             <p className="text-gray-500 mt-1">
-              by {course.author_name} · {modules.length} modules
+              by {course.author_name} · {modules.length} {modules.length === 1 ? 'module' : 'modules'}
             </p>
           </div>
         </div>
         {isEditable && (
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
+            <OpenInWorkspace kind="course" id={course.id} title={course.title} />
             <Button variant="secondary" onClick={() => navigate(`/courses/${courseId}/edit`)}>
               <Edit className="w-4 h-4 mr-2" />
               Edit
@@ -149,6 +155,8 @@ export function CourseDetail() {
         )}
       </div>
 
+      {isEditable && <SharingPanel resource="courses" id={course.id} visibility={course.visibility} />}
+      <p className="text-sm text-gray-600">Used in {course.times_added} paths: {course.own_path_count ?? 0} by the author, {course.other_path_count ?? 0} by other owners.</p>
       {/* Course Info */}
       <Card>
         <CardContent>
@@ -180,7 +188,7 @@ export function CourseDetail() {
             <div className="space-y-3">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-gray-600">
-                  {progressData.completed_modules} of {progressData.total_modules} modules completed
+                  {progressData.completed_modules} of {progressData.total_modules} {progressData.total_modules === 1 ? 'module' : 'modules'} completed
                 </span>
                 <span className="font-medium text-indigo-600">
                   {progressData.completion_percentage}%
@@ -199,7 +207,7 @@ export function CourseDetail() {
                 {progressData.total_time_spent_minutes > 0 && (
                   <span className="flex items-center gap-1">
                     <Clock className="w-4 h-4" />
-                    {progressData.total_time_spent_minutes} min studied
+                    {Math.round(progressData.total_time_spent_minutes * 10) / 10} min studied
                   </span>
                 )}
               </div>
@@ -277,13 +285,21 @@ export function CourseDetail() {
                 const status = moduleProgress?.status || 'not_started';
 
                 return (
-                  <Link
+                  <div
                     key={module.id}
-                    to={`/courses/${courseId}/modules/${module.id}`}
                     className="flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors"
                   >
                     <div className="text-gray-400">
-                      <GripVertical className="w-5 h-5" />
+                      {isEditable && <div className="flex flex-col gap-1">
+                      <button aria-label={`Move ${module.title} up`} disabled={index === 0 || reorderModules.isPending} onClick={async () => {
+                        const ids = modules.map(m => m.id); [ids[index], ids[index - 1]] = [ids[index - 1], ids[index]];
+                        try { await reorderModules.mutateAsync({ courseId: course.id, moduleIds: ids }); } catch { showError('Could not reorder modules'); }
+                      }}>Move up</button>
+                      <button aria-label={`Move ${module.title} down`} disabled={index === modules.length - 1 || reorderModules.isPending} onClick={async () => {
+                        const ids = modules.map(m => m.id); [ids[index], ids[index + 1]] = [ids[index + 1], ids[index]];
+                        try { await reorderModules.mutateAsync({ courseId: course.id, moduleIds: ids }); } catch { showError('Could not reorder modules'); }
+                      }}>Move down</button>
+                    </div>}
                     </div>
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
                       status === 'completed'
@@ -300,7 +316,7 @@ export function CourseDetail() {
                         <Circle className="w-4 h-4" />
                       )}
                     </div>
-                    <div className="flex-1 min-w-0">
+                    <Link to={`/courses/${courseId}/modules/${module.id}`} className="flex-1 min-w-0">
                       <h3 className="font-medium text-gray-900 truncate">{module.title}</h3>
                       <div className="flex items-center gap-4 text-sm text-gray-500 mt-1">
                         {module.flashcard_count > 0 && (
@@ -318,7 +334,7 @@ export function CourseDetail() {
                           </span>
                         )}
                       </div>
-                    </div>
+                    </Link>
                     {isEditable && (
                       <div className="flex gap-2">
                         <button
@@ -326,6 +342,7 @@ export function CourseDetail() {
                             e.preventDefault();
                             navigate(`/courses/${courseId}/modules/${module.id}/edit`);
                           }}
+                          aria-label={`Edit ${module.title}`}
                           className="p-2 hover:bg-gray-100 rounded"
                         >
                           <Edit className="w-4 h-4 text-gray-400" />
@@ -335,13 +352,14 @@ export function CourseDetail() {
                             e.preventDefault();
                             setModuleToDelete(module);
                           }}
+                          aria-label={`Delete ${module.title}`}
                           className="p-2 hover:bg-red-50 rounded"
                         >
                           <Trash2 className="w-4 h-4 text-gray-400 hover:text-red-500" />
                         </button>
                       </div>
                     )}
-                  </Link>
+                  </div>
                 );
               })}
             </div>

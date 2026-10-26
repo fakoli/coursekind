@@ -1,0 +1,23 @@
+import { afterEach, expect, it, vi } from 'vitest';
+import { renderHook, act, cleanup } from '@testing-library/react';
+import { useActiveStudyTime } from './useActiveStudyTime';
+afterEach(() => { cleanup(); vi.useRealTimers(); vi.restoreAllMocks(); });
+it('credits only focused visible activity after interaction and stops after idle', () => {
+  vi.useFakeTimers();
+  vi.spyOn(document, 'hasFocus').mockReturnValue(true);
+  vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('visible');
+  const { result } = renderHook(useActiveStudyTime);
+  act(() => vi.advanceTimersByTime(10000));
+  expect(result.current()).toBe(0);
+  window.dispatchEvent(new Event('pointerdown'));
+  act(() => vi.advanceTimersByTime(5000));
+  expect(result.current()).toBe(5);
+  vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden');
+  act(() => vi.advanceTimersByTime(5000));
+  expect(result.current()).toBe(0);
+  vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('visible');
+  window.dispatchEvent(new Event('keydown'));
+  act(() => vi.advanceTimersByTime(120000));
+  expect(result.current()).toBe(60);
+  expect(result.current()).toBe(0);
+});

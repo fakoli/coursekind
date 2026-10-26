@@ -59,15 +59,17 @@ async def update_module_progress(
     """Update progress for a specific module.
 
     Actions:
-    - start: Mark module as started
+    - start: Passive compatibility action; no study credit
     - complete: Mark module as completed
     - read_content: Mark content as read
-    - review_flashcard: Increment flashcard review count
+    - review_flashcard: Append a review and track distinct stable card identity
     - submit_quiz: Record quiz attempt and score
+    - practice: Record an execution and its result, without assessment credit
+    - save_state: Save personal drafts/questions without study credit
+
+    Supply event_id to retry a meaningful action without duplicate events or time.
     """
-    return await progress_service.update_module_progress(
-        user.id, module_id, course_id, data
-    )
+    return await progress_service.update_module_progress(user.id, module_id, course_id, data)
 
 
 @router.get(
@@ -81,7 +83,7 @@ async def get_module_progress(
     progress_service: ProgressService = Depends(get_progress_service),
 ):
     """Get progress for a specific module."""
-    return await progress_service.get_module_progress(user.id, module_id)
+    return await progress_service.get_module_progress(user.id, module_id, course_id)
 
 
 @router.get("/courses/{course_id}", response_model=CourseProgressStatus)

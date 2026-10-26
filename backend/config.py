@@ -2,7 +2,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
-from pydantic import model_validator
+from pydantic import SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Define paths for hierarchical .env loading
@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=(
             str(PROJECT_ROOT / ".env"),  # Project root (base config)
-            str(BACKEND_DIR / ".env"),   # Backend dir (overrides)
+            str(BACKEND_DIR / ".env"),  # Backend dir (overrides)
         ),
         env_file_encoding="utf-8",
         case_sensitive=False,
@@ -22,7 +22,11 @@ class Settings(BaseSettings):
     )
 
     # App
-    app_name: str = "Study Buddy"
+    app_name: str = "Coursekind"
+    workspace_enabled: bool = True
+    workspace_review_enabled: bool = True
+    typesafe_api_key: SecretStr | None = None
+    jev_model: Literal["jev-1.14.0"] = "jev-1.14.0"
     debug: bool = False
 
     # Storage
@@ -40,7 +44,8 @@ class Settings(BaseSettings):
         if not self.debug and self.jwt_secret == "change-me-in-production":
             raise ValueError(
                 "JWT_SECRET must be set to a secure value in production (DEBUG=false). "
-                "Generate a secure secret with: python -c \"import secrets; print(secrets.token_urlsafe(32))\""
+                "Generate a secure secret with: python -c "
+                '"import secrets; print(secrets.token_urlsafe(32))"'
             )
         return self
 
@@ -61,10 +66,9 @@ class Settings(BaseSettings):
     # AI (Anvil Serving router - OpenAI-compatible, self-hosted fleet)
     anvil_router_base_url: str | None = None  # e.g. https://fakoli-dark.tail4378d.ts.net/v1
     anvil_router_token: str | None = None
+    ai_credentials_key: str | None = None
     anvil_model: str = "llm.primary"
-    # Image generation model. We don't have a good open image model on the
-    # fleet yet, so this points at the Gemini nano banana route for now
-    # (OpenAI-compatible multimodal tier via the router).
+    # Legacy image setting; application image generation is currently unavailable.
     anvil_image_model: str = "gemini-nano-banana"
 
     # CORS

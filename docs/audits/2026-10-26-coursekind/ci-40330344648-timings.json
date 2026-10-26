@@ -1,0 +1,330 @@
+{
+  "measured_at": "2026-10-26T13:30:08.803Z",
+  "environment": "Playwright Chromium; isolated synthetic storage; mocked provider HTTP and delivery transports",
+  "interpretation": "Automated wall time, includes setup/assertions; not human usability time.",
+  "journeys": [
+    {
+      "journey": "AUTH-01",
+      "scenario": "AUTH-01 \u2014 register, inspect identity, sign out and sign in",
+      "result": "passed",
+      "elapsed_seconds": 5.825,
+      "retry": 0,
+      "file": "accounts-courses.spec.ts"
+    },
+    {
+      "journey": "AUTH-02",
+      "scenario": "AUTH-02 \u2014 reject bad login, reload session, sign out and isolate the next user",
+      "result": "passed",
+      "elapsed_seconds": 6.256,
+      "retry": 0,
+      "file": "accounts-courses.spec.ts"
+    },
+    {
+      "journey": "AUTH-03",
+      "scenario": "AUTH-03 \u2014 deny private deep links and author actions across accounts",
+      "result": "passed",
+      "elapsed_seconds": 8.82,
+      "retry": 0,
+      "file": "accounts-courses.spec.ts"
+    },
+    {
+      "journey": "COURSE-01",
+      "scenario": "COURSE-01 \u2014 create metadata and two manual outlines then reopen each",
+      "result": "passed",
+      "elapsed_seconds": 5.608,
+      "retry": 0,
+      "file": "accounts-courses.spec.ts"
+    },
+    {
+      "journey": "COURSE-02",
+      "scenario": "COURSE-02 \u2014 rename, reorder, remove and add outlines without losing activities",
+      "result": "passed",
+      "elapsed_seconds": 5.329,
+      "retry": 0,
+      "file": "accounts-courses.spec.ts"
+    },
+    {
+      "journey": "COURSE-03",
+      "scenario": "COURSE-03 \u2014 edit metadata, cancel deletion, then delete and reopen old URL",
+      "result": "passed",
+      "elapsed_seconds": 7.314,
+      "retry": 0,
+      "file": "accounts-courses.spec.ts"
+    },
+    {
+      "journey": "COURSE-04",
+      "scenario": "COURSE-04 \u2014 discover by search, difficulty and sort, recover empty results",
+      "result": "passed",
+      "elapsed_seconds": 5.093,
+      "retry": 0,
+      "file": "accounts-courses.spec.ts"
+    },
+    {
+      "journey": "COURSE-05",
+      "scenario": "COURSE-05 \u2014 generate selected AI outlines, append and persist editable lessons",
+      "result": "passed",
+      "elapsed_seconds": 4.775,
+      "retry": 0,
+      "file": "accounts-courses.spec.ts"
+    },
+    {
+      "journey": "MODULE-01",
+      "scenario": "MODULE-01 \u2014 edit Markdown, preview, reject empty title and persist learner rendering",
+      "result": "passed",
+      "elapsed_seconds": 6.011,
+      "retry": 0,
+      "file": "modules-study.spec.ts"
+    },
+    {
+      "journey": "MODULE-02",
+      "scenario": "MODULE-02 \u2014 add, edit, reorder and remove flashcards with saved learner order",
+      "result": "passed",
+      "elapsed_seconds": 5.622,
+      "retry": 0,
+      "file": "modules-study.spec.ts"
+    },
+    {
+      "journey": "MODULE-03",
+      "scenario": "MODULE-03 \u2014 edit quiz options and answer key then verify learner scoring",
+      "result": "passed",
+      "elapsed_seconds": 5.378,
+      "retry": 0,
+      "file": "modules-study.spec.ts"
+    },
+    {
+      "journey": "MODULE-04",
+      "scenario": "MODULE-04 \u2014 configure practice, execute, reload and explicitly remove it",
+      "result": "passed",
+      "elapsed_seconds": 4.775,
+      "retry": 0,
+      "file": "modules-study.spec.ts"
+    },
+    {
+      "journey": "MODULE-05",
+      "scenario": "MODULE-05 \u2014 generate activities, cancel then append, refine and save",
+      "result": "passed",
+      "elapsed_seconds": 10.509,
+      "retry": 0,
+      "file": "modules-study.spec.ts"
+    },
+    {
+      "journey": "STUDY-01",
+      "scenario": "STUDY-01 \u2014 read content, run embedded code and rerun changed code",
+      "result": "passed",
+      "elapsed_seconds": 3.889,
+      "retry": 0,
+      "file": "modules-study.spec.ts"
+    },
+    {
+      "journey": "STUDY-02",
+      "scenario": "STUDY-02 \u2014 flip and persist every card including the final card",
+      "result": "passed",
+      "elapsed_seconds": 4.98,
+      "retry": 0,
+      "file": "modules-study.spec.ts"
+    },
+    {
+      "journey": "STUDY-03",
+      "scenario": "STUDY-03 \u2014 rate cards, filter and retain personal ratings",
+      "result": "passed",
+      "elapsed_seconds": 5.188,
+      "retry": 0,
+      "file": "modules-study.spec.ts"
+    },
+    {
+      "journey": "STUDY-04",
+      "scenario": "STUDY-04 \u2014 incomplete quiz is blocked, score 50%, retry and persist 100%",
+      "result": "passed",
+      "elapsed_seconds": 5.875,
+      "retry": 0,
+      "file": "modules-study.spec.ts"
+    },
+    {
+      "journey": "STUDY-05",
+      "scenario": "STUDY-05 \u2014 practice output, errors, timeout, reset, solution and saved code",
+      "result": "passed",
+      "elapsed_seconds": 9.584,
+      "retry": 0,
+      "file": "modules-study.spec.ts"
+    },
+    {
+      "journey": "STUDY-06",
+      "scenario": "STUDY-06 \u2014 complete first module, resume, finish and reload 100% course",
+      "result": "passed",
+      "elapsed_seconds": 4.855,
+      "retry": 0,
+      "file": "modules-study.spec.ts"
+    },
+    {
+      "journey": "PATH-01",
+      "scenario": "PATH-01 \u2014 create a goal, edit its details and reload the empty path",
+      "result": "passed",
+      "elapsed_seconds": 8.09,
+      "retry": 0,
+      "file": "paths-sharing.spec.ts"
+    },
+    {
+      "journey": "PATH-02",
+      "scenario": "PATH-02 \u2014 add owned and discovered courses as references, reject duplicate membership",
+      "result": "passed",
+      "elapsed_seconds": 6.597,
+      "retry": 0,
+      "file": "paths-sharing.spec.ts"
+    },
+    {
+      "journey": "PATH-03",
+      "scenario": "PATH-03 \u2014 reorder references, cancel/remove course and cancel/delete path",
+      "result": "passed",
+      "elapsed_seconds": 4.262,
+      "retry": 0,
+      "file": "paths-sharing.spec.ts"
+    },
+    {
+      "journey": "PATH-04",
+      "scenario": "PATH-04 \u2014 discover, follow, reload selected list then unfollow without deleting",
+      "result": "passed",
+      "elapsed_seconds": 5.241,
+      "retry": 0,
+      "file": "paths-sharing.spec.ts"
+    },
+    {
+      "journey": "PATH-05",
+      "scenario": "PATH-05 \u2014 study a selected multi-course path and retain weighted personal progress",
+      "result": "passed",
+      "elapsed_seconds": 6.765,
+      "retry": 0,
+      "file": "paths-sharing.spec.ts"
+    },
+    {
+      "journey": "SHARE-01",
+      "scenario": "SHARE-01 \u2014 publish, discover and study, unlist then restore private access",
+      "result": "passed",
+      "elapsed_seconds": 14.916,
+      "retry": 0,
+      "file": "paths-sharing.spec.ts"
+    },
+    {
+      "journey": "SHARE-02",
+      "scenario": "SHARE-02 \u2014 grant a named learner, deny outsider, revoke and deny bookmarked access",
+      "result": "passed",
+      "elapsed_seconds": 12.31,
+      "retry": 0,
+      "file": "paths-sharing.spec.ts"
+    },
+    {
+      "journey": "SHARE-03",
+      "scenario": "SHARE-03 \u2014 share a path without implicitly granting its private course",
+      "result": "passed",
+      "elapsed_seconds": 9.847,
+      "retry": 0,
+      "file": "paths-sharing.spec.ts"
+    },
+    {
+      "journey": "SHARE-04",
+      "scenario": "SHARE-04 \u2014 source changes reach reused paths and deletion leaves unavailable reference",
+      "result": "passed",
+      "elapsed_seconds": 9.036,
+      "retry": 0,
+      "file": "paths-sharing.spec.ts"
+    },
+    {
+      "journey": "SHARE-05",
+      "scenario": "SHARE-05 \u2014 reuse counters reflect distinct active references and deletion decrements",
+      "result": "passed",
+      "elapsed_seconds": 8.535,
+      "retry": 0,
+      "file": "paths-sharing.spec.ts"
+    },
+    {
+      "journey": "STATS-01",
+      "scenario": "STATS-01 \u2014 real reading sessions group by inactivity and leave rolling week",
+      "result": "passed",
+      "elapsed_seconds": 6.527,
+      "retry": 0,
+      "file": "stats-ai-settings.spec.ts"
+    },
+    {
+      "journey": "STATS-02",
+      "scenario": "STATS-02 \u2014 same-day repeats, consecutive dates, gap and historical longest streak",
+      "result": "passed",
+      "elapsed_seconds": 7.038,
+      "retry": 0,
+      "file": "stats-ai-settings.spec.ts"
+    },
+    {
+      "journey": "STATS-03",
+      "scenario": "STATS-03 \u2014 started course and selected paths differ from ownership and completion",
+      "result": "passed",
+      "elapsed_seconds": 6.605,
+      "retry": 0,
+      "file": "stats-ai-settings.spec.ts"
+    },
+    {
+      "journey": "STATS-04",
+      "scenario": "STATS-04 \u2014 activity and scores survive navigation, login and account isolation",
+      "result": "passed",
+      "elapsed_seconds": 6.861,
+      "retry": 0,
+      "file": "stats-ai-settings.spec.ts"
+    },
+    {
+      "journey": "AI-01",
+      "scenario": "AI-01 \u2014 default Anvil needs no personal key and generated content persists",
+      "result": "passed",
+      "elapsed_seconds": 4.493,
+      "retry": 0,
+      "file": "stats-ai-settings.spec.ts"
+    },
+    {
+      "journey": "AI-02",
+      "scenario": "AI-02 \u2014 save secondary Anvil model and use it after reload without changing other users",
+      "result": "passed",
+      "elapsed_seconds": 5.993,
+      "retry": 0,
+      "file": "stats-ai-settings.spec.ts"
+    },
+    {
+      "journey": "AI-03",
+      "scenario": "AI-03 \u2014 validate each external provider, persist choice and generate with zero app debit",
+      "result": "passed",
+      "elapsed_seconds": 10.144,
+      "retry": 0,
+      "file": "stats-ai-settings.spec.ts"
+    },
+    {
+      "journey": "AI-04",
+      "scenario": "AI-04 \u2014 replace and remove credential, explicitly return to Anvil and generate",
+      "result": "passed",
+      "elapsed_seconds": 5.939,
+      "retry": 0,
+      "file": "stats-ai-settings.spec.ts"
+    },
+    {
+      "journey": "AI-05",
+      "scenario": "AI-05 \u2014 unavailable and malformed generation retain draft, retry once with one debit",
+      "result": "passed",
+      "elapsed_seconds": 8.963,
+      "retry": 0,
+      "file": "stats-ai-settings.spec.ts"
+    },
+    {
+      "journey": "SUPPORT-01",
+      "scenario": "SUPPORT-01 \u2014 persist notification preferences, validate phone and report unavailable transport",
+      "result": "passed",
+      "elapsed_seconds": 4.629,
+      "retry": 0,
+      "file": "stats-ai-settings.spec.ts"
+    },
+    {
+      "journey": "SUPPORT-02",
+      "scenario": "SUPPORT-02 \u2014 mobile navigation, keyboard tabs/dialogs and missing-route recovery",
+      "result": "passed",
+      "elapsed_seconds": 6.691,
+      "retry": 0,
+      "file": "stats-ai-settings.spec.ts"
+    }
+  ],
+  "commit": "4c9690e4879d3beb3737cebbca5d08c33daf2a13",
+  "run_id": 40330344648,
+  "run_url": "https://github.com/fakoli/my-ai-study-buddy/actions/runs/40330344648"
+}

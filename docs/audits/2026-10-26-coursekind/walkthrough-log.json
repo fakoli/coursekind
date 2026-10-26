@@ -1,0 +1,360 @@
+[
+  {
+    "journey": "WORKSPACE-01",
+    "scenario": "Create from goal alone then save parameters and reload",
+    "status": "pass",
+    "duration_ms": 27349,
+    "commit": "374d415",
+    "notes": "Synthetic Author private workspace2d07a796. Goal-only create kept defaults5cards3quiz; saved prior knowledge+3weeklyhours; reload retained values; Anvilprimary remains selected. Task1 checkpoint only, planning/build not implemented yet."
+  },
+  {
+    "journey": "WORKSPACE-01",
+    "scenario": "Archive, find archived workspace, restore",
+    "status": "pass",
+    "duration_ms": 18745,
+    "commit": "374d415",
+    "notes": "Archived brief becomes read-only and disappears from active list; Show archived finds it; Restore re-enables saved brief."
+  },
+  {
+    "journey": "WORKSPACE-01",
+    "scenario": "Other account deep-links private workspace",
+    "status": "pass",
+    "duration_ms": null,
+    "commit": "374d415",
+    "notes": "Synthetic Student sees generic Workspace unavailable without goal or brief."
+  },
+  {
+    "journey": "WORKSPACE-01",
+    "scenario": "Open existing course twice without duplication",
+    "status": "pass",
+    "duration_ms": 10919,
+    "commit": "374d415",
+    "notes": "Owned CourseA opens same workspace af29e91c on second entry; original course/module links, count, sharing and quiz score remain intact. Student workspace list remains empty."
+  },
+  {
+    "journey": "WORKSPACE-06",
+    "scenario": "Two-tab stale brief recovery",
+    "status": "pass",
+    "duration_ms": 26774,
+    "commit": "9ae518e",
+    "notes": "Both tabs begin same version. Second saves new audience; first save rejected with draft retained and explicit replacement warning. Reload saved brief fetched current server audience and returned Saved, preventing overwrite."
+  },
+  {
+    "journey": "WORKSPACE-01",
+    "scenario": "Archive then restore in same editor and save new edit",
+    "status": "fail",
+    "duration_ms": null,
+    "commit": "9ae518e",
+    "notes": "Independent review CK-T1-01 reproduced in actual CUA: local version remains stale, subsequent Save409 despite no other writer. Draft kept, fix pending."
+  },
+  {
+    "journey": "WORKSPACE-02",
+    "scenario": "Existing owned path opens workspace with shared course references",
+    "status": "pass",
+    "duration_ms": null,
+    "commit": "9ae518e",
+    "notes": "PathA opened workspace0dc66dbb with path scope and both original course links. Foreign CourseB retained Baseline Learner authorship,two modules,study-only controls. Timer lost when evidence filesystem write hung; not a generation test."
+  },
+  {
+    "journey": "WORKSPACE-01",
+    "scenario": "Dirty draft survives archive/restore, saves and reloads",
+    "status": "pass",
+    "duration_ms": 14814,
+    "commit": "d92da47",
+    "notes": "Regression CK-T1-01: edited audience, archived without saving, restored in same tab, draft retained, Save succeeded and reload retained it. Earlier failed reproduction kept in log."
+  },
+  {
+    "journey": "WORKSPACE-06",
+    "scenario": "360px workspace navigation and path brief creation",
+    "status": "pass",
+    "duration_ms": 32168,
+    "commit": "d92da47",
+    "notes": "Verified DOM clientWidth=scrollWidth=360 and full-page screenshot. All five mobile destinations visible; Workspaces navigation works. Goal+Learning path scope created private workspace78f19fb2 with defaults5/3. Playwright label helper failed to locate Scope; native AX selection worked. AI panels pending."
+  },
+  {
+    "journey": "WORKSPACE-01",
+    "scenario": "Live Anvil plan attempt 1",
+    "status": "fail",
+    "duration_ms": null,
+    "server_job_elapsed_ms": 155,
+    "commit": "ca8f8b3",
+    "notes": "Synthetic one-course/two-module goal. UI showed running then failed,0applicationcredits,no draft. Persisted job d0d0dd0a failed in155ms; cause under diagnosis, not classified as provider outage yet."
+  },
+  {
+    "journey": "WORKSPACE-01",
+    "scenario": "Explicit live Anvil retry during local model maintenance",
+    "result": "blocked-provider-unavailable",
+    "duration_ms": null,
+    "provider": "anvil/llm.primary",
+    "server_http_status": 503,
+    "application_credits": 0,
+    "commit": "ca8f8b3",
+    "notes": "Second explicit attempt failed in about 66ms; saved job remains discoverable, shows attempt 2 and zero credits. No automatic fallback. Safe temporary exception diagnostic confirmed upstream HTTP503."
+  },
+  {
+    "journey": "WORKSPACE-01",
+    "scenario": "Explicit retry after selecting mock OpenAI",
+    "result": "pass",
+    "duration_ms": 6553,
+    "provider": "mock OpenAI/gpt-test",
+    "commit": "a1e6f33",
+    "notes": "Attempt3 ready with updated provider provenance, zero application credits, editable plan. Earlier Anvil failures retained in this audit, not a claim of per-attempt history in the current job UI."
+  },
+  {
+    "journey": "WORKSPACE-01",
+    "scenario": "Edit saved plan, reload, apply private course",
+    "result": "pass",
+    "duration_ms": 15014,
+    "provider": "mock OpenAI/gpt-test",
+    "commit": "a1e6f33",
+    "notes": "Edited title survived reload; Apply created one linked course with two modules; applied plan read-only; first incomplete module selected by default with five cards and three questions."
+  },
+  {
+    "journey": "WORKSPACE-01",
+    "scenario": "Build first lesson, reload, dismiss/reopen review, apply and study",
+    "result": "pass",
+    "duration_ms": 36022,
+    "provider": "mock OpenAI/gpt-test",
+    "commit": "a1e6f33",
+    "notes": "Draft persisted through reload and dismissal, five cards/three questions; apply created history and Study link to same module, next incomplete module auto-selected."
+  },
+  {
+    "journey": "WORKSPACE-02",
+    "scenario": "Plan new path with explicitly selected foreign course, reorder, apply, inspect path",
+    "result": "pass",
+    "duration_ms": 35990,
+    "provider": "mock OpenAI/gpt-test",
+    "commit": "a1e6f33",
+    "notes": "Private two-course path has reused original course995b47b1 first and new course second, two modules each, original Baseline Learner attribution; workspace Build only offers owned new modules."
+  },
+  {
+    "journey": "WORKSPACE-03",
+    "scenario": "Partial two-module batch and selected-step recovery",
+    "result": "pass",
+    "duration_ms": 31166,
+    "provider": "mock OpenAI/gpt-test",
+    "commit": "a1e6f33",
+    "notes": "Injected fourth provider POST failure: first draft remains ready at attempt1; second fails. Explicit Retry step2 preserves first, produces second at attempt2; both review buttons available, no auto-apply."
+  },
+  {
+    "journey": "WORKSPACE-01",
+    "scenario": "Generated content study continuity before revisions",
+    "result": "pass",
+    "duration_ms": 95423,
+    "provider": "mock OpenAI/gpt-test",
+    "commit": "a1e6f33",
+    "notes": "Five cards reviewed/rated (Easy3/Medium1/Hard1), next-module completion saves one of two complete, course50%, quiz100%, five-of-five cards. Second unbuilt module honestly shows no activities. Helper Playwright AX-role mismatch used native accessible control, not an app failure."
+  },
+  {
+    "journey": "WORKSPACE-04",
+    "scenario": "Quiz-only revision, study, reload and compensating restore",
+    "result": "pass",
+    "duration_ms": 154031,
+    "provider": "mock OpenAI/gpt-test",
+    "commit": "928d7f9",
+    "notes": "Reviewed before3/proposed2 questions; apply left lesson/cards/sandbox/ratings/progress/activity byte-equivalent. Studied new quiz50% beside original100%; reloaded history and restored original3-question quiz. Both attempts, original cardIDs/ratings and all prior activity retained; new Restored content history entry visible."
+  },
+  {
+    "journey": "WORKSPACE-04",
+    "scenario": "Original editor changes while proposal pending, conflict and explicit regenerate",
+    "result": "pass",
+    "duration_ms": 142006,
+    "provider": "mock OpenAI/gpt-test",
+    "commit": "928d7f9",
+    "notes": "Second tab saved manual lesson note through original ModuleEditor. Stale quiz Apply blocked with proposal retained/current-module link/regenerate. Explicit regeneration produced new job; review/apply succeeded and manual note plus both prior quiz attempts stayed. Duplicate conflict copy noted for focused repair."
+  },
+  {
+    "journey": "WORKSPACE-04",
+    "scenario": "Read and apply module draft saved before revision upgrade",
+    "result": "pass",
+    "duration_ms": 35096,
+    "provider": "mock OpenAI/gpt-test",
+    "commit": "928d7f9",
+    "notes": "Task2 persisted draft remains readable with Lesson/cards/quiz comparison, applies to original target, records immutable history, retains second pending draft."
+  },
+  {
+    "journey": "WORKSPACE-04",
+    "scenario": "Manual path reference removal, saved proposal recovery and restore",
+    "result": "pass",
+    "duration_ms": 218263,
+    "provider": "no inference/manual",
+    "commit": "cc6fd8f",
+    "notes": "Removed reusedcourse from draft, reviewed savedmanualproposal after frontend reload, applied free. Pathmembership becameone; sourcecourse and bothoriginalmoduleIDs remained. Restored priorreferences asnewhistory; actualpathshows originaltwo-courseorder/authorship/counts. Readabilityminor CourseUUID comparisonlabels assignedTask5."
+  },
+  {
+    "journey": "WORKSPACE-05",
+    "scenario": "Explicit current material disclosure and live three-dimension JEV review",
+    "status": "pass",
+    "duration_ms": 26615,
+    "commit": "acfbfd2",
+    "notes": "Synthetic generated lesson only. Exact objective, excerpt, quiz options and marked answer disclosed before sending to TypeSafe. Live jev-1.14.0 returned support 98%, ambiguity 2%, alignment 38%, usage 465 input / 59 output tokens. Result says Advisory and focuses the result. Duration includes tool/evidence overhead, not provider latency. All nine content, learner-history and accounting collections stayed byte-identical."
+  },
+  {
+    "journey": "WORKSPACE-05",
+    "scenario": "Reload, identical selection cache and restore invalidation",
+    "status": "pass",
+    "duration_ms": null,
+    "commit": "acfbfd2",
+    "notes": "Reload/opening selection did not automatically review. Explicit identical selection recovered the same receipt ID and timestamp; collection still contained one review. Restoring the quiz through History immediately replaced probabilities with Review stale. Review current material removed stale result and disclosed current source without another provider call. Same-module removed-selection recovery is a separate independently identified repair, not covered by this successful case."
+  },
+  {
+    "journey": "WORKSPACE-05",
+    "scenario": "Unavailable, malformed response, explicit retry and staged draft review",
+    "status": "pass",
+    "duration_ms": null,
+    "commit": "acfbfd2",
+    "notes": "Controlled disposable provider transport: 503 and a string probability each produced Review unavailable, material kept; explicit retry with a valid response showed three advisory values. Opening a ready but unapplied second-module draft disclosed proposed lesson/quiz and reviewed it without applying. Synthetic mock call log confirms separate unavailable/malformed/ready calls. These fault/staged cases are mocked; the earlier live result is separately recorded."
+  },
+  {
+    "journey": "WORKSPACE-05",
+    "scenario": "Same-module shortened lesson and removed selected question recovery",
+    "status": "pass",
+    "duration_ms": null,
+    "commit": "06b17dc",
+    "notes": "Actual two-tab CUA: selected Question 3 and obtained controlled advisory; original ModuleEditor shortened lesson from 253 to 48 characters and removed Question 3, then saved. Background review read marked result stale. Explicit Review current material reset to Question 1, end boundary 48 and enabled Send, with no implicit inference. Explicit Send completed a new controlled advisory. Separate sole-objective replacement regression is covered by frontend tests and scoped review. Synthetic module now has short lesson and two questions; prior learner history remains."
+  },
+  {
+    "journey": "WORKSPACE-06",
+    "scenario": "Feature-off rollback preserves saved workspace and ordinary study",
+    "status": "pass",
+    "duration_ms": null,
+    "commit": "06b17dc",
+    "notes": "Disposable backend restarted with WORKSPACE_ENABLED=false and WORKSPACE_REVIEW_ENABLED=false. Existing workspace reads/history remain visible by design. Explicit refinement blocked with Workspace changes are currently disabled; TypeSafe Send disabled. Linked generated course and lesson opened normally, preserving two quiz attempts, 50% latest score and five cards. Gates restored afterward; no normal user instance changes."
+  },
+  {
+    "journey": "WORKSPACE-01",
+    "scenario": "Disabled activity count normalization and review focus recovery",
+    "status": "pass",
+    "duration_ms": 19832,
+    "commit": "095542c",
+    "notes": "Actual CUA at final-pass head: enabled flashcard count0 disabled Build; unchecking flashcards enabled Build and produced a lesson-plus-three-question draft without flashcard changes. Draft review received focus and Dismiss returned focus to originating Review draft button. Mock OpenAI explicitly selected; no live inference claim."
+  },
+  {
+    "journey": "WORKSPACE-06",
+    "scenario": "Compact 360px navigation, keyboard disclosure and unsaved draft preservation",
+    "status": "pass",
+    "duration_ms": null,
+    "commit": "095542c",
+    "notes": "Actual CUA viewport360x800: clientWidth=scrollWidth=360, full height2363 versus prior5416 mobile screenshot. Next action and six section links visible; saved brief/applied plan/revisions/review/history collapsed. Typed unsaved audience suffix, Return collapsed/reopened brief and preserved it; restored original field without saving. Return expanded linked module outline with both original links. Cleared viewport override. Screenshot12 records compact layout."
+  },
+  {
+    "journey": "WORKSPACE-06",
+    "scenario": "Real Chrome 200% zoom, six sections, review focus and primary Next recovery",
+    "status": "pass",
+    "duration_ms": null,
+    "commit": "4744158",
+    "notes": "Native Chrome UI explicitly reported Zoom:200%. At that actual zoom the page clientWidth and scrollWidth were both932. All six section links opened their content; saved draft review focused its region and Dismiss returned to its trigger; History exposed compare/restore controls. Manually collapsed Plan then primary Next opened it, confirming repair. Live failure account showed available100 credits and safe503 guidance; no retry sent. Native input used after extension/embedded-browser zoom attempts proved unreliable; these were tooling issues, not app failures. Restored Chrome Zoom:100% and closed only two temporary validation tabs. Screenshot13 contains only app content."
+  },
+  {
+    "journey": "WORKSPACE-06",
+    "scenario": "Held old-account response arrives after sign-out and account switch",
+    "status": "pass",
+    "duration_ms": null,
+    "commit": "4744158",
+    "notes": "Disposable middleware held exactly one authenticated GET response for the live-helper private workspace. Confirmed claimed and not delivered; signed out and into Baseline Author before explicitly releasing response. Middleware confirmed delivery afterward. Navigating old workspace showed generic Workspace unavailable, no prior goal/jobs/drafts. Screenshot14. No production auth/config changes."
+  },
+  {
+    "journey": "WORKSPACE-06",
+    "scenario": "Insufficient local quota preserves drafts and rejects before provider call",
+    "status": "pass",
+    "duration_ms": null,
+    "commit": "4744158",
+    "notes": "Explicit UI selected Anvil/llm.primary on disposable Author only. With its API stopped, fixture balance temporarily set15 from saved200; normal user untouched. Workspace showed available15 and required25 with manual/BYOK/operator recovery guidance. Explicit Build created a discoverable failed job with insufficient-credit category and zero debit; diagnostic wrapper recorded InsufficientTokensException before any provider POST. Earlier ready drafts remained. Restored original200 fixture balance while stopped."
+  },
+  {
+    "journey": "WORKSPACE-04",
+    "scenario": "Readable manual path comparison and saved-versus-new focus recovery",
+    "status": "partial-fail",
+    "duration_ms": null,
+    "commit": "4744158",
+    "notes": "Proposed reordered path references display authorized current course titles with original ID links. Saved manual review focuses region and Dismiss returns to the saved button. Newly prepared manual proposal focuses region, but Dismiss returns to document body; reproduced by pointer and keyboard Return. Originating Review path changes button remains available. Sent residual focus issue to aggregate review; proposals were not applied."
+  },
+  {
+    "journey": "WORKSPACE-06",
+    "scenario": "Revoked reused-course access hides title but blocks workspace repair controls",
+    "status": "partial-fail",
+    "duration_ms": null,
+    "commit": "4744158",
+    "notes": "Owner of synthetic public reused course changed it to private. Referencing Author workspace reload correctly removed source title and showed Course unavailable; however Plan/Build/Revision/Review/History disappeared behind Saved plans and jobs unavailable, preventing workspace manual path cleanup/owned-material workflows. Aggregate review assessing coupling. Restored original public visibility through owner UI and reloaded; controls returned. Screenshot15 preserves blocked state."
+  },
+  {
+    "journey": "WORKSPACE-01",
+    "scenario": "Fresh goal-only entry through reviewed plan, default module build and study entry",
+    "status": "pass",
+    "duration_ms": 59500,
+    "commit": "4744158",
+    "notes": "Entered only learning goal; defaults one course/5 cards/3 questions. Created private workspace456212f2, generated mock OpenAI plan, applied2-module course, built default first module, reviewed5cards/3questions, explicitly applied, opened Study this module with Content/Flashcards(5)/Quiz(3). Saved brief and applied plan collapsed, next action advanced. Time includes observation/tool overhead; provider mocked, not live Anvil quality evidence."
+  },
+  {
+    "journey": "WORKSPACE-01",
+    "scenario": "Study new generated module and continue with saved learning records",
+    "status": "pass",
+    "duration_ms": null,
+    "commit": "4744158",
+    "notes": "Fresh course0e91223c/module3dd37fdc: marked content read, reviewed5/5cards including lastcard, ratedcard1Hard, submitted3-questionquiz100% exactly1attempt, continued to nextmodule and returned. Course shows1/2completed50%,5/5cards,quiz100%. Useful warmed-state fixture for aggregate cache repair; elapsed time not measured."
+  },
+  {
+    "journey": "WORKSPACE-04",
+    "scenario": "Dirty brief survives local plan Apply and warmed course progress refreshes",
+    "status": "pass",
+    "duration_ms": 26217,
+    "commit": "c634312",
+    "notes": "Course0e91223c warmed1/2completed50%. Unsaved audience retained through additive2-moduleplanApply and Savebrief succeeded. SPAcourse return immediately1/4completed25%,quiz100%retained, no hardreload."
+  },
+  {
+    "journey": "WORKSPACE-04",
+    "scenario": "Warmed flashcard ratings update on replacement and restore",
+    "status": "pass",
+    "duration_ms": 98726,
+    "commit": "c634312",
+    "notes": "Module3dd37fdc originalHard1/Unrated4. Cards-onlyrevision replaced5cards; immediateSPAstudy showed revisedcontentHard0/Unrated5. Historyrestore andSPAreturn showedoriginalcontentHard1/Unrated4,5/5reviews andquiz100%preserved. No hardreload."
+  },
+  {
+    "journey": "WORKSPACE-04",
+    "scenario": "New async manual path proposal returns keyboard focus",
+    "status": "pass",
+    "duration_ms": 4360,
+    "commit": "c634312",
+    "notes": "KeyboardReturn onReviewpathchanges preparesnewproposal, focusesDraftreview; DismissfocusesoriginalReviewpathchangesbutton. Proposalunapplied; originalpathorderpreserved."
+  },
+  {
+    "journey": "WORKSPACE-06",
+    "scenario": "Revoked-source baseline removal recovers current membership but hides new draft",
+    "status": "partial-fail",
+    "duration_ms": null,
+    "commit": "c634312",
+    "notes": "RevokedcourseBprivate; workspacehides title and providesRepairlinkedpath. RemovedunavailableB inbaselinepath, reopened sameworkspace withownedaf1course andenabledcontrols. Historicaljobs/plansremainaccessdenied. Newownedmodulebuild completed butinaccessiblehistoricaljob causedentirelistfailure, hidingnewdraft. Independentreviewreproduced25creditdebitoncontrolledfixture. Addednarrowrepairruling; Bcurrentlyprivate andpathcontainsownedcourseonly pendingretest."
+  },
+  {
+    "journey": "WORKSPACE-03",
+    "scenario": "Retry preview reflects provider changed since prior failure",
+    "status": "pass",
+    "duration_ms": null,
+    "commit": "c634312",
+    "notes": "PriorAnvil/llm.primary insufficientquotajob selectedRetryStep1. Previewnamesnewinferenceopenai/gpt-test,max0Anvilcredits,currentquota200,unknownprior/newexternalchargeswarning. ExplicitRetrycompletesattempt2ready0creditswithreviewbutton. Finalize-onlywithoutcredentials remainsfocusedcomponent/APIcoverage."
+  },
+  {
+    "journey": "WORKSPACE-03",
+    "scenario": "Recover previously hidden authorized build alongside inaccessible history",
+    "status": "pass",
+    "duration_ms": 20459,
+    "commit": "4868fd2",
+    "notes": "Foreign source remainedprivate,currentpathcontainedownedcourse. Reloadexposesalready-savedbuildwithoutregeneration; explicit1unavailablejob/1unavailableplannotice. Review\u2192Apply\u2192reload\u2192ReviewshowsappliedoutputandStudythismodule. Earlierauthorizedbuildsalsoavailable; oldsourcecontenthidden."
+  },
+  {
+    "journey": "WORKSPACE-02",
+    "scenario": "New plan remains reviewable, applicable and reloadable after source repair",
+    "status": "pass",
+    "duration_ms": 8633,
+    "commit": "4868fd2",
+    "notes": "Withforeignsource stillprivate andoldplanomitted, generatednewmockplan,reviewed,appliedoneprivate2-modulecourse636dcc15tolinkedpath,reloadedandreopenedappliedplan. SourceownerlaterrestoredoriginalpublicvisibilityviaUI. Existingoriginalownedcourse/outputpreserved; extra testcourse retainedasprivatefixture."
+  },
+  {
+    "journey": "WORKSPACE-06",
+    "scenario": "Normal local runtime upgrade preserves user session, settings and data",
+    "status": "pass",
+    "duration_ms": null,
+    "commit": "4868fd2",
+    "notes": "Stoppednormal8010/5173, madeprivateconsistentbackup, verifiedall8existingdatafilesbyte-identicalbefore/afterstartup. Updatedbackendandpinnedfrontendto4868fd2. Existingloginretained;SettingsshowsAnvil/llm.primaryconfiguredand25creditsunchanged. OpenedWorkspacesnormalappwithoutcreatingcontentorcallingprovider. Screenshot18; no realnotificationorcredentialmutation."
+  }
+]

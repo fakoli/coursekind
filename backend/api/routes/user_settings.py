@@ -1,16 +1,13 @@
-"""User settings routes for Anvil AI connectivity.
-
-The platform uses a single self-hosted Anvil Serving router (OpenAI-compatible)
-for all text generation, so there are no per-user provider API keys to manage.
-This router exposes the remaining user-facing settings surface: an
-"Anvil connection" check that verifies the server-side router configuration.
-"""
+"""Authenticated provider preferences, write-only credentials and live model catalogs."""
 
 from fastapi import APIRouter, Depends
 
 from config import get_settings
-from dependencies import get_current_user
+from dependencies import StorageDep, get_current_user
+from exceptions import AIServiceException
+from models.ai_preferences import AIPreferencesUpdate, Provider, ValidateCredentialRequest
 from models.user import User
+from services.ai_preferences_service import AIPreferencesService
 from services.anvil_client import check_anvil_health
 
 router = APIRouter()
@@ -33,4 +30,54 @@ async def check_ai_connection(
         "is_reachable": is_valid,
         "model": settings.anvil_model,
         "message": message,
+    }
+
+
+@router.get("/ai-preferences")
+async def get_ai_preferences(storage: StorageDep, user: User = Depends(get_current_user)):
+    return await AIPreferencesService(storage, get_settings()).get(user.id)
+
+
+@router.put("/ai-preferences")
+async def update_ai_preferences(
+    request: AIPreferencesUpdate, storage: StorageDep, user: User = Depends(get_current_user)
+):
+    return await AIPreferencesService(storage, get_settings()).update(user.id, request)
+
+
+@router.delete("/ai-preferences/credentials/{provider}")
+async def delete_ai_credential(
+    provider: Provider, storage: StorageDep, user: User = Depends(get_current_user)
+):
+    return await AIPreferencesService(storage, get_settings()).delete_credential(user.id, provider)
+
+
+@router.get("/ai-preferences/models")
+async def get_ai_models(
+    provider: Provider, storage: StorageDep, user: User = Depends(get_current_user)
+):
+    try:
+        models = await AIPreferencesService(storage, get_settings()).catalog(user.id, provider)
+        return {
+            "provider": provider,
+            "models": models,
+            "is_available": True,
+            "message": "Advertised text models; generation availability is checked per request",
+        }
+    except AIServiceException as exc:
+        return {"provider": provider, "models": [], "is_available": False, "message": exc.message}
+
+
+@router.post("/ai-preferences/validate")
+async def validate_ai_credential(
+    request: ValidateCredentialRequest, storage: StorageDep, user: User = Depends(get_current_user)
+):
+    models = await AIPreferencesService(storage, get_settings()).catalog(
+        user.id, request.provider, request.api_key
+    )
+    return {
+        "provider": request.provider,
+        "is_valid": True,
+        "models": models,
+        "message": "Credential accepted by model catalog. Select a model and save.",
     }

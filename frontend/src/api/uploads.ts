@@ -34,26 +34,15 @@ export async function uploadImage(
  * Upload an image from a URL to a course
  */
 export async function uploadImageFromUrl(
-  courseId: string,
+  _courseId: string,
   url: string
 ): Promise<ImageUploadResponse> {
-  const token = localStorage.getItem('token');
-
-  const response = await fetch(`${BASE_URL}/uploads/images/${courseId}/from-url`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token && { Authorization: `Bearer ${token}` }),
-    },
-    body: JSON.stringify({ url }),
-  });
-
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    throw new Error(error.detail || 'Failed to upload image from URL');
+  // A remote reference is rendered only by the browser, without app credentials.
+  const parsed = new URL(url);
+  if (!['https:', 'http:'].includes(parsed.protocol) || parsed.username || parsed.password) {
+    throw new Error('Use an HTTP(S) image URL without credentials, or upload a raster file.');
   }
-
-  return response.json();
+  return { url: parsed.href, filename: parsed.pathname.split('/').pop() || 'remote-image' };
 }
 
 /**

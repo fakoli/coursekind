@@ -98,10 +98,10 @@ export function useModuleGeneration() {
           callbacks.onQuizGenerated(result.quiz.questions, true);
         }
 
-        success(`Content generated! Used ${result.tokens_used} tokens.`);
+        success(`Content generated! Used ${result.tokens_used} application credits.`);
       } catch (err) {
         console.error('Failed to generate content:', err);
-        showError('Failed to generate content. Please try again.');
+        showError(err instanceof Error ? err.message : 'Failed to generate content. Please try again.');
       }
     },
     [options, generateContent, success, showError]
@@ -129,7 +129,7 @@ export function useModuleGeneration() {
 
         // Return whether to replace or append - caller decides with ConfirmModal
         success(
-          `Generated ${result.flashcards.length} flashcards! Used ${result.tokens_used} tokens.`
+          `Generated ${result.flashcards.length} flashcards! Used ${result.tokens_used} application credits.`
         );
 
         // If no existing, just replace
@@ -142,7 +142,7 @@ export function useModuleGeneration() {
         return 'replace'; // Default - caller should use ConfirmModal to decide
       } catch (err) {
         console.error('Failed to generate flashcards:', err);
-        showError('Failed to generate flashcards. Please try again.');
+        showError(err instanceof Error ? err.message : 'Failed to generate flashcards. Please try again.');
         return null;
       }
     },
@@ -165,13 +165,13 @@ export function useModuleGeneration() {
         });
 
         success(
-          `Generated ${result.flashcards.length} flashcards! Used ${result.tokens_used} tokens.`
+          `Generated ${result.flashcards.length} flashcards! Used ${result.tokens_used} application credits.`
         );
 
         return result.flashcards;
       } catch (err) {
         console.error('Failed to generate flashcards:', err);
-        showError('Failed to generate flashcards. Please try again.');
+        showError(err instanceof Error ? err.message : 'Failed to generate flashcards. Please try again.');
         return null;
       }
     },
@@ -200,11 +200,11 @@ export function useModuleGeneration() {
 
         callbacks.onQuizGenerated(result.quiz.questions, !appendMode);
         success(
-          `Generated ${result.quiz.questions.length} questions! Used ${result.tokens_used} tokens.`
+          `Generated ${result.quiz.questions.length} questions! Used ${result.tokens_used} application credits.`
         );
       } catch (err) {
         console.error('Failed to generate quiz:', err);
-        showError('Failed to generate quiz. Please try again.');
+        showError(err instanceof Error ? err.message : 'Failed to generate quiz. Please try again.');
       }
     },
     [options.quizQuestionCount, generateQuiz, success, showError]
@@ -226,13 +226,13 @@ export function useModuleGeneration() {
         });
 
         success(
-          `Generated ${result.quiz.questions.length} more questions! Used ${result.tokens_used} tokens.`
+          `Generated ${result.quiz.questions.length} more questions! Used ${result.tokens_used} application credits.`
         );
 
         return result.quiz.questions;
       } catch (err) {
         console.error('Failed to generate more questions:', err);
-        showError('Failed to generate more questions. Please try again.');
+        showError(err instanceof Error ? err.message : 'Failed to generate more questions. Please try again.');
         return null;
       }
     },
@@ -263,10 +263,10 @@ export function useModuleGeneration() {
         });
 
         callbacks.onVisualGenerated('\n' + result.markdown_reference + '\n');
-        success(`Visual generated! Used ${result.tokens_used} tokens.`);
+        success(`Visual generated! Used ${result.tokens_used} application credits.`);
       } catch (err) {
         console.error('Failed to generate visual:', err);
-        showError('Failed to generate visual. Please try again.');
+        showError(err instanceof Error ? err.message : 'Failed to generate visual. Please try again.');
       }
     },
     [generateVisual, success, showError]

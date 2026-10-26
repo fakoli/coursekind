@@ -1,3 +1,4 @@
+import { GenerationCost } from '../common/GenerationCost';
 import {
   Plus,
   Trash2,
@@ -65,6 +66,7 @@ export function CourseModulesStep({
               <div className="flex flex-col gap-1 text-gray-400">
                 <button
                   onClick={() => onMoveModule(index, 'up')}
+                  aria-label={`Move module ${index + 1} up`}
                   disabled={index === 0}
                   className="hover:text-gray-600 disabled:opacity-30"
                 >
@@ -73,6 +75,7 @@ export function CourseModulesStep({
                 <GripVertical className="w-4 h-4" />
                 <button
                   onClick={() => onMoveModule(index, 'down')}
+                  aria-label={`Move module ${index + 1} down`}
                   disabled={index === outlines.length - 1}
                   className="hover:text-gray-600 disabled:opacity-30"
                 >
@@ -87,6 +90,7 @@ export function CourseModulesStep({
                   type="text"
                   value={module.title}
                   onChange={(e) => onUpdateModule(index, 'title', e.target.value)}
+                  aria-label={`Module ${index + 1} title`}
                   placeholder="Module title"
                   className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
@@ -94,12 +98,14 @@ export function CourseModulesStep({
                   type="text"
                   value={module.description}
                   onChange={(e) => onUpdateModule(index, 'description', e.target.value)}
+                  aria-label={`Module ${index + 1} description`}
                   placeholder="Brief description (optional)"
                   className="w-full rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
               <button
                 onClick={() => onRemoveModule(index)}
+                aria-label={`Remove module ${index + 1}`}
                 className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded"
               >
                 <Trash2 className="w-4 h-4" />
@@ -131,7 +137,7 @@ export function CourseModulesStep({
                   Generate Suggestions
                 </Button>
               )}
-              <p className="text-xs text-amber-600 mt-2">Cost: ~10 tokens</p>
+              <p className="text-xs text-amber-600 mt-2"><GenerationCost amount={10} /></p>
             </div>
           </div>
         </div>

@@ -30,7 +30,9 @@ class AuthService:
     def _create_access_token(self, user_id: str) -> str:
         expire = datetime.now(timezone.utc) + timedelta(hours=self.settings.jwt_expiration_hours)
         to_encode = {"sub": user_id, "exp": expire}
-        return jwt.encode(to_encode, self.settings.jwt_secret, algorithm=self.settings.jwt_algorithm)
+        return jwt.encode(
+            to_encode, self.settings.jwt_secret, algorithm=self.settings.jwt_algorithm
+        )
 
     async def register(self, user_data: UserCreate) -> User:
         existing = await self.storage.list("users", {"email": user_data.email})
@@ -92,6 +94,7 @@ class AuthService:
             id=user_data["id"],
             email=user_data["email"],
             name=user_data["name"],
+            timezone=user_data.get("timezone", "UTC"),
             created_at=ensure_datetime(user_data["created_at"]),
             token_balance=user_data.get("token_balance", 100),
             role=UserRole(user_data.get("role", "user")),

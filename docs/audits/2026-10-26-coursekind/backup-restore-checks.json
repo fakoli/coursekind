@@ -1,0 +1,18 @@
+{
+  "date": "2026-10-26",
+  "commit": "06b17dc",
+  "json": {
+    "process_stopped_before_copy": true,
+    "separate_restore_path": true,
+    "all_collection_hashes_equal": true,
+    "storage_reads_equal_original_documents": true,
+    "collection_count": 21
+  },
+  "sqlite": {
+    "synthetic_records": 2,
+    "connection_closed_before_copy": true,
+    "separate_restore_path": true,
+    "restored_records_match": true
+  },
+  "limits": "Local single-process backup/restore drill. Not crash/power-loss or disaster-recovery certification. User runtime and data untouched."
+}

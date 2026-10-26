@@ -10,6 +10,7 @@ import type {
 } from '../types';
 
 export const coursesApi = {
+  listShared: () => api.get<CourseResponse[]>('/courses/shared'),
   /** List all courses accessible to the current user */
   list: () => api.get<CourseResponse[]>('/courses'),
 

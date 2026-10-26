@@ -13,7 +13,7 @@ export function useModuleOutlines() {
 
   const addOutline = useCallback(() => {
     const newOutline: ModuleOutline = {
-      id: `new-${Date.now()}`,
+      id: `new-${crypto.randomUUID()}`,
       title: `Module ${outlines.length + 1}`,
       description: '',
     };
@@ -37,7 +37,7 @@ export function useModuleOutlines() {
       modules.map((m) => ({
         id: m.id,
         title: m.title,
-        description: '',
+        description: m.description || '',
       }))
     );
   }, []);

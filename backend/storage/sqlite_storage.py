@@ -2,14 +2,36 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 from contextlib import asynccontextmanager
+from contextvars import ContextVar
+from functools import wraps
 from pathlib import Path
-from typing import Any, AsyncIterator
+from typing import Any, AsyncIterator, Awaitable, Callable, Concatenate, ParamSpec, TypeVar
 
 import aiosqlite
 
 from storage.base import StorageBackend
+
+_P = ParamSpec("_P")
+_T = TypeVar("_T")
+
+
+def _operation(*, write: bool = False) -> Callable[
+    [Callable[Concatenate[SQLiteStorage, _P], Awaitable[_T]]],
+    Callable[Concatenate[SQLiteStorage, _P], Awaitable[_T]],
+]:
+    """Serialize connection access; each mutation gets a rollback boundary."""
+    def decorate(
+        method: Callable[Concatenate[SQLiteStorage, _P], Awaitable[_T]],
+    ) -> Callable[Concatenate[SQLiteStorage, _P], Awaitable[_T]]:
+        @wraps(method)
+        async def wrapped(self: SQLiteStorage, *args: _P.args, **kwargs: _P.kwargs) -> _T:
+            async with (self.transaction() if write else self._locked()):
+                return await method(self, *args, **kwargs)
+        return wrapped
+    return decorate
 
 
 class SQLiteStorage(StorageBackend):
@@ -17,7 +39,9 @@ class SQLiteStorage(StorageBackend):
 
     Data is stored as JSON documents in a simple key-value schema,
     allowing flexible schema evolution while leveraging SQLite's
-    ACID guarantees.
+    ACID guarantees. Access to the shared connection is serialized across tasks.
+    Transactions and nested savepoints must stay in the same asyncio task;
+    inherited child-task calls fail promptly instead of joining or deadlocking.
     """
 
     def __init__(self, db_path: str):
@@ -25,6 +49,27 @@ class SQLiteStorage(StorageBackend):
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self._connection: aiosqlite.Connection | None = None
         self._transaction_depth = 0
+        self._operation_lock = asyncio.Lock()
+        self._operation_owner: asyncio.Task[Any] | None = None
+        self._transaction_owner: ContextVar[asyncio.Task[Any] | None] = ContextVar(
+            "sqlite_transaction_owner", default=None
+        )
+
+    @asynccontextmanager
+    async def _locked(self) -> AsyncIterator[None]:
+        task = asyncio.current_task()
+        if self._operation_owner is task:
+            yield
+            return
+        inherited_owner = self._transaction_owner.get()
+        if inherited_owner is not None and self._operation_owner is inherited_owner:
+            raise RuntimeError("SQLite transactions must run in the same task")
+        async with self._operation_lock:
+            self._operation_owner = task
+            try:
+                yield
+            finally:
+                self._operation_owner = None
 
     async def _get_connection(self) -> aiosqlite.Connection:
         """Get or create database connection."""
@@ -59,19 +104,14 @@ class SQLiteStorage(StorageBackend):
 
         await conn.commit()
 
-    def _in_transaction(self) -> bool:
-        return self._transaction_depth > 0
-
-    async def _commit_if_needed(self, conn: aiosqlite.Connection) -> None:
-        if not self._in_transaction():
-            await conn.commit()
-
+    @_operation()
     async def close(self) -> None:
         """Close the database connection."""
         if self._connection is not None:
             await self._connection.close()
             self._connection = None
 
+    @_operation()
     async def get(self, collection: str, id: str) -> dict[str, Any] | None:
         """Get a single document by ID."""
         conn = await self._get_connection()
@@ -87,6 +127,7 @@ class SQLiteStorage(StorageBackend):
 
         return json.loads(row["data"])
 
+    @_operation()
     async def list(
         self, collection: str, filters: dict[str, Any] | None = None
     ) -> list[dict[str, Any]]:
@@ -144,6 +185,7 @@ class SQLiteStorage(StorageBackend):
                 return False
         return True
 
+    @_operation(write=True)
     async def create(self, collection: str, data: dict[str, Any]) -> dict[str, Any]:
         """Create a new document."""
         if "id" not in data:
@@ -157,10 +199,10 @@ class SQLiteStorage(StorageBackend):
             """,
             (collection, data["id"], json.dumps(data, default=str)),
         )
-        await self._commit_if_needed(conn)
 
         return data
 
+    @_operation(write=True)
     async def update(
         self, collection: str, id: str, data: dict[str, Any]
     ) -> dict[str, Any] | None:
@@ -183,10 +225,10 @@ class SQLiteStorage(StorageBackend):
             """,
             (json.dumps(updated, default=str), collection, id),
         )
-        await self._commit_if_needed(conn)
 
         return updated
 
+    @_operation(write=True)
     async def delete(self, collection: str, id: str) -> bool:
         """Delete a document by ID."""
         conn = await self._get_connection()
@@ -194,12 +236,12 @@ class SQLiteStorage(StorageBackend):
             "DELETE FROM documents WHERE collection = ? AND id = ?",
             (collection, id),
         )
-        await self._commit_if_needed(conn)
 
         deleted = cursor.rowcount > 0
         await cursor.close()
         return deleted
 
+    @_operation()
     async def count(self, collection: str, filters: dict[str, Any] | None = None) -> int:
         """Count documents in a collection.
 
@@ -241,25 +283,35 @@ class SQLiteStorage(StorageBackend):
 
     @asynccontextmanager
     async def transaction(self) -> AsyncIterator["SQLiteStorage"]:
-        """Context manager for transactions with automatic rollback on error."""
-        conn = await self._get_connection()
-        is_outermost = self._transaction_depth == 0
-        if is_outermost:
-            # Start transaction by disabling autocommit
-            await conn.execute("BEGIN IMMEDIATE")
+        """Isolate one task's work, with nested savepoint and cancellation rollback."""
+        async with self._locked():
+            conn = await self._get_connection()
+            outermost = self._transaction_depth == 0
+            savepoint = f"storage_{self._transaction_depth}"
+            token = self._transaction_owner.set(asyncio.current_task()) if outermost else None
+            try:
+                await conn.execute("BEGIN IMMEDIATE" if outermost else f"SAVEPOINT {savepoint}")
+                self._transaction_depth += 1
+                try:
+                    yield self
+                    if outermost:
+                        await conn.commit()
+                    else:
+                        await conn.execute(f"RELEASE SAVEPOINT {savepoint}")
+                finally:
+                    self._transaction_depth -= 1
+            except BaseException:
+                if outermost:
+                    await conn.rollback()
+                else:
+                    await conn.execute(f"ROLLBACK TO SAVEPOINT {savepoint}")
+                    await conn.execute(f"RELEASE SAVEPOINT {savepoint}")
+                raise
+            finally:
+                if token is not None:
+                    self._transaction_owner.reset(token)
 
-        self._transaction_depth += 1
-        try:
-            yield self
-            if is_outermost:
-                await conn.commit()
-        except Exception:
-            if is_outermost:
-                await conn.rollback()
-            raise
-        finally:
-            self._transaction_depth -= 1
-
+    @_operation(write=True)
     async def batch_delete(
         self, collection: str, ids: list[str]
     ) -> dict[str, bool]:
@@ -283,13 +335,13 @@ class SQLiteStorage(StorageBackend):
 
         delete_query = f"DELETE FROM documents WHERE collection = ? AND id IN ({placeholders})"
         await conn.execute(delete_query, (collection, *ids))
-        await self._commit_if_needed(conn)
 
         for id in ids:
             results[id] = id in existing
 
         return results
 
+    @_operation(write=True)
     async def batch_create(
         self, collection: str, items: list[dict[str, Any]]
     ) -> list[dict[str, Any]]:
@@ -309,6 +361,5 @@ class SQLiteStorage(StorageBackend):
                 for item in items
             ],
         )
-        await self._commit_if_needed(conn)
 
         return items

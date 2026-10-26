@@ -1,56 +1,81 @@
-# Study Buddy
+# Coursekind
 
-A learning platform for visual learners who learn by doing. Combines flashcards, quizzes, tests, and visual references with AI-powered coaching.
+Turn a learning goal into a reviewable course or learning path, build one lesson at a time, and revise it without losing study history. Existing manual authoring, flashcards, quizzes and configured practices remain available.
+
+See the [local v1 operating guide](docs/product/coursekind-local-v1.md) for onboarding, recovery, quotas, backup and rollback boundaries.
+
+## Release
+
+[Coursekind v1.0.0](https://github.com/fakoli/coursekind/releases/tag/v1.0.0) is the first local-use release. Clone `https://github.com/fakoli/coursekind.git`. See the [release notes](docs/product/releases/v1.0.0.md) for validation and operating limits.
 
 ## Features
 
-- **Flashcard Decks**: Create and study flashcard decks with spaced repetition
+- **Flashcard Decks**: Create, review, rate and filter module flashcards with persistent personal progress
 - **Quizzes**: AI-generated quizzes to test your knowledge
 - **Course Authoring**: Create structured courses with modules, content, and assessments
 - **Learning Paths**: Organize courses into learning paths for guided learning
-- **AI-Powered Content**: Generate module content, flashcards, quizzes, and visuals via the self-hosted Anvil router
-- **Progress Tracking**: Track your learning progress, streaks, and mastery
+- **AI-Powered Content**: Generate editable module content, flashcards and quizzes with Anvil or an explicitly selected external provider; image generation is unavailable
+- **Progress Tracking**: Track explicit study events, sessions, streaks and personal course/path completion
 - **Admin Console**: User management and token administration (admin role)
-- **Notifications**: Configurable email and SMS reminders
+- **Notifications**: Saved email/SMS preferences and truthful provider availability; delivery requires a configured transport
+
+## User Journeys and Validation
+
+See the [user journey and UI validation catalog](docs/user-journeys.md) for the
+expected course, module, study, learning-path, sharing, statistics, and AI-model
+workflows, adopted policies, and acceptance boundaries. The [26 October baseline
+audit](docs/audits/2026-10-26/README.md) separates real rendered evidence, mocked
+external integrations, durable tests, timings and remaining limits. The
+[browser acceptance suite](frontend/e2e/README.md) runs in GitHub Actions against
+isolated synthetic storage and reports each journey independently.
+
+The historical [25 October walkthrough](docs/audits/2026-10-25/README.md) records outcomes,
+timings, evidence, and issues for all 40 journeys. The
+[AI workspace proposal](docs/ai-workspace-proposal.md) outlines one workflow for
+planning, generating, and revising paths, courses, and modules.
+
+Shared lesson HTML is sanitized, and Mermaid diagrams use strict mode. Scripts,
+iframes, event handlers, inline CSS and unsafe link protocols are removed from
+rendered output; standard Markdown, tables, code and protected images remain usable.
 
 ## Tech Stack
 
 | Layer | Technology |
 |-------|------------|
 | Frontend | React + TypeScript (Vite) |
-| Backend | Python 3.11+ / FastAPI |
+| Backend | Python 3.12 / FastAPI (qualified runtime) |
 | Data Models | Pydantic v2 |
 | Content | Markdown files |
-| Persistence | JSON (local), SQLite/Supabase (production) |
+| Persistence | JSON or SQLite, one application process |
 | AI | Anvil Serving router (self-hosted, OpenAI-compatible) |
 
 ## Quick Start
 
 ### Prerequisites
 
-- Python 3.11+
-- Node.js 18+
+- Python 3.12 (qualified runtime)
+- Node.js 22.12+ or 24 LTS (CI tests 22 and 24)
 - [uv](https://github.com/astral-sh/uv) (Python package manager)
 
 ### Backend Setup
 
 ```bash
 cd backend
-uv sync
+uv sync --locked --dev --python 3.12
 
 # Copy and configure environment
 cp .env.example .env
 # Edit .env with your settings (ANVIL_ROUTER_BASE_URL, ANVIL_ROUTER_TOKEN, etc.)
 
 # Run development server (port 8010 to match frontend proxy)
-uv run uvicorn main:app --reload --port 8010
+uv run --locked --python 3.12 uvicorn main:app --reload --port 8010
 ```
 
 ### Frontend Setup
 
 ```bash
 cd frontend
-npm install
+npm ci
 npm run dev
 ```
 
@@ -93,25 +118,27 @@ ANVIL_MODEL=llm.primary            # text generation route
 ANVIL_VISION_MODEL=vision.general  # image/vision route
 
 # Storage
-STORAGE_BACKEND=json    # or sqlite, supabase
+STORAGE_BACKEND=json    # or sqlite for workspace support
 STORAGE_PATH=./data
 
-# Optional: Supabase
-SUPABASE_URL=...
-SUPABASE_KEY=...
+# Workspace gates
+WORKSPACE_ENABLED=true
+WORKSPACE_REVIEW_ENABLED=false
+# Optional backend-only advisory review: TYPESAFE_API_KEY
 
 # Optional: Notifications
 MAILGUN_API_KEY=...
 MAILGUN_DOMAIN=...
 ```
 
-The router credential is server-side only. Users do not provide provider API
-keys; the Settings page reports whether the shared Anvil connection is healthy.
+The router credential is server-side only. Anvil `llm.primary` is the default; Settings supports available Anvil models and explicitly selected OpenAI, Gemini or Anthropic using the user's saved API key. External provider success has zero Anvil debit, but external billing may apply. There is no silent fallback. Never place credentials, including optional `TYPESAFE_API_KEY`, in Vite variables or browser code.
+
+Workspace transactions are qualified for JSON and SQLite in a single process. The legacy Supabase adapter is not a qualified workspace backend. New additive workspace records require no destructive migration of existing learning data.
 
 ## Project Structure
 
 ```
-/study-buddy
+/coursekind
   /docs
     architecture.md      # API specs, data models
     implementation.md    # Development guide
@@ -160,7 +187,7 @@ See [docs/architecture.md](docs/architecture.md) for full API specs.
 ```bash
 # Backend
 cd backend
-uv run pytest tests/ -v
+env -u DEBUG uv run --locked --python 3.12 pytest tests/ -q
 
 # Frontend
 cd frontend
@@ -180,3 +207,5 @@ npm run lint --prefix frontend
 ## License
 
 Apache-2.0 - See [LICENSE](LICENSE) for details.
+
+The [local Codex subscription prototype](docs/local-codex-subscription.md) is deferred after failed isolation qualification and has no executable provider path. Historical AI-06 evidence is retained; the active browser suite contains the original 40 IDs. Stored subscription selections require explicit replacement in Settings, with no fallback.

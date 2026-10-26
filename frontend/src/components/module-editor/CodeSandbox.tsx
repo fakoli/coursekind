@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { Play, RotateCcw, Eye, EyeOff, Loader2, CheckCircle, XCircle } from 'lucide-react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
@@ -10,6 +10,7 @@ interface CodeSandboxProps {
   readOnly?: boolean;
   onCodeChange?: (code: string) => void;
   savedCode?: string;
+  onExecuted?: (code: string, result: ExecutionResult) => Promise<void>;
 }
 
 export function CodeSandbox({
@@ -17,19 +18,17 @@ export function CodeSandbox({
   readOnly = false,
   onCodeChange,
   savedCode,
+  onExecuted,
 }: CodeSandboxProps) {
-  const [code, setCode] = useState(savedCode || sandbox.starter_code);
+  const running = useRef<AbortController | null>(null);
+  useEffect(() => () => running.current?.abort(), []);
+  const [code, setCode] = useState(savedCode ?? sandbox.starter_code);
   const [isRunning, setIsRunning] = useState(false);
   const [result, setResult] = useState<ExecutionResult | null>(null);
   const [showSolution, setShowSolution] = useState(false);
 
-  // Reset code when sandbox changes
-  useEffect(() => {
-    setCode(savedCode || sandbox.starter_code);
-    setResult(null);
-    setShowSolution(false);
-  }, [sandbox.starter_code, savedCode]);
-
+  // The parent keys this editor by module and waits for saved state before
+  // mounting. A progress acknowledgement must never erase the current output.
   const handleCodeChange = useCallback(
     (value: string) => {
       setCode(value);
@@ -39,10 +38,14 @@ export function CodeSandbox({
   );
 
   const handleRun = useCallback(async () => {
+    const controller = new AbortController();
+    running.current = controller;
     setIsRunning(true);
     try {
-      const executionResult = await executeCode(code, sandbox.language);
+      const executionResult = await executeCode(code, sandbox.language, controller.signal);
+      if (controller.signal.aborted) return;
       setResult(executionResult);
+      await onExecuted?.(code, executionResult);
     } catch (err) {
       setResult({
         success: false,
@@ -53,7 +56,7 @@ export function CodeSandbox({
     } finally {
       setIsRunning(false);
     }
-  }, [code, sandbox.language]);
+  }, [code, sandbox.language, onExecuted]);
 
   const handleReset = useCallback(() => {
     setCode(sandbox.starter_code);
@@ -109,9 +112,10 @@ export function CodeSandbox({
         {/* Editor */}
         <div className="relative">
           <textarea
+            aria-label="Practice code"
             value={code}
             onChange={(e) => handleCodeChange(e.target.value)}
-            disabled={readOnly}
+            disabled={readOnly || isRunning}
             className="w-full h-64 p-4 font-mono text-sm bg-gray-900 text-gray-100 resize-none focus:outline-none"
             placeholder={`Write your ${languageLabel} code here...`}
             spellCheck={false}

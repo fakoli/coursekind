@@ -37,6 +37,7 @@ function StatCard({ icon, value, label, color }: StatCardProps) {
 }
 
 function formatTime(minutes: number): string {
+  minutes = Math.round(minutes * 10) / 10;
   if (minutes < 60) {
     return `${minutes}m`;
   }
@@ -96,18 +97,20 @@ export function StatsGrid({ stats }: StatsGridProps) {
     (stats.average_quiz_score === null || stats.average_quiz_score === 0);
 
   // Show welcome card for new users with no activity
-  if (hasNoActivity) {
-    return <WelcomeCard />;
-  }
-
   return (
+    <>
+    {hasNoActivity && <WelcomeCard />}
+    <p className="text-sm text-gray-600">Study days use {stats.timezone ?? 'UTC'}. Sessions group actions until more than 30 minutes idle.</p>
     <div className="grid gap-4 grid-cols-2 lg:grid-cols-3">
       <StatCard
         icon={<GraduationCap className="w-5 h-5 text-indigo-600" />}
-        value={stats.active_paths}
-        label="Active Paths"
+        value={stats.selected_paths ?? 0}
+        label="Selected Paths"
         color="bg-indigo-50"
       />
+      <StatCard icon={<GraduationCap className="w-5 h-5 text-indigo-600" />} value={stats.active_paths} label="Active Selected Paths" color="bg-indigo-50" />
+      <StatCard icon={<CheckCircle className="w-5 h-5 text-green-600" />} value={stats.completed_selected_paths ?? 0} label="Completed Selected Paths" color="bg-green-50" />
+      <StatCard icon={<Clock className="w-5 h-5 text-blue-600" />} value={stats.study_sessions_week ?? 0} label="Study Sessions · Last 7 Days" color="bg-blue-50" />
       <StatCard
         icon={<BookOpen className="w-5 h-5 text-blue-600" />}
         value={stats.courses_in_progress}
@@ -143,5 +146,6 @@ export function StatsGrid({ stats }: StatsGridProps) {
         color="bg-rose-50"
       />
     </div>
+    </>
   );
 }

@@ -1,0 +1,57 @@
+{
+  "date": "2026-10-26",
+  "node": "24.18.0",
+  "command": "npm audit --omit=dev --json",
+  "outcome": "Findings remain; not a clean security audit",
+  "counts": {
+    "info": 0,
+    "low": 2,
+    "moderate": 2,
+    "high": 0,
+    "critical": 0,
+    "total": 4
+  },
+  "packages": [
+    {
+      "name": "@tailwindcss/typography",
+      "severity": "moderate",
+      "direct": true,
+      "fix_available": {
+        "name": "@tailwindcss/typography",
+        "version": "0.5.4",
+        "isSemVerMajor": true
+      }
+    },
+    {
+      "name": "katex",
+      "severity": "low",
+      "direct": false,
+      "fix_available": {
+        "name": "mermaid",
+        "version": "12.2.0",
+        "isSemVerMajor": true
+      }
+    },
+    {
+      "name": "mermaid",
+      "severity": "low",
+      "direct": true,
+      "fix_available": {
+        "name": "mermaid",
+        "version": "12.2.0",
+        "isSemVerMajor": true
+      }
+    },
+    {
+      "name": "postcss-selector-parser",
+      "severity": "moderate",
+      "direct": false,
+      "fix_available": {
+        "name": "@tailwindcss/typography",
+        "version": "0.5.4",
+        "isSemVerMajor": true
+      }
+    }
+  ],
+  "assessment": "Same remaining production metadata as baseline dependency-review.md. Existing bounded risk assessment remains, no exhaustive exploitability claim or broad forced upgrade."
+}

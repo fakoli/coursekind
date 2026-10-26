@@ -96,7 +96,7 @@ const server = http.createServer((req, res) => {
   if (urlPath.startsWith('/api/')) {
     proxyToBackend(req, res);
   } else if (urlPath === '/health') {
-    send(res, 200, JSON.stringify({ status: 'healthy', host: 'study-buddy' }), {
+    send(res, 200, JSON.stringify({ status: 'healthy', host: 'coursekind' }), {
       'Content-Type': 'application/json',
     });
   } else {

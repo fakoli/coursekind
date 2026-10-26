@@ -25,9 +25,12 @@ class UserLogin(BaseModel):
 
 class User(UserBase):
     id: str
+    timezone: str = "UTC"
     created_at: datetime
     token_balance: int = 100
-    role: UserRole = UserRole.USER  # Defaults to "user" for backward compatibility with existing records
+    role: UserRole = (
+        UserRole.USER
+    )  # Defaults to "user" for backward compatibility with existing records
 
 
 class UserInDB(User):

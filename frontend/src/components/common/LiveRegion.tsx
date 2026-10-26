@@ -1,12 +1,5 @@
-import { useState, useEffect, useCallback, createContext, ReactNode, useRef } from 'react';
-
-type Politeness = 'polite' | 'assertive';
-
-export interface LiveRegionContextValue {
-  announce: (message: string, politeness?: Politeness) => void;
-}
-
-export const LiveRegionContext = createContext<LiveRegionContextValue | null>(null);
+import { LiveRegionContext, type Politeness } from './LiveRegionContext';
+import { useState, useEffect, useCallback, ReactNode, useRef } from 'react';
 
 interface LiveRegionProviderProps {
   children: ReactNode;

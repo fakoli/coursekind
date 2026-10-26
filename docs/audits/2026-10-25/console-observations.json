@@ -1,0 +1,32 @@
+[
+  {
+    "level": "error",
+    "message": "Failed to generate module Variables and Numbers in Python: ApiError: Request failed\n    at request (http://127.0.0.1:5174/src/api/client.ts?t=1792987869289:21:11)",
+    "timestamp": "2026-10-26T04:24:10.865Z",
+    "url": "http://127.0.0.1:5174/src/hooks/useModuleSuggestions.ts?t=1792987871442"
+  },
+  {
+    "level": "error",
+    "message": "Failed to generate module Your First Function: ApiError: Request failed\n    at request (http://127.0.0.1:5174/src/api/client.ts?t=1792987869289:21:11)",
+    "timestamp": "2026-10-26T04:24:51.457Z",
+    "url": "http://127.0.0.1:5174/src/hooks/useModuleSuggestions.ts?t=1792987871442"
+  },
+  {
+    "level": "error",
+    "message": "Failed to save course: TypeError: Failed to fetch\n    at request (http://127.0.0.1:5174/src/api/client.ts?t=1792987869289:11:26)\n    at Object.get (http://127.0.0.1:5174/src/api/client.ts?t=1792987869289:29:18)\n    at Object.list (http://127.0.0.1:5174/src/api/modules.ts?t=1792987869289:4:27)\n    at saveModuleOutlines (http://127.0.0.1:5174/src/services/saveModuleOutlines.ts?t=1792987870234:3:37)\n    at handleSave (http://127.0.0.1:5174/src/pages/CourseEditor.tsx?t=1792987871445:102:13)",
+    "timestamp": "2026-10-26T04:28:16.076Z",
+    "url": "http://127.0.0.1:5174/src/pages/CourseEditor.tsx?t=1792987871445"
+  },
+  {
+    "level": "error",
+    "message": "Failed to save course: TypeError: Failed to fetch\n    at request (http://127.0.0.1:5174/src/api/client.ts?t=1792987869289:11:26)\n    at Object.get (http://127.0.0.1:5174/src/api/client.ts?t=1792987869289:29:18)\n    at Object.list (http://127.0.0.1:5174/src/api/modules.ts?t=1792987869289:4:27)\n    at saveModuleOutlines (http://127.0.0.1:5174/src/services/saveModuleOutlines.ts?t=1792987870234:3:37)\n    at handleSave (http://127.0.0.1:5174/src/pages/CourseEditor.tsx?t=1792987871445:102:13)",
+    "timestamp": "2026-10-26T04:28:32.987Z",
+    "url": "http://127.0.0.1:5174/src/pages/CourseEditor.tsx?t=1792987871445"
+  },
+  {
+    "level": "error",
+    "message": "Failed to generate content: ApiError: Request failed\n    at request (http://127.0.0.1:5174/src/api/client.ts?t=1792987869289:21:11)",
+    "timestamp": "2026-10-26T04:34:17.419Z",
+    "url": "http://127.0.0.1:5174/src/hooks/useModuleGeneration.ts?t=1792987871439"
+  }
+]

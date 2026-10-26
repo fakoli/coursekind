@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { Play, Copy, Check, Loader2, ChevronDown, ChevronRight } from 'lucide-react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
@@ -8,20 +8,29 @@ import type { SandboxLanguage } from '../../types';
 interface RunnableCodeBlockProps {
   code: string;
   language: SandboxLanguage;
+  onExecuted?: (code: string, result: ExecutionResult) => Promise<void>;
 }
 
-export function RunnableCodeBlock({ code, language }: RunnableCodeBlockProps) {
+export function RunnableCodeBlock({ code, language, onExecuted }: RunnableCodeBlockProps) {
+  const [draft, setDraft] = useState(code);
+  const [editing, setEditing] = useState(false);
+  const running = useRef<AbortController | null>(null);
+  useEffect(() => () => running.current?.abort(), []);
   const [isRunning, setIsRunning] = useState(false);
   const [result, setResult] = useState<ExecutionResult | null>(null);
   const [showOutput, setShowOutput] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const handleRun = useCallback(async () => {
+    const controller = new AbortController();
+    running.current = controller;
     setIsRunning(true);
     setShowOutput(true);
     try {
-      const executionResult = await executeCode(code, language);
+      const executionResult = await executeCode(draft, language, controller.signal);
+      if (controller.signal.aborted) return;
       setResult(executionResult);
+      await onExecuted?.(draft, executionResult);
     } catch (err) {
       setResult({
         success: false,
@@ -32,17 +41,17 @@ export function RunnableCodeBlock({ code, language }: RunnableCodeBlockProps) {
     } finally {
       setIsRunning(false);
     }
-  }, [code, language]);
+  }, [draft, language, onExecuted]);
 
   const handleCopy = useCallback(async () => {
     try {
-      await navigator.clipboard.writeText(code);
+      await navigator.clipboard.writeText(draft);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
       // Clipboard access denied
     }
-  }, [code]);
+  }, [draft]);
 
   const languageLabel = language === 'python' ? 'Python' : 'JavaScript';
 
@@ -52,6 +61,8 @@ export function RunnableCodeBlock({ code, language }: RunnableCodeBlockProps) {
       <div className="flex items-center justify-between bg-gray-800 px-3 py-1.5 border-b border-gray-700">
         <span className="text-xs font-medium text-gray-400">{languageLabel}</span>
         <div className="flex items-center gap-1">
+          <button className="px-2 py-1 text-xs text-white" disabled={isRunning} onClick={() => setEditing(!editing)}>{editing ? 'Hide editor' : 'Edit code'}</button>
+          <button className="px-2 py-1 text-xs text-white" disabled={isRunning} onClick={() => { setDraft(code); setResult(null); }}>Reset code</button>
           <button
             onClick={handleCopy}
             className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors"
@@ -64,6 +75,7 @@ export function RunnableCodeBlock({ code, language }: RunnableCodeBlockProps) {
             disabled={isRunning}
             className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-white bg-green-600 hover:bg-green-700 disabled:bg-gray-600 rounded transition-colors"
             title="Run code"
+            aria-label="Run code"
           >
             {isRunning ? (
               <Loader2 className="w-3 h-3 animate-spin" />
@@ -76,7 +88,9 @@ export function RunnableCodeBlock({ code, language }: RunnableCodeBlockProps) {
       </div>
 
       {/* Code block */}
-      <SyntaxHighlighter
+      {editing ? <textarea aria-label="Example code" value={draft} disabled={isRunning}
+        className="w-full h-40 p-3 bg-gray-900 text-white font-mono text-sm" spellCheck={false}
+        onChange={event => setDraft(event.target.value)} /> : <SyntaxHighlighter
         style={oneDark}
         language={language}
         PreTag="div"
@@ -86,8 +100,8 @@ export function RunnableCodeBlock({ code, language }: RunnableCodeBlockProps) {
           fontSize: '0.875rem',
         }}
       >
-        {code}
-      </SyntaxHighlighter>
+        {draft}
+      </SyntaxHighlighter>}
 
       {/* Output section */}
       {(showOutput || result) && (

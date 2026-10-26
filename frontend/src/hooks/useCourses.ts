@@ -43,6 +43,8 @@ export function useCreateCourse() {
     mutationFn: (data: CourseCreate) => coursesApi.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['courses'] });
+      queryClient.invalidateQueries({ queryKey: ['path'] });
+      queryClient.invalidateQueries({ queryKey: ['paths'] });
     },
   });
 }
@@ -56,6 +58,8 @@ export function useUpdateCourse() {
       coursesApi.update(courseId, data),
     onSuccess: (_, { courseId }) => {
       queryClient.invalidateQueries({ queryKey: ['courses'] });
+      queryClient.invalidateQueries({ queryKey: ['path'] });
+      queryClient.invalidateQueries({ queryKey: ['paths'] });
       queryClient.invalidateQueries({ queryKey: ['course', courseId] });
     },
   });
@@ -69,6 +73,12 @@ export function useDeleteCourse() {
     mutationFn: (courseId: string) => coursesApi.delete(courseId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['courses'] });
+      queryClient.invalidateQueries({ queryKey: ['path'] });
+      queryClient.invalidateQueries({ queryKey: ['paths'] });
     },
   });
+}
+
+export function useSharedCourses() {
+  return useQuery({ queryKey: ['courses', 'shared'], queryFn: coursesApi.listShared });
 }
