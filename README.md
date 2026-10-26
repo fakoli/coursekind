@@ -4,6 +4,10 @@ Turn a learning goal into a reviewable course or learning path, build one lesson
 
 See the [local v1 operating guide](docs/product/coursekind-local-v1.md) for onboarding, recovery, quotas, backup and rollback boundaries.
 
+## Release
+
+[Coursekind v1.0.0](https://github.com/fakoli/coursekind/releases/tag/v1.0.0) is the first local-use release. Clone `https://github.com/fakoli/coursekind.git`. See the [release notes](docs/product/releases/v1.0.0.md) for validation and operating limits.
+
 ## Features
 
 - **Flashcard Decks**: Create, review, rate and filter module flashcards with persistent personal progress
@@ -134,7 +138,7 @@ Workspace transactions are qualified for JSON and SQLite in a single process. Th
 ## Project Structure
 
 ```
-/study-buddy
+/coursekind
   /docs
     architecture.md      # API specs, data models
     implementation.md    # Development guide

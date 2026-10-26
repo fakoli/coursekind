@@ -128,3 +128,7 @@ The scoped adversarial review and root UI both found a remaining recovery defect
 ## Final local-v1 acceptance
 
 Production4868fd2: all aggregate findings resolved after independent scoped approval. CI40363622442 passed49 browser retry0/7.7minutes,536backend211frontend,Node22/24lint/build. ActualUI gates and normalruntime upgrade passed; normaldata/session/Anvildefault preserved. Finalreport and operatingguide published; PR23 remains draft/unmerged. LiveAnvil503 availability limitation remains explicit; JEVlivefeature passed. No publicdeployment or repositoryrename.
+
+## Release preparation — 26 October 2026, afternoon
+
+The owner authorized pushing the completed work, publishing a version, and renaming the repository. Renamed the existing public repository to `fakoli/coursekind` without changing its visibility or stable repository ID; updated the active checkout remote. Preparing v1.0.0 with frontend/backend/API version metadata and package names aligned, dependency versions unchanged. PR #23's completed documentation head passed CI40365179260. A new isolated synthetic live Anvil validation is running against llm.primary; no Codex model is used. The normal user storage and quota are not used for this check.

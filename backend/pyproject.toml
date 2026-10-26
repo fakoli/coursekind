@@ -1,6 +1,6 @@
 [project]
-name = "study-buddy-backend"
-version = "0.1.0"
+name = "coursekind-backend"
+version = "1.0.0"
 description = "Coursekind - A learning platform for visual learners"
 requires-python = ">=3.11"
 dependencies = [

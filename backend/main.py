@@ -38,7 +38,7 @@ app = FastAPI(
     lifespan=lifespan,
     title=settings.app_name,
     description="A learning platform for visual learners who learn by doing",
-    version="0.1.0",
+    version="1.0.0",
 )
 
 # CORS middleware
