@@ -77,3 +77,4 @@ record,journey_ids,scenario,observed_status,elapsed_seconds,later_retest_records
 75,AI-06; COURSE-05; MODULE-05,"Generate lesson, two cards and two quiz questions; refine, save and reopen",pass,127.285,
 76,AI-06,Return explicitly to Anvil and verify zero subscription debit,pass,16.885,
 77,COURSE-02,Older course editor save must preserve a module added in another tab,fail,17.001,
+78,STUDY-02,Finish must not discard a failed earlier flashcard review,fail,28.388,

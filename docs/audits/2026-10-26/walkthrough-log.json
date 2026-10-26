@@ -538,5 +538,12 @@
     "status": "fail",
     "duration_ms": 17001,
     "notes": "Actual2tabrepro: oldcourseeditorheld1module; other tabcreatedConcurrent outline must survive239036cb-797c-45bd-9f59-b1899c212b93; savingolderunchangeddraftdeletednewmodule, coursecountback1, newmoduleURLreloadModuleNotFound. Onlynewsyntheticmoduleaffected; existinggeneratedmodule4f8f preserved. Finalreviewfinding; pendingfix."
+  },
+  {
+    "journey": "STUDY-02",
+    "scenario": "Finish must not discard a failed earlier flashcard review",
+    "status": "fail",
+    "duration_ms": 28388,
+    "notes": "Actual UI withdisposablemiddleware2targeted503reviewevents: flipcardAfailed;NextretriedAfailedbutadvanced;flipcardBsaved;Finishnavigatedcourseandmarked100%completewith1/2cards, earlierAunsaved. Screenshot57. Syntheticmodule4f8f nowAuthorcompleted; requestfailurecounter0. Pendingfinalreviewfix."
   }
 ]

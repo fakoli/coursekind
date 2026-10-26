@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "source": "walkthrough-log.json",
-  "record_count": 78,
+  "record_count": 79,
   "note": "Historical outcomes and source notes are preserved, not promoted into final journey passes. Record indices are zero-based.",
   "records": [
     {
@@ -1535,6 +1535,25 @@
         "status": "fail",
         "duration_ms": 17001,
         "notes": "Actual2tabrepro: oldcourseeditorheld1module; other tabcreatedConcurrent outline must survive239036cb-797c-45bd-9f59-b1899c212b93; savingolderunchangeddraftdeletednewmodule, coursecountback1, newmoduleURLreloadModuleNotFound. Onlynewsyntheticmoduleaffected; existinggeneratedmodule4f8f preserved. Finalreviewfinding; pendingfix."
+      }
+    },
+    {
+      "record": 78,
+      "journey_ids": [
+        "STUDY-02"
+      ],
+      "scenario": "Finish must not discard a failed earlier flashcard review",
+      "observed_status": "fail",
+      "elapsed_seconds": 28.388,
+      "timing_source": "duration_ms",
+      "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
+      "later_retest_records": [],
+      "source": {
+        "journey": "STUDY-02",
+        "scenario": "Finish must not discard a failed earlier flashcard review",
+        "status": "fail",
+        "duration_ms": 28388,
+        "notes": "Actual UI withdisposablemiddleware2targeted503reviewevents: flipcardAfailed;NextretriedAfailedbutadvanced;flipcardBsaved;Finishnavigatedcourseandmarked100%completewith1/2cards, earlierAunsaved. Screenshot57. Syntheticmodule4f8f nowAuthorcompleted; requestfailurecounter0. Pendingfinalreviewfix."
       }
     }
   ]
