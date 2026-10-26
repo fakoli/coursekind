@@ -35,6 +35,13 @@ import type { FlashcardFilter as FilterType, FlashcardRating, QuizQuestionData }
 
 type ViewTab = 'content' | 'flashcards' | 'quiz' | 'practice';
 
+interface FlashcardReviewEncounter {
+  actionKey: string;
+  cardKey: string;
+  saved: boolean;
+  startedAt: number;
+}
+
 export function ModuleViewer() {
   const { user } = useAuthContext();
   const { courseId, moduleId } = useParams();
@@ -53,6 +60,8 @@ function StudyModule() {
   const [isFlipped, setIsFlipped] = useState(false);
   const [quizAnswers, setQuizAnswers] = useState<Record<number, number>>({});
   const [quizSubmitted, setQuizSubmitted] = useState(false);
+  const [quizSubmissionPending, setQuizSubmissionPending] = useState(false);
+  const [submittedQuizAnswers, setSubmittedQuizAnswers] = useState<Record<number, number> | null>(null);
   const [flashcardFilter, setFlashcardFilter] = useState<FilterType>('all');
   const [localExtraQuestions, setExtraQuizQuestions] = useState<QuizQuestionData[] | null>(null);
   const [localPracticeCode, setLocalPracticeCode] = useState<string | null>(null);
@@ -96,6 +105,27 @@ function StudyModule() {
       setPersonalSaveError(false);
     } catch { setPersonalSaveError(true); }
   };
+  const retryFailedStudySave = async () => {
+    const failed = failedStudyAction;
+    if (!failed) return;
+    const isQuiz = failed.data.action === 'submit_quiz';
+    if (isQuiz) setQuizSubmissionPending(true);
+    try {
+      await saveAction(failed.key, failed.data);
+      if (isQuiz) {
+        const snapshot = Object.fromEntries(
+          Object.entries(failed.data.quiz_answers ?? {}).map(([index, answer]) => [Number(index), answer]),
+        );
+        setQuizAnswers(snapshot);
+        setSubmittedQuizAnswers(snapshot);
+        setQuizSubmitted(true);
+      }
+    } catch {
+      // The existing failed action and its idempotency key remain available.
+    } finally {
+      if (isQuiz) setQuizSubmissionPending(false);
+    }
+  };
 
   // Flashcard rating hooks
   const { data: ratingsData } = useFlashcardRatings(courseId || '', moduleId || '');
@@ -115,7 +145,8 @@ function StudyModule() {
   }, [ratingsData]);
 
   const hasTrackedContentRead = useRef(false);
-  const trackedFlashcardReviews = useRef(new Set<string>());
+  const flashcardReviewEncounter = useRef<FlashcardReviewEncounter | null>(null);
+  const flashcardReviewSequence = useRef(0);
   const pendingFlashcardReviews = useRef(new Map<string, Promise<void>>());
 
   // Combine module quiz questions with extra generated questions
@@ -145,20 +176,43 @@ function StudyModule() {
   const trackFlashcardReview = (): Promise<void> => {
     const flashcard = filteredFlashcards[safeFlashcardIndex];
     const cardKey = flashcard?.id ?? `index:${flashcard?.originalIndex}`;
-    if (!courseId || !moduleId || !flashcard
-      || trackedFlashcardReviews.current.has(cardKey)) return Promise.resolve();
-    const trackedReviews = trackedFlashcardReviews.current;
-    const pendingReviews = pendingFlashcardReviews.current;
-    const pending = pendingReviews.get(cardKey);
+    if (!courseId || !moduleId || !flashcard) return Promise.resolve();
+    const now = Date.now();
+    let encounter = flashcardReviewEncounter.current;
+    if (encounter?.cardKey === cardKey) {
+      const pending = pendingFlashcardReviews.current.get(encounter.actionKey);
+      if (pending) return pending;
+      // An unsaved encounter always retries the same event ID. A saved encounter
+      // remains one interaction until the card is left or study resumes after 30m.
+      if (!encounter.saved || now - encounter.startedAt <= 30 * 60 * 1000) {
+        if (encounter.saved) return Promise.resolve();
+      } else {
+        encounter = null;
+      }
+    } else {
+      encounter = null;
+    }
+    if (!encounter) {
+      const sequence = ++flashcardReviewSequence.current;
+      encounter = {
+        actionKey: `card:${cardKey}:encounter:${sequence}`,
+        cardKey,
+        saved: false,
+        startedAt: now,
+      };
+      flashcardReviewEncounter.current = encounter;
+    }
+    const pending = pendingFlashcardReviews.current.get(encounter.actionKey);
     if (pending) return pending;
-    const saved = saveAction(`card:${flashcard.id ?? flashcard.originalIndex}`, { action: 'review_flashcard', flashcard_id: flashcard.id })
-      .then(() => { trackedReviews.add(cardKey); })
+    const currentEncounter = encounter;
+    const saved = saveAction(encounter.actionKey, { action: 'review_flashcard', flashcard_id: flashcard.id })
+      .then(() => { currentEncounter.saved = true; })
       .catch(error => {
         showError('Could not save your flashcard review. Please try again.');
         throw error;
       })
-      .finally(() => { pendingReviews.delete(cardKey); });
-    pendingReviews.set(cardKey, saved);
+      .finally(() => { pendingFlashcardReviews.current.delete(currentEncounter.actionKey); });
+    pendingFlashcardReviews.current.set(currentEncounter.actionKey, saved);
     return saved;
   };
 
@@ -186,6 +240,7 @@ function StudyModule() {
   useEffect(() => {
     setCurrentFlashcardIndex(0);
     setIsFlipped(false);
+    flashcardReviewEncounter.current = null;
   }, [flashcardFilter]);
 
   if (isLoading) {
@@ -226,32 +281,40 @@ function StudyModule() {
 
     if (direction === 'prev' && safeFlashcardIndex > 0) {
       setCurrentFlashcardIndex(safeFlashcardIndex - 1);
+      flashcardReviewEncounter.current = null;
     } else if (direction === 'next' && safeFlashcardIndex < filteredFlashcards.length - 1) {
       setCurrentFlashcardIndex(safeFlashcardIndex + 1);
+      flashcardReviewEncounter.current = null;
     }
   };
 
   const handleQuizAnswer = (questionIndex: number, answerIndex: number) => {
-    if (!quizSubmitted) {
+    if (!quizSubmitted && !quizSubmissionPending) {
       eventRequests.current.delete('quiz');
+      setFailedStudyAction(previous => previous?.key === 'quiz' ? null : previous);
       setQuizAnswers({ ...quizAnswers, [questionIndex]: answerIndex });
     }
   };
 
   const handleQuizSubmit = async () => {
-    if (!courseId || !moduleId || updateProgress.isPending) return;
-    const score = Math.round(allQuizQuestions.filter((q, i) => quizAnswers[i] === q.correct_index).length / allQuizQuestions.length * 100);
+    if (!courseId || !moduleId || quizSubmissionPending) return;
+    const snapshot = { ...quizAnswers };
+    const score = Math.round(allQuizQuestions.filter((q, i) => snapshot[i] === q.correct_index).length / allQuizQuestions.length * 100);
+    setQuizSubmissionPending(true);
     try {
-      await saveAction('quiz', { action: 'submit_quiz', quiz_score: score, quiz_answers: quizAnswers });
+      await saveAction('quiz', { action: 'submit_quiz', quiz_score: score, quiz_answers: snapshot });
+      setSubmittedQuizAnswers(snapshot);
       setQuizSubmitted(true);
     } catch { showError('Could not save your quiz. Please try again.'); }
+    finally { setQuizSubmissionPending(false); }
   };
 
   const calculateQuizScore = () => {
     if (allQuizQuestions.length === 0) return 0;
+    const answers = submittedQuizAnswers ?? quizAnswers;
     let correct = 0;
     allQuizQuestions.forEach((q, i) => {
-      if (quizAnswers[i] === q.correct_index) correct++;
+      if (answers[i] === q.correct_index) correct++;
     });
     return Math.round((correct / allQuizQuestions.length) * 100);
   };
@@ -315,7 +378,7 @@ function StudyModule() {
         )}
       </div>
 
-      {failedStudyAction && <div role="alert">A study action has not been saved. <Button disabled={updateProgress.isPending} onClick={() => { void saveAction(failedStudyAction.key, failedStudyAction.data).catch(() => {}); }}>Retry study save</Button></div>}
+      {failedStudyAction && <div role="alert">A study action has not been saved. <Button disabled={updateProgress.isPending || quizSubmissionPending} onClick={() => { void retryFailedStudySave(); }}>Retry study save</Button></div>}
       {personalSaveError && <div role="alert">Could not save your personal changes. <Button onClick={() => savePersonal(personalDraft.current)}>Retry save</Button></div>}
       {personalError && <p role="alert">Could not load saved study state. Reload before editing your personal practice.</p>}
       {personal?.quiz_attempts ? <p>Saved quiz attempts: {personal.quiz_attempts} · Latest score: {personal.quiz_score}%</p> : null}
@@ -502,7 +565,8 @@ function StudyModule() {
                       variant="secondary"
                       onClick={() => {
                         eventRequests.current.delete('quiz');
-                      setQuizAnswers({});
+                        setQuizAnswers({});
+                        setSubmittedQuizAnswers(null);
                         setQuizSubmitted(false);
                       }}
                     >
@@ -532,7 +596,10 @@ function StudyModule() {
                 </p>
                 <div className="space-y-2">
                   {question.options.map((option, oIndex) => {
-                    const isSelected = quizAnswers[qIndex] === oIndex;
+                    const displayedAnswers = quizSubmitted && submittedQuizAnswers
+                      ? submittedQuizAnswers
+                      : quizAnswers;
+                    const isSelected = displayedAnswers[qIndex] === oIndex;
                     const isCorrect = question.correct_index === oIndex;
                     let optionClass = 'border-gray-200 hover:border-indigo-300';
 
@@ -551,7 +618,7 @@ function StudyModule() {
                         key={oIndex}
                         onClick={() => handleQuizAnswer(qIndex, oIndex)}
                         className={`w-full text-left p-3 rounded-lg border transition-colors ${optionClass}`}
-                        disabled={quizSubmitted}
+                        disabled={quizSubmitted || quizSubmissionPending}
                       >
                         {option}
                       </button>
@@ -570,7 +637,8 @@ function StudyModule() {
           {!quizSubmitted && (
             <Button
               onClick={handleQuizSubmit}
-              disabled={Object.keys(quizAnswers).length !== allQuizQuestions.length}
+              disabled={quizSubmissionPending || Object.keys(quizAnswers).length !== allQuizQuestions.length}
+              isLoading={quizSubmissionPending}
             >
               Submit Quiz
             </Button>

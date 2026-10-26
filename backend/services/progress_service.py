@@ -600,10 +600,71 @@ class ProgressService:
                         )
                         break
 
-        # If no path items, suggest from user's courses
-        if not items:
+        recommended_courses = {item.course_id for item in items}
+
+        # A learner can study a readable course directly without following a path
+        # or authoring it. Resume those courses before generic authored suggestions.
+        if len(items) < limit:
+            progress_records = await self.storage.list("module_progress", {"user_id": user_id})
+            progress_records.sort(
+                key=lambda record: ensure_datetime(record.get("updated_at"))
+                or datetime.min.replace(tzinfo=timezone.utc),
+                reverse=True,
+            )
+            started_course_ids = []
+            for record in progress_records:
+                course_id = record.get("course_id")
+                if (
+                    course_id
+                    and record.get("status") in {"in_progress", "completed"}
+                    and course_id not in started_course_ids
+                    and course_id not in recommended_courses
+                ):
+                    started_course_ids.append(course_id)
+            for course_id in started_course_ids:
+                try:
+                    course_progress = await self.get_course_progress(user_id, course_id)
+                except NotFoundException:
+                    # Live access checks prevent revoked course metadata from leaking.
+                    continue
+                if course_progress.completion_percentage == 100:
+                    continue
+                module_status = next(
+                    (
+                        module
+                        for module in course_progress.modules
+                        if module.status == "in_progress"
+                    ),
+                    next(
+                        (
+                            module
+                            for module in course_progress.modules
+                            if module.status != "completed"
+                        ),
+                        None,
+                    ),
+                )
+                if module_status:
+                    items.append(
+                        NextUpItem(
+                            item_type="module",
+                            module_id=module_status.module_id,
+                            module_title=module_status.module_title,
+                            course_id=course_progress.course_id,
+                            course_title=course_progress.course_title,
+                            reason="Continue where you left off",
+                        )
+                    )
+                    recommended_courses.add(course_id)
+                if len(items) >= limit:
+                    break
+
+        # Fill any remaining recommendations from unfinished authored courses.
+        if len(items) < limit:
             courses = await self.storage.list("courses", {"author_id": user_id})
-            for course in courses[:limit]:
+            for course in courses:
+                if course["id"] in recommended_courses:
+                    continue
                 try:
                     course_progress = await self.get_course_progress(user_id, course["id"])
                     if course_progress.completion_percentage < 100:
@@ -620,6 +681,7 @@ class ProgressService:
                                         reason="Continue your course",
                                     )
                                 )
+                                recommended_courses.add(course["id"])
                                 break
                 except NotFoundException:
                     continue

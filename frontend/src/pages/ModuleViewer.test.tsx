@@ -73,6 +73,64 @@ it('uses a native flashcard flip control and sends stable card identity', async 
   expect(flip.querySelector('button')).toBeNull();
 });
 
+it('records new events when the same stable card is revisited or resumed after 30 minutes', async () => {
+  const module = makeModule();
+  module.flashcards[0].id = 'card-first';
+  const state = installJourneyApi([module]);
+  renderJourney(<ModuleViewer />, '/courses/c1/modules/m1', '/courses/:courseId/modules/:moduleId');
+  fireEvent.click(await screen.findByRole('button', { name: 'Flashcards (2)' }));
+  let now = Date.now();
+  vi.spyOn(Date, 'now').mockImplementation(() => now);
+
+  fireEvent.click(screen.getByRole('button', { name: 'Flip flashcard' }));
+  await waitFor(() => expect(state.progress.get('m1')?.reviews).toBe(1));
+  fireEvent.click(screen.getByRole('button', { name: 'Easy' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Next flashcard' }));
+  expect(state.actions.filter(action => action.action === 'review_flashcard')).toHaveLength(1);
+
+  fireEvent.click(screen.getByRole('button', { name: 'Previous flashcard' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Flip flashcard' }));
+  await waitFor(() => expect(state.progress.get('m1')?.reviews).toBe(2));
+  const reviews = state.actions.filter(action => action.action === 'review_flashcard');
+  expect(reviews).toHaveLength(2);
+  expect(new Set(reviews.map(review => review.event_id)).size).toBe(2);
+  expect(new Set(reviews.map(review => review.flashcard_id))).toEqual(new Set(['card-first']));
+
+  fireEvent.click(screen.getByRole('button', { name: 'Flip flashcard' }));
+  now += 30 * 60 * 1000 + 1;
+  fireEvent.click(screen.getByRole('button', { name: 'Flip flashcard' }));
+  await waitFor(() => expect(state.progress.get('m1')?.reviews).toBe(3));
+  const resumedReviews = state.actions.filter(action => action.action === 'review_flashcard');
+  expect(new Set(resumedReviews.map(review => review.event_id)).size).toBe(3);
+  expect(new Set(resumedReviews.map(review => review.flashcard_id))).toEqual(new Set(['card-first']));
+});
+
+it('freezes the submitted quiz answers while their save is pending', async () => {
+  installJourneyApi([makeModule()]);
+  const journeyFetch = fetch;
+  let submitted: Record<string, unknown> | undefined;
+  let finishSave: ((response: Response) => void) | undefined;
+  vi.stubGlobal('fetch', vi.fn((input: string, init?: RequestInit) => {
+    const path = new URL(input, 'http://localhost').pathname.replace('/api/v1', '');
+    const body = init?.body ? JSON.parse(String(init.body)) : {};
+    if (path === '/progress/modules/c1/m1' && init?.method === 'POST' && body.action === 'submit_quiz') {
+      submitted = body;
+      return new Promise<Response>(resolve => { finishSave = resolve; });
+    }
+    return journeyFetch(input, init);
+  }));
+  renderJourney(<ModuleViewer />, '/courses/c1/modules/m1', '/courses/:courseId/modules/:moduleId');
+  fireEvent.click(await screen.findByRole('button', { name: 'Quiz (1)' }));
+  fireEvent.click(screen.getByRole('button', { name: '6' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Submit Quiz' }));
+  await waitFor(() => expect(submitted).toEqual(expect.objectContaining({ quiz_score: 0, quiz_answers: { 0: 1 } })));
+  expect(screen.getByRole('button', { name: '5' })).toBeDisabled();
+
+  finishSave?.(new Response(JSON.stringify({ id: 'p1' }), { status: 200 }));
+  expect(await screen.findByText('Score: 0%')).toBeInTheDocument();
+  expect(submitted?.quiz_answers).toEqual({ 0: 1 });
+});
+
 it('keeps quiz feedback unsubmitted when the personal save fails', async () => {
   const state = installJourneyApi([makeModule()]);
   state.failQuiz = true;
@@ -83,6 +141,13 @@ it('keeps quiz feedback unsubmitted when the personal save fails', async () => {
   await screen.findByText('Could not save your quiz. Please try again.');
   expect(screen.getByRole('button', { name: 'Submit Quiz' })).toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'Retry Quiz' })).not.toBeInTheDocument();
+  state.failQuiz = false;
+  fireEvent.click(screen.getByRole('button', { name: 'Retry study save' }));
+  expect(await screen.findByText('Score: 100%')).toBeInTheDocument();
+  const attempts = state.actions.filter(action => action.action === 'submit_quiz');
+  expect(attempts).toHaveLength(2);
+  expect(new Set(attempts.map(attempt => attempt.event_id)).size).toBe(1);
+  expect(attempts[0].quiz_answers).toEqual(attempts[1].quiz_answers);
 });
 
 it('persists personal practice drafts across remounts, including an empty draft and Reset', async () => {

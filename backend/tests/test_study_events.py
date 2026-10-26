@@ -353,3 +353,29 @@ async def test_module_progress_reflects_removed_cards(study):
     await act(service, "review_flashcard", flashcard_id="a")
     await storage.update("modules", "m", {"flashcards": []})
     assert (await service.get_module_progress("u", "m", "c")).flashcards_reviewed == 0
+
+
+@pytest.mark.asyncio
+async def test_next_up_prefers_readable_started_course_without_a_follow_and_redacts_revoked(study):
+    storage, service, clock = study
+    await storage.create(
+        "courses",
+        {"id": "direct", "title": "Direct study", "author_id": "other", "visibility": "public"},
+    )
+    await storage.create(
+        "modules",
+        {"id": "direct-module", "course_id": "direct", "title": "Resume me", "order_index": 0},
+    )
+    await service.update_module_progress(
+        "u", "direct-module", "direct", ModuleProgressCreate(action="read_content")
+    )
+
+    next_up = await service.get_next_up("u")
+    assert next_up.items[0].course_id == "direct"
+    assert next_up.items[0].module_id == "direct-module"
+    assert next_up.items[0].course_title == "Direct study"
+
+    await storage.update("courses", "direct", {"visibility": "private"})
+    revoked = await service.get_next_up("u")
+    assert all(item.course_id != "direct" for item in revoked.items)
+    assert all(item.course_title != "Direct study" for item in revoked.items)
