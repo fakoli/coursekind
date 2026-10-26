@@ -78,3 +78,30 @@ it('keeps history on conflict and uses the captured fingerprint on retry', async
   await waitFor(() => expect(restore).toHaveBeenCalledTimes(2));
   expect(restore.mock.calls[0][2]).toEqual(restore.mock.calls[1][2]);
 });
+
+it.each([
+  { name: 'changed visual', visual: 'visuals/revised-card.png' },
+  { name: 'removed visual', visual: null },
+  { name: 'untrusted visual', visual: 'javascript:alert(1)<svg onload="alert(2)">' },
+])('shows a flashcard $name before restoring recorded history', async ({ visual }) => {
+  installWorkspaceBuildApi();
+  const revision = fixture();
+  const card = { id: 'retained', front: 'Unchanged front', back: 'Unchanged back' };
+  revision.before[0].fields = { flashcards: [{ ...card, visual: 'visuals/original-card.png' }] };
+  revision.after[0].fields = { flashcards: [{ ...card, visual }] };
+  revision.touched_fields = [['flashcards']];
+  vi.spyOn(workspacesApi, 'history').mockResolvedValue([revision]);
+  renderJourney(
+    <WorkspaceHistory workspaceId="w1" onChanged={async () => {}} />,
+    '/workspaces/w1',
+    '/workspaces/:workspaceId',
+  );
+  fireEvent.click(await screen.findByText('Compare recorded fields', { exact: true }));
+  expect(screen.getByText('visuals/original-card.png', { exact: true })).toBeVisible();
+  expect(screen.getByText(visual || 'No visual', { exact: true })).toBeVisible();
+  expect(screen.getAllByText('Unchanged front')).toHaveLength(2);
+  expect(screen.getAllByText('Unchanged back')).toHaveLength(2);
+  expect(
+    screen.getByRole('region', { name: 'Workspace history' }).querySelector('img, a, svg, iframe'),
+  ).toBeNull();
+});

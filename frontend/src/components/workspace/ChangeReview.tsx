@@ -46,6 +46,9 @@ export function EditorialValue({ name, value }: { name: string; value: unknown }
             <li key={card.id || index} className="border rounded p-2">
               <p className="font-medium">{card.front}</p>
               <p>{card.back}</p>
+              <p className="whitespace-pre-wrap break-words">
+                Visual: <span>{card.visual || 'No visual'}</span>
+              </p>
             </li>
           ))}
         </ol>
@@ -243,10 +246,6 @@ export function ChangeReview({
       )}
       {conflict && (
         <div className="space-y-2">
-          <p>
-            This content changed since your draft was created. Your draft is kept. Review the
-            current version or regenerate before applying.
-          </p>
           {proposal.revision_request && (
             <>
               <p>
