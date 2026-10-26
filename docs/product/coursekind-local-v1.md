@@ -11,7 +11,7 @@ Coursekind turns a goal into a private course or a path of one to three courses.
 5. Review the saved draft, then explicitly Apply. Open the resulting module and study it. Generation alone does not count as learning activity. Earlier completed jobs are compact summaries; failures and current jobs remain discoverable.
 6. Revise only the chosen lesson, cards, quiz, course details/outline or path references. Compare changes, apply and use History to restore prior content. A stale apply/restore rejects safely and retains the draft. Creation entries are not deletable undo operations.
 
-Existing courses and paths offer Open in workspace. Explicit path reuse keeps original authorship and never grants edit access to a source. Current-access checks govern reads, generation, polling, apply and restore. Course titles in reference comparisons come from current authorized reads; failures show a neutral reference label.
+Existing courses and paths offer Open in workspace. Explicit path reuse keeps original authorship and never grants edit access to a source. Current-access checks govern reads, generation, polling, apply and restore. Course titles in reference comparisons come from current authorized reads; failures show a neutral reference label. Path-linked workspaces follow the current path membership. If a current source becomes unavailable, follow Repair linked path and remove its reference using the path controls. Historical records keep their own source-access checks. The workspace lists accessible jobs, plans, proposals and history with explicit unavailable-history counts, so an inaccessible old record cannot hide a new saved draft. Reload recovers authorized outputs without regeneration.
 
 ## Costs and recovery
 
@@ -21,7 +21,7 @@ A plan costing 10 followed by a module costing 25 needs at least 35 available cr
 
 Validated drafts are billed when saved, even before Apply. Generation receipts avoid duplicate application debits. Provider HTTP 503, rate limits, authentication failures, timeout/connection failures and invalid output use bounded safe diagnostics. No provider body, prompt, credential or URL is copied into the job error. Unknown internal failures receive separate generic operator guidance. Failures do not trigger a fallback provider.
 
-A failed batch keeps earlier drafts. Remaining steps require explicit selection and Retry. After process restart, queued/running steps become interrupted; polling never resumes inference. Unknown external outcomes may already have incurred charges. Retry captures the currently selected provider/model and warns about this uncertainty. A staged validated draft finalizes without another model call. Cancellation prevents remaining calls; already claimed inference may finish and be billed.
+A failed batch keeps earlier drafts. Remaining steps require explicit selection and Retry. After process restart, queued/running steps become interrupted; polling never resumes inference. Unknown external outcomes may already have incurred charges. Retry captures the currently selected provider/model and warns about this uncertainty. The selected retry preview names the effective provider/model for each step, shows the maximum Anvil debit and available budget, and distinguishes new inference from saved-output finalization. A staged validated draft finalizes without another model call or current credential. Cancellation prevents remaining calls; already claimed inference may finish and be billed.
 
 ## Supported installation and configuration
 

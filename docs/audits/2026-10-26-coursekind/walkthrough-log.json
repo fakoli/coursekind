@@ -292,5 +292,69 @@
     "duration_ms": null,
     "commit": "4744158",
     "notes": "Fresh course0e91223c/module3dd37fdc: marked content read, reviewed5/5cards including lastcard, ratedcard1Hard, submitted3-questionquiz100% exactly1attempt, continued to nextmodule and returned. Course shows1/2completed50%,5/5cards,quiz100%. Useful warmed-state fixture for aggregate cache repair; elapsed time not measured."
+  },
+  {
+    "journey": "WORKSPACE-04",
+    "scenario": "Dirty brief survives local plan Apply and warmed course progress refreshes",
+    "status": "pass",
+    "duration_ms": 26217,
+    "commit": "c634312",
+    "notes": "Course0e91223c warmed1/2completed50%. Unsaved audience retained through additive2-moduleplanApply and Savebrief succeeded. SPAcourse return immediately1/4completed25%,quiz100%retained, no hardreload."
+  },
+  {
+    "journey": "WORKSPACE-04",
+    "scenario": "Warmed flashcard ratings update on replacement and restore",
+    "status": "pass",
+    "duration_ms": 98726,
+    "commit": "c634312",
+    "notes": "Module3dd37fdc originalHard1/Unrated4. Cards-onlyrevision replaced5cards; immediateSPAstudy showed revisedcontentHard0/Unrated5. Historyrestore andSPAreturn showedoriginalcontentHard1/Unrated4,5/5reviews andquiz100%preserved. No hardreload."
+  },
+  {
+    "journey": "WORKSPACE-04",
+    "scenario": "New async manual path proposal returns keyboard focus",
+    "status": "pass",
+    "duration_ms": 4360,
+    "commit": "c634312",
+    "notes": "KeyboardReturn onReviewpathchanges preparesnewproposal, focusesDraftreview; DismissfocusesoriginalReviewpathchangesbutton. Proposalunapplied; originalpathorderpreserved."
+  },
+  {
+    "journey": "WORKSPACE-06",
+    "scenario": "Revoked-source baseline removal recovers current membership but hides new draft",
+    "status": "partial-fail",
+    "duration_ms": null,
+    "commit": "c634312",
+    "notes": "RevokedcourseBprivate; workspacehides title and providesRepairlinkedpath. RemovedunavailableB inbaselinepath, reopened sameworkspace withownedaf1course andenabledcontrols. Historicaljobs/plansremainaccessdenied. Newownedmodulebuild completed butinaccessiblehistoricaljob causedentirelistfailure, hidingnewdraft. Independentreviewreproduced25creditdebitoncontrolledfixture. Addednarrowrepairruling; Bcurrentlyprivate andpathcontainsownedcourseonly pendingretest."
+  },
+  {
+    "journey": "WORKSPACE-03",
+    "scenario": "Retry preview reflects provider changed since prior failure",
+    "status": "pass",
+    "duration_ms": null,
+    "commit": "c634312",
+    "notes": "PriorAnvil/llm.primary insufficientquotajob selectedRetryStep1. Previewnamesnewinferenceopenai/gpt-test,max0Anvilcredits,currentquota200,unknownprior/newexternalchargeswarning. ExplicitRetrycompletesattempt2ready0creditswithreviewbutton. Finalize-onlywithoutcredentials remainsfocusedcomponent/APIcoverage."
+  },
+  {
+    "journey": "WORKSPACE-03",
+    "scenario": "Recover previously hidden authorized build alongside inaccessible history",
+    "status": "pass",
+    "duration_ms": 20459,
+    "commit": "4868fd2",
+    "notes": "Foreign source remainedprivate,currentpathcontainedownedcourse. Reloadexposesalready-savedbuildwithoutregeneration; explicit1unavailablejob/1unavailableplannotice. Review\u2192Apply\u2192reload\u2192ReviewshowsappliedoutputandStudythismodule. Earlierauthorizedbuildsalsoavailable; oldsourcecontenthidden."
+  },
+  {
+    "journey": "WORKSPACE-02",
+    "scenario": "New plan remains reviewable, applicable and reloadable after source repair",
+    "status": "pass",
+    "duration_ms": 8633,
+    "commit": "4868fd2",
+    "notes": "Withforeignsource stillprivate andoldplanomitted, generatednewmockplan,reviewed,appliedoneprivate2-modulecourse636dcc15tolinkedpath,reloadedandreopenedappliedplan. SourceownerlaterrestoredoriginalpublicvisibilityviaUI. Existingoriginalownedcourse/outputpreserved; extra testcourse retainedasprivatefixture."
+  },
+  {
+    "journey": "WORKSPACE-06",
+    "scenario": "Normal local runtime upgrade preserves user session, settings and data",
+    "status": "pass",
+    "duration_ms": null,
+    "commit": "4868fd2",
+    "notes": "Stoppednormal8010/5173, madeprivateconsistentbackup, verifiedall8existingdatafilesbyte-identicalbefore/afterstartup. Updatedbackendandpinnedfrontendto4868fd2. Existingloginretained;SettingsshowsAnvil/llm.primaryconfiguredand25creditsunchanged. OpenedWorkspacesnormalappwithoutcreatingcontentorcallingprovider. Screenshot18; no realnotificationorcredentialmutation."
   }
 ]

@@ -21,3 +21,5 @@ Ruling: Recover the pushed branch into a nonsynced local checkout after cloud-pl
 Ruling: Track resolved backend application dependencies and use locked installs in Task5 — the storage-recovery reinstall exposed that uv.lock was ignored and every fresh setup could resolve a different dependency graph — dependency upgrades will require deliberate lockfile changes and CI verification; this adds a small maintenance step for reproducibility.
 
 Ruling: Bound the new workspace runner to one active provider inference across jobs — the plan’s concurrency bound should also protect local Anvil from simultaneous workspace submissions — concurrent users may wait longer; future higher throughput needs explicit measured concurrency controls. Legacy generation endpoints are unchanged.
+
+Ruling: Repair the confirmed inaccessible-history/new-draft discovery defect beyond the final-review single-wave cap — the owner explicitly requires autonomous durable journeys, and a successful charged draft with no review path is load-bearing — this adds one focused repair and verification cycle; broad review scope remains closed.

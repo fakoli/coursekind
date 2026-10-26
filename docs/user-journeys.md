@@ -1,4 +1,4 @@
-# Study Buddy user journeys and UI validation catalog
+# Coursekind user journeys and UI validation catalog
 
 Last reviewed: 2026-10-26 against the repaired baseline and its regression suites.
 

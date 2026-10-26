@@ -118,3 +118,13 @@ Started at `3e368dd`; root documentation advanced to `81089c7` while production 
 ### Final review checkpoint (26 October, morning)
 
 Task5 repaired head4744158 passed CI40354633764:49 browser cases with no retries,522backend and200frontend tests, Node22/24 lint/build. Actual goal-only creation through study-ready module took59.5seconds with a controlled provider, including UI/tool overhead. Actual Chrome200% zoom, delayed old-account response rejection, and insufficient-quota rejection before inference passed. The independent aggregate review then found five P2 cross-flow defects. They are accepted for one consolidated repair wave; review is not yet approved. The latest live Anvil attempt returned503 in1.05seconds with zero debit; no automatic fallback or retry.
+
+### Aggregate repair and recovery challenge
+
+Repair c634312 passed 528 backend tests, 210 frontend tests, lint/build and browser type checking. Exact-head CI40361087811 passed all49 browser cases with zero retries in5.6minutes and both Node22/24 matrices. Actual UI verified dirty brief save after local Apply, warm course progress50%→25%, card rating replacement/restoration1→0→1, new manual-proposal keyboard return focus, and changed-provider retry disclosure.
+
+The scoped adversarial review and root UI both found a remaining recovery defect: an old inaccessible job caused the entire saved-jobs list to fail. The repaired path allowed a new build, but its valid output stayed hidden; the reviewer proved a25-credit debit on a disposable service fixture. A recorded ruling authorizes one narrow follow-up beyond the normal final-wave cap because usable, durable recovery is an explicit user requirement. The follow-up must preserve direct-record access checks while making authorized jobs/plans discoverable after reload and clearly reporting unavailable history. This is not treated as a pass merely because existing CI is green.
+
+## Final local-v1 acceptance
+
+Production4868fd2: all aggregate findings resolved after independent scoped approval. CI40363622442 passed49 browser retry0/7.7minutes,536backend211frontend,Node22/24lint/build. ActualUI gates and normalruntime upgrade passed; normaldata/session/Anvildefault preserved. Finalreport and operatingguide published; PR23 remains draft/unmerged. LiveAnvil503 availability limitation remains explicit; JEVlivefeature passed. No publicdeployment or repositoryrename.

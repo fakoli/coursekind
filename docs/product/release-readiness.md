@@ -1,54 +1,39 @@
-# Coursekind release readiness
+# Coursekind local v1 release readiness
 
-Status: local v1 build in progress, 26 October 2026. This is a reviewable draft on PR #23, not a public deployment or completed launch.
+Production candidate: **4868fd2**, 26 October 2026. Independent aggregate review and both scoped repairs are approved with no remaining identified findings. Actual UI acceptance is complete. Exact-production-head [CI40363622442](https://github.com/fakoli/my-ai-study-buddy/actions/runs/40363622442) passed all 49 browser cases with zero retries in 7.7 minutes, 536 backend tests, 211 frontend tests and Node22/24 lint/build checks. The local-v1 completion gate is satisfied. PR #23 remains a draft; no merge or public deployment occurred.
 
-Coursekind turns a learning goal into a course or path that its author can review, build, revise and study. The display name changed; repository identity, existing routes, saved course/module IDs and user data remain compatible. Anvil `llm.primary` remains the default.
+Coursekind turns a goal into a course you can keep improving. The display name changed while existing routes, storage identities, course/module IDs and user data remain compatible. Anvil `llm.primary` remains the default.
 
-## Requirements and acceptance evidence
+## Delivered requirements
 
-| User need | Implementation and current evidence | Remaining acceptance |
-| --- | --- | --- |
-| Create individual courses with modules | Existing manual course/module flows repaired; original 40 browser journeys passed at baseline and Task1 | Final product regression run |
-| Study lesson content, flashcards, quizzes and practices | Baseline content/read, immutable review/quiz retries and configured Python/JavaScript practices validated | Final continuity checks after revision/restore |
-| Combine courses into learning paths | Ordered whole-course references, live counts and equal-course progress | Final regression; per-module path selection is outside this v1 |
-| Share courses and paths while retaining authorship | Current-access checks, explicit visibility/recipients, reused original IDs; sharing a path does not grant private source-course access | Final regression after workspace revisions |
-| Track usefulness of reused courses | Baseline reuse counts and source attribution retained | Final regression |
-| Personal activity, streaks, in-progress courses and followed paths | Baseline account-scoped activity and timezone semantics validated | Final regression; no generation event should count as study |
-| Choose models, default to local Anvil, optionally bring API keys | Anvil plus OpenAI/Gemini/Anthropic BYOK; explicit selection and no automatic fallback | External BYOK contract tests are mocked; subscription login remains deferred |
-| Start with a goal or existing content in one workspace | Private brief, idempotent existing-material entry, reload/archive/restore, mobile creation | Passed Task1 UI/review/CI; final polish remains |
-| AI plans courses/modules with less manual entry | Structured plans, manual edits, refinement, private apply, explicit course reuse | Actual first-course and mixed-reuse UI passed; corrected Task2 CI passes all42 browser cases |
-| Build study-ready material from the plan | Default one module, maximum three per batch, lesson plus requested cards/quiz, explicit review/apply | Actual build/reload/dismiss/apply/study and partial retry passed with mock provider |
-| Safely revise what AI creates | Typed scoped revisions, before/after review and conflict-safe apply | Accepted through cc6fd8f: local suites, independent review, actual UI and44-case CI passed |
-| Recover earlier content without erasing learning history | Immutable history and compensating restore | Accepted through cc6fd8f: local suites, independent review, actual UI and44-case CI passed |
-| Complement generation with JEV | Explicit advisory review of selected objective, lesson excerpt and quiz item | Accepted Task 4 through `06b17dc`: independent repair review, actual live/UI and CI 40349425309 passed |
-| Credible product operation | Compact onboarding/recovery sections, quota guidance, locked dependencies and local operating guide; stopped-process backup round trips recorded | Task 5 implementation ready for final deterministic results, independent review and root CI/CUA |
+| User need | Delivered behavior and acceptance |
+| --- | --- |
+| Courses, modules and study activities | Manual course/module editing, lesson content, flashcards, quizzes and configured Python/JavaScript practice; repaired save/retry/completion flows and stable learner records. |
+| Learning paths and sharing | Ordered whole-course references, current-access checks, visibility/named recipients, original authorship, reuse counts and live module/progress summaries. Sharing a path never grants private source access. |
+| Personal learning statistics | Account-scoped activity, timezone-aware streaks, courses in progress and followed paths; generation does not fabricate learning activity. |
+| Model choice and accounting | Anvil default plus OpenAI/Gemini/Anthropic API keys; explicit provider/model selection, no fallback, local quota accounting and clear selected retry costs. |
+| One workspace for new or existing material | Private goal briefs, existing-course/path entry, editable defaults, archive/restore, compact persistent sections and mobile/keyboard access. |
+| AI-first planning and building | Structured course/path plans, explicit source reuse, manual refinement, bounded lesson/card/quiz drafts, separate Review and Apply, persisted jobs and explicit recovery. |
+| Safe revisions | Scoped typed changes, readable comparisons, conflict detection, immutable history and compensating restore that preserves study records. |
+| Recovery across source changes | Live path membership and per-record authorized discovery; unavailable history counts never hide a valid new draft or reveal revoked material. |
+| JEV integration | Explicit advisory probabilities for answer support, ambiguity and objective alignment using a selected objective, lesson excerpt and quiz item; no score or completion effect. |
+| Local operation | Locked backend dependencies, setup/backup/restore/rollback guide, single-process bounds, safe errors, feature gates and bounded live smoke helper. |
 
-## Evidence boundaries
+All 40 original active browser journeys remain, with nine additional workspace cases covering six journey groups. The latest local suites pass **536 backend tests and 211 frontend tests**, plus lint, build, browser type checking and scoped Ruff. The exact final production run passed all 49 browser cases with zero retries; its timing artifact is committed in the product audit.
 
-The original baseline gate passed 40 browser journeys with no retries, 306 backend tests and 145 frontend tests. Task1 then passed the same 40 browser journeys, 330 backend tests and 163 frontend tests. Task2's corrected Python 3.12 backend suite passes 383 tests; CI40337912952 also passes all42 browser cases and169 frontend tests on Node22/24 with lint/build. Exact commits, CI links, screenshots and observed UI timings live in the [baseline audit](../audits/2026-10-26/README.md) and [product audit](../audits/2026-10-26-coursekind/README.md).
+Actual UI evidence includes goal-only entry through study-ready material in 59.5 seconds, partial build retry, revisions and preserved quiz history, real Chrome 200% zoom, 360px navigation, keyboard focus, delayed old-account-response rejection, quota rejection before inference, and recovered drafts after source revocation. Timings include observation/tool overhead and are not model latency benchmarks. See the [43-observation product walkthrough](../audits/2026-10-26-coursekind/walkthrough-summary.md) and [baseline audit](../audits/2026-10-26/README.md); historical failures remain visible beside their fixes.
 
-Actual UI walkthrough timings include human/agent observation and tool overhead. They are not inference benchmarks or server latency percentiles. Deterministic provider fixtures validate application behavior, count/schema handling, retries and preservation; they do not establish live model quality.
+The normal local app now runs `4868fd2` at http://127.0.0.1:5173/workspaces. Its existing session, Anvil selection and 25-credit balance were retained. A stopped-process private backup preceded the update, and all 8 original data files were byte-identical after startup. The disposable test instance and synthetic data are separate.
 
-Two explicit live Anvil plan attempts returned HTTP503 during local model maintenance. Both retained a discoverable failed job and charged zero application credits. Testing then explicitly selected mock OpenAI in the separate disposable validation account. The normal app's Anvil selection and data were unchanged. Live qualification remains open, not silently converted into a pass.
+## External qualification and deliberate limits
 
-The Codex subscription CLI prototype was removed after its isolation qualification failed. The supported OpenAI option currently uses an API key; subscription access is not represented as ordinary API credit. Reintroducing it requires a supported isolated authentication/runtime integration.
+- The live three-dimension JEV feature check passed. Probabilities are advisory and educational accuracy remains uncalibrated.
+- The last live Anvil plan attempt returned HTTP 503 in 1.05 seconds, with zero application debit and no fallback/retry. Earlier failures are retained. Live Anvil goal-to-study qualification remains unavailable during model maintenance; deterministic UI/provider tests do not convert that into a pass.
+- External BYOK adapters are qualified with mocked HTTP, not real vendor entitlement/billing/teaching-quality certification. The Codex CLI subscription prototype was removed after failed isolation qualification; OpenAI API-key support is distinct from subscription access. Supported isolated OAuth remains follow-up work.
+- Local application credits are accounting/quota units, not money. A plan plus first module requires 35 Anvil credits; the normal account currently has 25. Manual work is free; quota changes remain an explicit operator decision.
+- JSON and SQLite are supported single-process modes. Distributed execution, multi-file JSON power-loss atomicity and public-scale guarantees are not claimed.
+- Public deployment, repository/domain renaming, trademark/legal clearance, production notification delivery and adoption validation were not performed.
+- Collaboration/groups, per-module path composition, AI-generated practice projects, arbitrary shell tools, ingestion/RAG and exam-grade assessment remain outside local v1.
+- Inherited bundle-size and dependency maintenance debt remains documented; no zero-vulnerability or comprehensive pentest claim is made.
 
-## Deliberate local-v1 limits
-
-- One application process owns job execution. JSON and SQLite transactions are tested; distributed coordination and multi-file JSON power-loss atomicity are not claimed.
-- Public deployment, domain/trademark clearance, repository renaming and production notification delivery have not been performed.
-- Existing practices are supported. AI-generated practice projects, arbitrary shell tools, automatic grading, source ingestion/RAG and collaboration are deferred.
-- JEV results are advisory probabilities, not factual certification or learner scores. Educational calibration remains separate work.
-- BYOK external billing can occur even when an application operation fails; application credits account for local Anvil usage and are not currency.
-- New content remains private until the author explicitly changes sharing.
-
-## Completion gate
-
-Before calling the local v1 complete, finish Task 5 acceptance and final aggregate independent review, resolve important findings, run the final backend/frontend and browser suites, walk the new UI journeys, update the normal local runtime to the accepted commit, and publish a final evidence report and comprehensive draft PR. Tasks 3 and 4 are accepted at their recorded checkpoints. No merge or public deployment is authorized by this completion gate.
-
-
-## Task 5 operating checkpoint
-
-The [local operating guide](coursekind-local-v1.md) documents supported JSON/SQLite operation, saved-draft billing, explicit interruption retry, backup/restore and feature rollback. Task 4 repaired CI [40349425309](https://github.com/fakoli/my-ai-study-buddy/actions/runs/40349425309) passed 509 backend tests, 191 frontend tests, Node 22/24 lint/build and 46 browser cases in 6.2 minutes at `06b17dc`. Root also verified real disabled-gate behavior: saved workspace reads and baseline learning material remained available while writes and review submission were disabled.
-
-Task 5 adds three browser cases (49 total, preserving the original 40) and all six workspace journey groups. Authoring/type/list success is distinct from root's exact-commit remote execution. New normal-runtime refresh, final screenshots and final live provider qualification remain root-owned gates. The stopped-process [backup round trips](../audits/2026-10-26-coursekind/backup-restore-checks.json) and [timed walkthrough summary](../audits/2026-10-26-coursekind/walkthrough-summary.md) preserve actual evidence and historical failures.
+See the [operating guide](coursekind-local-v1.md), [autonomous decisions](implementation-decisions.md), [aggregate review](../audits/2026-10-26-coursekind/aggregate-review.md) and [final scoped approval](../audits/2026-10-26-coursekind/discovery-fix-review.md).

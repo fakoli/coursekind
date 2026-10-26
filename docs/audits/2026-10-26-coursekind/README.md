@@ -1,4 +1,8 @@
-# Coursekind product acceptance — in progress
+# Coursekind product acceptance
+
+Accepted local-v1 production code: **4868fd2**, with **536 backend tests and 211 frontend tests** passing locally, plus lint/build, scoped Ruff and browser type checking. Exact-head [CI40363622442](https://github.com/fakoli/my-ai-study-buddy/actions/runs/40363622442) passed all 49 browser cases with zero retries in 7.7 minutes, all backend/frontend checks and Node22/24 lint/build. The [final recovery review](discovery-fix-review.md) is approved; all identified findings are resolved. Root actual UI now passes all five aggregate repair scenarios, including recovery of the already-saved hidden draft and fresh plan Apply/reload while old source access remains revoked.
+
+Use the [complete timed walkthrough summary](walkthrough-summary.md) for all current observations. The checkpoints below are chronological evidence, including superseded failures and pending statements. The [aggregate review](aggregate-review.md), [first repair review](aggregate-fix-review.md), and [repair report](aggregate-fix-report.md) explain the cross-flow fixes.
 
 Original40 browser journeys passed at `af5d483` in [baselineCI](https://github.com/fakoli/my-ai-study-buddy/actions/runs/40324667864). New product work remains in progress.
 

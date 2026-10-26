@@ -39,5 +39,13 @@ This table preserves every recorded product walkthrough, including failed attemp
 | 32 | WORKSPACE-06 | Revoked reused-course access hides title but blocks workspace repair controls | partial-fail | Not measured | `4744158` |
 | 33 | WORKSPACE-01 | Fresh goal-only entry through reviewed plan, default module build and study entry | pass | 59.500 | `4744158` |
 | 34 | WORKSPACE-01 | Study new generated module and continue with saved learning records | pass | Not measured | `4744158` |
+| 35 | WORKSPACE-04 | Dirty brief survives local plan Apply and warmed course progress refreshes | pass | 26.217 | `c634312` |
+| 36 | WORKSPACE-04 | Warmed flashcard ratings update on replacement and restore | pass | 98.726 | `c634312` |
+| 37 | WORKSPACE-04 | New async manual path proposal returns keyboard focus | pass | 4.360 | `c634312` |
+| 38 | WORKSPACE-06 | Revoked-source baseline removal recovers current membership but hides new draft | partial-fail | Not measured | `c634312` |
+| 39 | WORKSPACE-03 | Retry preview reflects provider changed since prior failure | pass | Not measured | `c634312` |
+| 40 | WORKSPACE-03 | Recover previously hidden authorized build alongside inaccessible history | pass | 20.459 | `4868fd2` |
+| 41 | WORKSPACE-02 | New plan remains reviewable, applicable and reloadable after source repair | pass | 8.633 | `4868fd2` |
+| 42 | WORKSPACE-06 | Normal local runtime upgrade preserves user session, settings and data | pass | Not measured | `4868fd2` |
 
 The final product acceptance report identifies which later checks close earlier failures. A historical passing checkpoint does not establish final-head acceptance.
