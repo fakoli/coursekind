@@ -212,5 +212,13 @@
     "duration_ms": null,
     "commit": "06b17dc",
     "notes": "Actual two-tab CUA: selected Question 3 and obtained controlled advisory; original ModuleEditor shortened lesson from 253 to 48 characters and removed Question 3, then saved. Background review read marked result stale. Explicit Review current material reset to Question 1, end boundary 48 and enabled Send, with no implicit inference. Explicit Send completed a new controlled advisory. Separate sole-objective replacement regression is covered by frontend tests and scoped review. Synthetic module now has short lesson and two questions; prior learner history remains."
+  },
+  {
+    "journey": "WORKSPACE-06",
+    "scenario": "Feature-off rollback preserves saved workspace and ordinary study",
+    "status": "pass",
+    "duration_ms": null,
+    "commit": "06b17dc",
+    "notes": "Disposable backend restarted with WORKSPACE_ENABLED=false and WORKSPACE_REVIEW_ENABLED=false. Existing workspace reads/history remain visible by design. Explicit refinement blocked with Workspace changes are currently disabled; TypeSafe Send disabled. Linked generated course and lesson opened normally, preserving two quiz attempts, 50% latest score and five cards. Gates restored afterward; no normal user instance changes."
   }
 ]
