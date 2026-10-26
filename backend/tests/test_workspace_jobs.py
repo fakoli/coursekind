@@ -25,6 +25,27 @@ from services.workspace_service import WorkspaceService
 from tests.test_workspaces import workspace_store as workspace_store
 
 
+def test_workspace_service_type_annotations_resolve():
+    from inspect import isfunction
+    from typing import get_type_hints
+
+    from services.workspace_context import WorkspaceContext
+    from services.workspace_plan_service import WorkspacePlanService
+
+    # Evaluate Python 3.14's otherwise lazy annotations too: class methods named
+    # list must not shadow the builtin in another method's public contract.
+    for service in (
+        WorkspaceJobService,
+        WorkspacePlanService,
+        WorkspaceChangeService,
+        WorkspaceContext,
+        WorkspaceRunner,
+    ):
+        for name, method in vars(service).items():
+            if not name.startswith("_") and isfunction(method):
+                get_type_hints(method)
+
+
 def test_batch_default_and_limit():
     assert BuildRequest(request_id="build", module_ids=["a"]).flashcard_count == 5
     assert BuildRequest(request_id="build", module_ids=["a"]).quiz_question_count == 3

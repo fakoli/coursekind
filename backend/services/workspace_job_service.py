@@ -1,5 +1,7 @@
 """Durable job admission, authorized reads and explicit retry/cancellation."""
 
+from __future__ import annotations
+
 from datetime import datetime, timezone
 from typing import Literal
 from uuid import uuid4

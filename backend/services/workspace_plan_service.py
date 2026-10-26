@@ -1,5 +1,7 @@
 """Reviewable plans and atomic additive materialization using existing domain services."""
 
+from __future__ import annotations
+
 import json
 from datetime import datetime, timezone
 from uuid import uuid4
