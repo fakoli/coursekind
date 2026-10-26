@@ -43,3 +43,7 @@ Shared Hindsight recall succeeded, but retention of the new verified product dec
 ## Baseline gate complete
 
 At `af5d483`, final independent review has no open findings; CI40324667864 passed all40 browser journeys without retries,306 backend tests,145 frontend tests and both Node22/24 lint/build jobs. Normal app was restarted and verified with Anvilprimary retained. The existing draft PR23 will carry the subsequent Coursekind build and remain unmerged until user review. Product design passed a fresh builder check; root resolved explicit replay/read/source-selection/review-freshness interface gaps before implementation.
+
+## Workspace lifecycle checkpoint
+
+Coursekind identity and private workspaces implemented at `9ae518e` (independent review pending). Local full verification:330 backend and160 frontend tests, lint/build, scoped Ruff and browser types/list40 pass. Actual disposable UI: goal-only creation/save/reload; archive/filter/restore; cross-account denial; repeated owned-course entry; two-tab stale-save recovery all passed. Timed evidence lives in `docs/audits/2026-10-26-coursekind/walkthrough-log.json`; these are supervised walkthrough wall-clock times including observation overhead, not product latency benchmarks. AI planning/generation, revisions and Jev UI remain pending.

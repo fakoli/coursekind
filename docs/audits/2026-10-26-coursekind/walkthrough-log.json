@@ -30,5 +30,13 @@
     "duration_ms": 10919,
     "commit": "374d415",
     "notes": "Owned CourseA opens same workspace af29e91c on second entry; original course/module links, count, sharing and quiz score remain intact. Student workspace list remains empty."
+  },
+  {
+    "journey": "WORKSPACE-06",
+    "scenario": "Two-tab stale brief recovery",
+    "status": "pass",
+    "duration_ms": 26774,
+    "commit": "9ae518e",
+    "notes": "Both tabs begin same version. Second saves new audience; first save rejected with draft retained and explicit replacement warning. Reload saved brief fetched current server audience and returned Saved, preventing overwrite."
   }
 ]
