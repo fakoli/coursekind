@@ -1,0 +1,34 @@
+[
+  {
+    "journey": "WORKSPACE-01",
+    "scenario": "Create from goal alone then save parameters and reload",
+    "status": "pass",
+    "duration_ms": 27349,
+    "commit": "374d415",
+    "notes": "Synthetic Author private workspace2d07a796. Goal-only create kept defaults5cards3quiz; saved prior knowledge+3weeklyhours; reload retained values; Anvilprimary remains selected. Task1 checkpoint only, planning/build not implemented yet."
+  },
+  {
+    "journey": "WORKSPACE-01",
+    "scenario": "Archive, find archived workspace, restore",
+    "status": "pass",
+    "duration_ms": 18745,
+    "commit": "374d415",
+    "notes": "Archived brief becomes read-only and disappears from active list; Show archived finds it; Restore re-enables saved brief."
+  },
+  {
+    "journey": "WORKSPACE-01",
+    "scenario": "Other account deep-links private workspace",
+    "status": "pass",
+    "duration_ms": null,
+    "commit": "374d415",
+    "notes": "Synthetic Student sees generic Workspace unavailable without goal or brief."
+  },
+  {
+    "journey": "WORKSPACE-01",
+    "scenario": "Open existing course twice without duplication",
+    "status": "pass",
+    "duration_ms": 10919,
+    "commit": "374d415",
+    "notes": "Owned CourseA opens same workspace af29e91c on second entry; original course/module links, count, sharing and quiz score remain intact. Student workspace list remains empty."
+  }
+]
