@@ -5,7 +5,6 @@ from fastapi import APIRouter, Depends, Query
 from dependencies import CurrentUser, get_storage
 from models.flashcard_rating import (
     FilteredFlashcardsResponse,
-    FlashcardRating,
     FlashcardRatingRecord,
     FlashcardRatingResponse,
     FlashcardRatingSummary,
@@ -16,10 +15,14 @@ from models.flashcard_rating import (
 from services.flashcard_rating_service import FlashcardRatingService
 from storage.base import StorageBackend
 
-router = APIRouter(prefix="/courses/{course_id}/modules/{module_id}/flashcards", tags=["flashcard-ratings"])
+router = APIRouter(
+    prefix="/courses/{course_id}/modules/{module_id}/flashcards", tags=["flashcard-ratings"]
+)
 
 
-def get_flashcard_rating_service(storage: StorageBackend = Depends(get_storage)) -> FlashcardRatingService:
+def get_flashcard_rating_service(
+    storage: StorageBackend = Depends(get_storage),
+) -> FlashcardRatingService:
     return FlashcardRatingService(storage)
 
 
@@ -49,6 +52,7 @@ async def get_user_ratings(
 ) -> list[FlashcardRatingRecord]:
     """Get the current user's ratings for all flashcards in a module."""
     return await service.get_user_ratings(
+        course_id=course_id,
         user_id=current_user.id,
         module_id=module_id,
     )

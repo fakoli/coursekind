@@ -1,3 +1,4 @@
+import { useAuthContext } from '../components/common/AuthProvider';
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
@@ -32,6 +33,7 @@ import type { FlashcardFilter as FilterType, FlashcardRating, QuizQuestionData }
 type ViewTab = 'content' | 'flashcards' | 'quiz' | 'practice';
 
 export function ModuleViewer() {
+  const { user } = useAuthContext();
   const { courseId, moduleId } = useParams<{ courseId: string; moduleId: string }>();
   const navigate = useNavigate();
   const { error: showError } = useToast();
@@ -184,7 +186,7 @@ export function ModuleViewer() {
     );
   }
 
-  const isEditable = courseData?.course.source === 'database';
+  const isEditable = courseData?.course.source === 'database' && courseData.course.author_id === user?.id;
   const currentModuleIndex = modules?.findIndex((m) => m.id === moduleId) ?? -1;
   const prevModule = currentModuleIndex > 0 ? modules?.[currentModuleIndex - 1] : null;
   const nextModule = modules && currentModuleIndex < modules.length - 1

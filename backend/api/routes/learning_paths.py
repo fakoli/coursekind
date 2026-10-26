@@ -1,9 +1,11 @@
 """Learning Path API routes."""
 
 from fastapi import APIRouter, Depends
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from dependencies import CurrentUser, OptionalUser, StorageDep
+from exceptions import NotFoundException
+from models.course import CourseResponse
 from models.learning_path import (
     AddCourseToPath,
     LearningPath,
@@ -12,7 +14,8 @@ from models.learning_path import (
     LearningPathUpdate,
     ReorderCoursesInPath,
 )
-from models.course import CourseResponse
+from models.sharing import ShareRequest, SharingResponse
+from services.access_service import AccessService
 from services.course_service import CourseService
 from services.learning_path_service import LearningPathService
 
@@ -30,11 +33,22 @@ def get_learning_path_service(
     return LearningPathService(storage, course_service)
 
 
+class UnavailableCourse(BaseModel):
+    id: str
+    reason: str = "unavailable"
+
+
+class FollowResponse(BaseModel):
+    is_following: bool
+
+
 class LearningPathWithCoursesResponse(BaseModel):
     """Learning path with expanded course data."""
 
     path: LearningPath
     courses: list[CourseResponse]
+    unavailable_courses: list[UnavailableCourse] = Field(default_factory=list)
+    is_following: bool = False
 
 
 @router.get("", response_model=list[LearningPathResponse])
@@ -66,6 +80,31 @@ async def create_path(
     return await path_service.create_path(user.id, path_data)
 
 
+@router.get("/following", response_model=list[LearningPathResponse])
+async def list_following(
+    user: CurrentUser, path_service: LearningPathService = Depends(get_learning_path_service)
+):
+    return await path_service.list_following(user.id)
+
+
+@router.post("/{path_id}/follow", response_model=FollowResponse)
+async def follow_path(
+    path_id: str,
+    user: CurrentUser,
+    path_service: LearningPathService = Depends(get_learning_path_service),
+):
+    return await path_service.follow(path_id, user.id)
+
+
+@router.delete("/{path_id}/follow", response_model=FollowResponse)
+async def unfollow_path(
+    path_id: str,
+    user: CurrentUser,
+    path_service: LearningPathService = Depends(get_learning_path_service),
+):
+    return await path_service.unfollow(path_id, user.id)
+
+
 @router.get("/{path_id}", response_model=LearningPathWithCoursesResponse)
 async def get_path(
     path_id: str,
@@ -79,6 +118,7 @@ async def get_path(
 
     # Fetch course details
     courses = []
+    unavailable = []
     for course_id in path.course_ids:
         try:
             course, modules = await course_service.get_course_with_modules(course_id, user_id)
@@ -89,11 +129,15 @@ async def get_path(
                     module_count=len(modules),
                 )
             )
-        except Exception:
-            # Skip courses that are no longer accessible
-            pass
+        except NotFoundException:
+            unavailable.append(UnavailableCourse(id=course_id))
 
-    return LearningPathWithCoursesResponse(path=path, courses=courses)
+    return LearningPathWithCoursesResponse(
+        path=path,
+        courses=courses,
+        unavailable_courses=unavailable,
+        is_following=await path_service.is_following(path_id, user_id),
+    )
 
 
 @router.put("/{path_id}", response_model=LearningPath)
@@ -149,3 +193,18 @@ async def reorder_courses_in_path(
 ):
     """Reorder courses in a learning path."""
     return await path_service.reorder_courses(path_id, user.id, data.course_ids)
+
+
+@router.get("/{path_id}/sharing", response_model=SharingResponse)
+async def get_sharing(path_id: str, user: CurrentUser, storage: StorageDep):
+    return await AccessService(storage).sharing("learning_paths", path_id, user.id)
+
+
+@router.post("/{path_id}/sharing", response_model=SharingResponse)
+async def grant_sharing(path_id: str, data: ShareRequest, user: CurrentUser, storage: StorageDep):
+    return await AccessService(storage).grant("learning_paths", path_id, user.id, str(data.email))
+
+
+@router.delete("/{path_id}/sharing/{recipient_id}", response_model=SharingResponse)
+async def revoke_sharing(path_id: str, recipient_id: str, user: CurrentUser, storage: StorageDep):
+    return await AccessService(storage).revoke("learning_paths", path_id, user.id, recipient_id)

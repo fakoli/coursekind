@@ -436,6 +436,8 @@ export interface Course {
   ai_enabled: boolean;
   instructions: CourseInstructions | null;
   times_added: number;
+  own_path_count?: number;
+  other_path_count?: number;
   created_at: string;
   updated_at: string;
 }
@@ -580,6 +582,8 @@ export interface LearningPathResponse extends LearningPath {
 }
 
 export interface LearningPathWithCoursesResponse {
+  is_following?: boolean;
+  unavailable_courses?: { id: string; reason: string }[];
   path: LearningPath;
   courses: CourseResponse[];
 }

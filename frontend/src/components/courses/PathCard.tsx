@@ -1,3 +1,4 @@
+import { CourseImage } from '../common/CourseImage';
 import { Link } from 'react-router-dom';
 import { BookOpen, Clock, MoreVertical, Play, CheckCircle } from 'lucide-react';
 import { Card, CardContent } from '../common/Card';
@@ -38,7 +39,7 @@ export function PathCard({ path, onOptions, progress }: PathCardProps) {
         <CardContent className="flex flex-col h-full">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-3">
-              <img
+              <CourseImage
                 src={path.thumbnail_url || defaultThumbnails[path.difficulty]}
                 alt=""
                 className="w-10 h-10 rounded-lg object-cover"

@@ -38,7 +38,7 @@ if TYPE_CHECKING:
     from services.ai_generation_service import AIGenerationService
     from services.module_service import ModuleService
     from storage.base import StorageBackend
-
+from services.access_service import AccessService
 
 logger = get_logger(__name__)
 
@@ -183,6 +183,7 @@ class CourseOrchestrator:
             4. Visuals: Batch image generation (optional)
             5. Finalization: Save all modules to database
         """
+        await AccessService(self.storage).require_course_owner(course_id, user_id)
         options = options or GenerationOptions()
         result = FullCourseGenerationResult(
             course_id=course_id,
@@ -257,9 +258,7 @@ class CourseOrchestrator:
 
             # Phase 5: Finalization - Save modules to database
             result.phase = GenerationPhase.FINALIZATION
-            await self._phase_finalization(
-                course_id, user_id, result.module_results
-            )
+            await self._phase_finalization(course_id, user_id, result.module_results)
 
             result.phase = GenerationPhase.COMPLETED
             result.completed_at = datetime.now(timezone.utc)
@@ -369,9 +368,7 @@ class CourseOrchestrator:
                         quiz_question_count=options.quiz_questions_per_module,
                     )
 
-                    result = await self.ai_service.generate_module_content(
-                        user_id, request
-                    )
+                    result = await self.ai_service.generate_module_content(user_id, request)
 
                     logger.debug(
                         "Module content generated",
@@ -440,7 +437,7 @@ class CourseOrchestrator:
                 continue
 
             # Take up to max_visuals_per_module suggestions
-            for visual_desc in result.suggested_visuals[:options.max_visuals_per_module]:
+            for visual_desc in result.suggested_visuals[: options.max_visuals_per_module]:
                 visual_requests.append(
                     GenerateVisualRequest(
                         course_id=course_id,
@@ -465,8 +462,9 @@ class CourseOrchestrator:
         success_count = sum(1 for r in results if not isinstance(r, Exception))
         failed_count = len(results) - success_count
         tokens_used = sum(
-            r.tokens_used for r in results
-            if not isinstance(r, Exception) and hasattr(r, 'tokens_used')
+            r.tokens_used
+            for r in results
+            if not isinstance(r, Exception) and hasattr(r, "tokens_used")
         )
 
         logger.info(
@@ -513,9 +511,7 @@ class CourseOrchestrator:
         ]
 
         # Use batch create
-        await self.module_service.batch_create_modules(
-            course_id, user_id, modules_to_create
-        )
+        await self.module_service.batch_create_modules(course_id, user_id, modules_to_create)
 
         logger.info(
             "Phase 5: Finalization complete",

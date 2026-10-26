@@ -16,6 +16,7 @@ from models.course import (
     CourseUpdate,
 )
 from models.module import ModuleSummary
+from services.access_service import AccessService, can_discover
 from services.base_service import BaseService
 from services.cache_service import get_cache
 from storage.base import StorageBackend
@@ -46,6 +47,7 @@ class CourseService(BaseService):
         db_courses = await self._get_database_courses(user_id)
         courses.extend(db_courses)
 
+        await self._set_contributions(courses)
         return courses
 
     async def list_user_courses(self, user_id: str) -> list[CourseResponse]:
@@ -59,14 +61,14 @@ class CourseService(BaseService):
         course_ids = [c["id"] for c in db_courses]
         module_counts = await self._batch_get_module_counts(course_ids)
 
-        return [
+        courses = [
             CourseResponse(**course_data, module_count=module_counts.get(course_data["id"], 0))
             for course_data in db_courses
         ]
+        await self._set_contributions(courses)
+        return courses
 
-    async def discover_courses(
-        self, filters: CourseDiscoveryFilters
-    ) -> CourseDiscoveryResponse:
+    async def discover_courses(self, filters: CourseDiscoveryFilters) -> CourseDiscoveryResponse:
         """Browse public courses with search and filters."""
         all_courses = []
 
@@ -85,6 +87,8 @@ class CourseService(BaseService):
             for course_data in db_courses_data:
                 module_count = module_counts.get(course_data["id"], 0)
                 all_courses.append(CourseResponse(**course_data, module_count=module_count))
+
+        await self._set_contributions(all_courses)
 
         # Apply filters
         filtered = self._apply_discovery_filters(all_courses, filters)
@@ -121,30 +125,17 @@ class CourseService(BaseService):
         Raises:
             NotFoundException: If course not found or not accessible
         """
-        # Check filesystem first
-        fs_course = await self._get_filesystem_course(course_id)
-        if fs_course:
-            return fs_course
+        course_data = await AccessService(self.storage, str(self.content_path)).require_course(
+            course_id, user_id
+        )
+        if course_data.get("source") == "filesystem":
+            course = await self._get_filesystem_course(course_id)
+            await self._set_contributions([course])
+            return course
 
-        # Check database
-        course_data = await self.storage.get("courses", course_id)
-        if not course_data:
-            raise NotFoundException(
-                "Course not found",
-                code=ErrorCode.COURSE_NOT_FOUND,
-                details={"course_id": course_id},
-            )
-
-        # Check visibility
-        visibility = course_data.get("visibility", "private")
-        if visibility == "private" and course_data.get("author_id") != user_id:
-            raise NotFoundException(
-                "Course not found",
-                code=ErrorCode.COURSE_NOT_FOUND,
-                details={"course_id": course_id},
-            )
-
-        return Course(**course_data)
+        course = Course(**course_data)
+        await self._set_contributions([course])
+        return course
 
     async def get_course_with_modules(
         self, course_id: str, user_id: str | None = None
@@ -188,9 +179,7 @@ class CourseService(BaseService):
 
         return course
 
-    async def update_course(
-        self, course_id: str, user_id: str, data: CourseUpdate
-    ) -> Course:
+    async def update_course(self, course_id: str, user_id: str, data: CourseUpdate) -> Course:
         """Update a database course (author only)."""
         # Verify ownership (call raises if not authorized)
         await self._get_editable_course(course_id, user_id)
@@ -209,7 +198,9 @@ class CourseService(BaseService):
         # Invalidate cache
         self._invalidate_course_cache(course_id)
 
-        return Course(**updated_data)
+        course = Course(**updated_data)
+        await self._set_contributions([course])
+        return course
 
     async def delete_course(self, course_id: str, user_id: str) -> bool:
         """Delete a database course and all its modules (author only)."""
@@ -230,23 +221,13 @@ class CourseService(BaseService):
 
         return result
 
-    async def increment_times_added(self, course_id: str) -> None:
-        """Increment the times_added counter for a course."""
-        course_data = await self.storage.get("courses", course_id)
-        if course_data and course_data.get("source") == "database":
-            current = course_data.get("times_added", 0)
-            await self.storage.update(
-                "courses", course_id, {"times_added": current + 1}
-            )
-
-    async def decrement_times_added(self, course_id: str) -> None:
-        """Decrement the times_added counter for a course."""
-        course_data = await self.storage.get("courses", course_id)
-        if course_data and course_data.get("source") == "database":
-            current = course_data.get("times_added", 0)
-            await self.storage.update(
-                "courses", course_id, {"times_added": max(0, current - 1)}
-            )
+    async def _set_contributions(self, courses: list[Course]) -> None:
+        paths = await self.storage.list("learning_paths")
+        for course in courses:
+            references = [p for p in paths if course.id in p.get("course_ids", [])]
+            course.times_added = len(references)
+            course.own_path_count = sum(p.get("owner_id") == course.author_id for p in references)
+            course.other_path_count = course.times_added - course.own_path_count
 
     # Private helper methods
 
@@ -279,10 +260,7 @@ class CourseService(BaseService):
 
         # Fetch uncached counts in parallel
         if uncached_ids:
-            tasks = [
-                self.storage.count("modules", {"course_id": cid})
-                for cid in uncached_ids
-            ]
+            tasks = [self.storage.count("modules", {"course_id": cid}) for cid in uncached_ids]
             counts = await asyncio.gather(*tasks)
 
             # Cache and store results
@@ -435,21 +413,9 @@ class CourseService(BaseService):
 
     async def _get_database_courses(self, user_id: str | None) -> list[CourseResponse]:
         """Get database courses accessible to user."""
-        courses_data: list[dict] = []
-        user_course_ids: set[str] = set()
-
-        # Get user's own courses
-        if user_id:
-            user_courses = await self.storage.list("courses", {"author_id": user_id})
-            for course_data in user_courses:
-                courses_data.append(course_data)
-                user_course_ids.add(course_data["id"])
-
-        # Get public courses not owned by user
-        public_courses = await self.storage.list("courses", {"visibility": "public"})
-        for course_data in public_courses:
-            if course_data["id"] not in user_course_ids:
-                courses_data.append(course_data)
+        courses_data = [
+            c for c in await self.storage.list("courses") if can_discover(c, user_id, "author_id")
+        ]
 
         if not courses_data:
             return []
@@ -556,9 +522,7 @@ class CourseService(BaseService):
 
         return result
 
-    def _sort_courses(
-        self, courses: list[CourseResponse], sort: str
-    ) -> list[CourseResponse]:
+    def _sort_courses(self, courses: list[CourseResponse], sort: str) -> list[CourseResponse]:
         """Sort courses by the specified criteria."""
         if sort == "popular":
             return sorted(courses, key=lambda c: c.times_added, reverse=True)

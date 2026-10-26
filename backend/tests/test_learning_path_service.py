@@ -1,23 +1,16 @@
-"""Service-level tests for LearningPathService.
+"""Service tests for live path membership, access and owner mutations.
 
-Cover the previously-untested (20%) service directly with mocked
-course_service, exercising: list (own/public/dedup), get (visibility,
-ownership), create (course validation, times_added increments), update
-(ownership, not-found), delete (ownership, decrements), add/remove course
-(dedup, not-found, increments/decrements), reorder (ordering, mismatch),
-and the private _get_owned_path/_to_response helpers.
-
-Uses the in-memory JSON storage via the `storage` fixture + async client.
+Fixtures persist disposable courses so path validation uses the real access policy.
+Reuse is derived from distinct paths, never from increment/decrement mocks.
 """
 
 import pytest
-import tempfile
-from unittest.mock import AsyncMock
 
 from exceptions import (
     ErrorCode,
     ForbiddenException,
     NotFoundException,
+    StudyBuddyException,
 )
 from models.learning_path import LearningPathCreate, LearningPathUpdate
 from services.course_service import CourseService
@@ -26,16 +19,14 @@ from storage.json_storage import JSONStorage
 
 
 @pytest.fixture
-def learning_path_service(temp_storage_path):
-    """Build a LearningPathService with an AsyncMock course_service.
-
-    Uses a fresh JSONStorage per test backed by the same temp dir the
-    autouse `use_test_storage` fixture wipes. Fresh instance per test =
-    hermetic isolation (no cross-test state leakage).
-    """
+async def learning_path_service(temp_storage_path):
+    """Real course/path services backed by disposable JSON storage."""
     storage = JSONStorage(temp_storage_path)
-    course_service = AsyncMock(spec=CourseService)
-    course_service.get_course.return_value = {"id": "course-1"}
+    course_service = CourseService(storage, content_path=temp_storage_path + "/content")
+    for cid in ["c1", "c2", "c9"]:
+        await storage.create(
+            "courses", {"id": cid, "title": cid, "author_id": "author", "visibility": "public"}
+        )
     return LearningPathService(storage=storage, course_service=course_service)
 
 
@@ -63,7 +54,9 @@ async def seeded_path(client, auth_headers, storage, learning_path_service):
 _path_counter = [0]  # module-level counter for unique stable ids in seeding
 
 
-async def _create_path_direct(service, user_id="owner-1", course_ids=None, path_id="path", **overrides):
+async def _create_path_direct(
+    service, user_id="owner-1", course_ids=None, path_id="path", **overrides
+):
     """Seed a learning path directly into storage under a stable id.
 
     Bypasses create_path (which would validate courses + assign a random
@@ -100,8 +93,12 @@ class TestListPaths:
     @pytest.mark.asyncio
     async def test_list_paths_includes_own_and_public_no_dupe(self, learning_path_service):
         """Own private + public, with dedupe for public paths the user owns."""
-        await _create_path_direct(learning_path_service, "user-1", visibility="private", path_id="p1")
-        await _create_path_direct(learning_path_service, "user-1", visibility="public", path_id="p2")
+        await _create_path_direct(
+            learning_path_service, "user-1", visibility="private", path_id="p1"
+        )
+        await _create_path_direct(
+            learning_path_service, "user-1", visibility="public", path_id="p2"
+        )
         await _create_path_direct(learning_path_service, "other", visibility="public", path_id="p3")
 
         paths = await learning_path_service.list_paths("user-1")
@@ -110,8 +107,12 @@ class TestListPaths:
     @pytest.mark.asyncio
     async def test_list_paths_no_user_gets_public_only(self, learning_path_service):
         """Anonymous sees public paths only."""
-        await _create_path_direct(learning_path_service, "user-1", visibility="private", path_id="p1")
-        await _create_path_direct(learning_path_service, "user-2", visibility="public", path_id="p2")
+        await _create_path_direct(
+            learning_path_service, "user-1", visibility="private", path_id="p1"
+        )
+        await _create_path_direct(
+            learning_path_service, "user-2", visibility="public", path_id="p2"
+        )
 
         paths = await learning_path_service.list_paths(None)
         assert len(paths) == 1
@@ -120,7 +121,11 @@ class TestListPaths:
     async def test_list_paths_course_count(self, learning_path_service):
         """course_count reflects the number of course_ids."""
         await _create_path_direct(
-            learning_path_service, "user-1", course_ids=["c1", "c2"], visibility="public", path_id="p1"
+            learning_path_service,
+            "user-1",
+            course_ids=["c1", "c2"],
+            visibility="public",
+            path_id="p1",
         )
         paths = await learning_path_service.list_paths()
         assert paths[0].course_count == 2
@@ -163,21 +168,19 @@ class TestGetPath:
 
 class TestCreatePath:
     @pytest.mark.asyncio
-    async def test_create_validates_courses_and_increments(self, learning_path_service):
-        learning_path_service.course_service.get_course.return_value = {"id": "c1"}
+    async def test_create_validates_courses_and_persists_membership(self, learning_path_service):
         data = LearningPathCreate(title="New", course_ids=["c1"])
 
         path = await learning_path_service.create_path("user-1", data)
 
         assert path.id
         assert path.owner_id == "user-1"
-        learning_path_service.course_service.increment_times_added.assert_awaited_once_with("c1")
+        assert (await learning_path_service.storage.get("learning_paths", path.id))[
+            "course_ids"
+        ] == ["c1"]
 
     @pytest.mark.asyncio
     async def test_create_raises_when_course_missing(self, learning_path_service):
-        learning_path_service.course_service.get_course.side_effect = NotFoundException(
-            "missing", code=ErrorCode.COURSE_NOT_FOUND
-        )
         data = LearningPathCreate(title="New", course_ids=["ghost"])
 
         with pytest.raises(NotFoundException) as exc:
@@ -186,7 +189,6 @@ class TestCreatePath:
 
     @pytest.mark.asyncio
     async def test_create_persists_model(self, learning_path_service, storage):
-        learning_path_service.course_service.get_course.return_value = {"id": "c1"}
         data = LearningPathCreate(title="Persist", course_ids=["c1"])
 
         path = await learning_path_service.create_path("user-1", data)
@@ -215,13 +217,14 @@ class TestUpdatePath:
 
 class TestDeletePath:
     @pytest.mark.asyncio
-    async def test_delete_owner_only_decrements(self, learning_path_service):
-        await _create_path_direct(
-            learning_path_service, "owner", course_ids=["c1"]
-        )
+    async def test_delete_owner_only_removes_reference(self, learning_path_service):
+        await _create_path_direct(learning_path_service, "owner", course_ids=["c1"])
         deleted = await learning_path_service.delete_path("path", "owner")
         assert deleted is True
-        learning_path_service.course_service.decrement_times_added.assert_awaited_once_with("c1")
+        assert all(
+            "c1" not in p["course_ids"]
+            for p in await learning_path_service.storage.list("learning_paths")
+        )
 
     @pytest.mark.asyncio
     async def test_delete_other_user_forbidden(self, learning_path_service):
@@ -232,28 +235,32 @@ class TestDeletePath:
 
 class TestAddCourseToPath:
     @pytest.mark.asyncio
-    async def test_add_course_increments_and_returns(self, learning_path_service):
+    async def test_add_course_persists_and_returns(self, learning_path_service):
         await _create_path_direct(learning_path_service, "owner", course_ids=[])
-        learning_path_service.course_service.get_course.return_value = {"id": "c9"}
         result = await learning_path_service.add_course_to_path("path", "owner", "c9")
         assert "c9" in result.course_ids
-        learning_path_service.course_service.increment_times_added.assert_awaited_once_with("c9")
+        assert (await learning_path_service.storage.get("learning_paths", "path"))[
+            "course_ids"
+        ] == ["c9"]
 
     @pytest.mark.asyncio
     async def test_add_duplicate_is_noop(self, learning_path_service):
         await _create_path_direct(learning_path_service, "owner", course_ids=["c1"])
         result = await learning_path_service.add_course_to_path("path", "owner", "c1")
         assert result.course_ids == ["c1"]
-        learning_path_service.course_service.increment_times_added.assert_not_awaited()
+        assert len(await learning_path_service.storage.list("learning_paths")) == 1
 
 
 class TestRemoveCourseFromPath:
     @pytest.mark.asyncio
-    async def test_remove_course_decrements(self, learning_path_service):
+    async def test_remove_course_removes_reference(self, learning_path_service):
         await _create_path_direct(learning_path_service, "owner", course_ids=["c1", "c2"])
         result = await learning_path_service.remove_course_from_path("path", "owner", "c1")
         assert result.course_ids == ["c2"]
-        learning_path_service.course_service.decrement_times_added.assert_awaited_once_with("c1")
+        assert all(
+            "c1" not in p["course_ids"]
+            for p in await learning_path_service.storage.list("learning_paths")
+        )
 
     @pytest.mark.asyncio
     async def test_remove_missing_course_raises(self, learning_path_service):
@@ -273,7 +280,7 @@ class TestReorderCourses:
     @pytest.mark.asyncio
     async def test_reorder_mismatch_raises(self, learning_path_service):
         await _create_path_direct(learning_path_service, "owner", course_ids=["c1", "c2"])
-        with pytest.raises(NotFoundException):
+        with pytest.raises(StudyBuddyException):
             await learning_path_service.reorder_courses("path", "owner", ["c1", "c3"])
 
 

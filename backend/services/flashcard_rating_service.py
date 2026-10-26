@@ -15,6 +15,7 @@ from models.flashcard_rating import (
     UnhelpfulCardFeedback,
     UnhelpfulCardsResponse,
 )
+from services.access_service import AccessService
 from storage.base import StorageBackend
 from utils.datetime_utils import ensure_datetime
 
@@ -34,7 +35,7 @@ class FlashcardRatingService:
         now = datetime.now(timezone.utc)
 
         # Check if module exists
-        module = await self.storage.get("modules", module_id)
+        module = await AccessService(self.storage).require_module(course_id, module_id, user_id)
         if not module or module.get("course_id") != course_id:
             raise NotFoundException("Module not found", code=ErrorCode.MODULE_NOT_FOUND)
 
@@ -49,6 +50,7 @@ class FlashcardRatingService:
             {
                 "user_id": user_id,
                 "module_id": module_id,
+                "course_id": course_id,
                 "flashcard_index": data.flashcard_index,
             },
         )
@@ -89,11 +91,18 @@ class FlashcardRatingService:
         self,
         user_id: str,
         module_id: str,
+        course_id: str | None = None,
     ) -> list[FlashcardRatingRecord]:
-        """Get all ratings for a user in a specific module."""
+        """Get all ratings for a user in a specific readable module."""
+        if course_id is None:
+            module = await self.storage.get("modules", module_id)
+            if not module:
+                raise NotFoundException("Module not found")
+            course_id = module["course_id"]
+        await AccessService(self.storage).require_module(course_id, module_id, user_id)
         ratings = await self.storage.list(
             "flashcard_ratings",
-            {"user_id": user_id, "module_id": module_id},
+            {"user_id": user_id, "course_id": course_id, "module_id": module_id},
         )
 
         return [
@@ -119,7 +128,7 @@ class FlashcardRatingService:
     ) -> FlashcardRatingSummary:
         """Get summary of ratings for a module."""
         # Get module to know total flashcards
-        module = await self.storage.get("modules", module_id)
+        module = await AccessService(self.storage).require_module(course_id, module_id, user_id)
         if not module or module.get("course_id") != course_id:
             raise NotFoundException("Module not found", code=ErrorCode.MODULE_NOT_FOUND)
 
@@ -128,7 +137,7 @@ class FlashcardRatingService:
         # Get user's ratings for this module
         ratings = await self.storage.list(
             "flashcard_ratings",
-            {"user_id": user_id, "module_id": module_id},
+            {"user_id": user_id, "course_id": course_id, "module_id": module_id},
         )
 
         # Count by rating type
@@ -169,7 +178,7 @@ class FlashcardRatingService:
             Tuple of (ratings_list, summary)
         """
         # Get module to know total flashcards
-        module = await self.storage.get("modules", module_id)
+        module = await AccessService(self.storage).require_module(course_id, module_id, user_id)
         if not module or module.get("course_id") != course_id:
             raise NotFoundException("Module not found", code=ErrorCode.MODULE_NOT_FOUND)
 
@@ -178,7 +187,7 @@ class FlashcardRatingService:
         # Get user's ratings for this module (single query)
         ratings_raw = await self.storage.list(
             "flashcard_ratings",
-            {"user_id": user_id, "module_id": module_id},
+            {"user_id": user_id, "course_id": course_id, "module_id": module_id},
         )
 
         # Build ratings list
@@ -226,7 +235,7 @@ class FlashcardRatingService:
     ) -> FilteredFlashcardsResponse:
         """Get flashcards filtered by rating."""
         # Get module
-        module = await self.storage.get("modules", module_id)
+        module = await AccessService(self.storage).require_module(course_id, module_id, user_id)
         if not module or module.get("course_id") != course_id:
             raise NotFoundException("Module not found", code=ErrorCode.MODULE_NOT_FOUND)
 
@@ -235,7 +244,7 @@ class FlashcardRatingService:
         # Get user's ratings
         ratings = await self.storage.list(
             "flashcard_ratings",
-            {"user_id": user_id, "module_id": module_id},
+            {"user_id": user_id, "course_id": course_id, "module_id": module_id},
         )
         rating_map = {r["flashcard_index"]: FlashcardRating(r["rating"]) for r in ratings}
 
@@ -294,7 +303,9 @@ class FlashcardRatingService:
             "flashcard_ratings",
             {"course_id": course_id},
         )
-        unhelpful_ratings = [r for r in all_ratings if r["rating"] == FlashcardRating.UNHELPFUL.value]
+        unhelpful_ratings = [
+            r for r in all_ratings if r["rating"] == FlashcardRating.UNHELPFUL.value
+        ]
 
         # Group by module and flashcard index
         feedback_map: dict[tuple[str, int], list] = {}

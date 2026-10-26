@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Literal
 from uuid import uuid4
 
-from exceptions import ErrorCode, NotFoundException
+from exceptions import NotFoundException
 from models.progress import (
     CourseProgressStatus,
     DashboardStats,
@@ -21,6 +21,8 @@ from models.progress import (
     SessionsResponse,
     TopicMasteryResponse,
 )
+from services.access_service import AccessService
+from services.module_service import ModuleService
 from storage.base import StorageBackend
 from utils.datetime_utils import ensure_datetime
 
@@ -39,12 +41,13 @@ class ProgressService:
         data: ModuleProgressCreate,
     ) -> ModuleProgress:
         """Update progress for a module based on user action."""
+        await AccessService(self.storage).require_module(course_id, module_id, user_id)
         now = datetime.now(timezone.utc)
 
         # Get or create module progress record
         progress_records = await self.storage.list(
             "module_progress",
-            {"user_id": user_id, "module_id": module_id},
+            {"user_id": user_id, "course_id": course_id, "module_id": module_id},
         )
         progress = progress_records[0] if progress_records else None
 
@@ -73,25 +76,19 @@ class ProgressService:
             if progress["status"] == "not_started":
                 progress["status"] = "in_progress"
                 progress["started_at"] = now.isoformat()
-            await self._log_activity(
-                user_id, "module_started", module_id, course_id, {}
-            )
+            await self._log_activity(user_id, "module_started", module_id, course_id, {})
 
         elif data.action == "complete":
             progress["status"] = "completed"
             progress["completed_at"] = now.isoformat()
-            await self._log_activity(
-                user_id, "module_completed", module_id, course_id, {}
-            )
+            await self._log_activity(user_id, "module_completed", module_id, course_id, {})
 
         elif data.action == "read_content":
             progress["content_read"] = True
             if progress["status"] == "not_started":
                 progress["status"] = "in_progress"
                 progress["started_at"] = now.isoformat()
-            await self._log_activity(
-                user_id, "content_read", module_id, course_id, {}
-            )
+            await self._log_activity(user_id, "content_read", module_id, course_id, {})
 
         elif data.action == "review_flashcard":
             progress["flashcards_reviewed"] = progress.get("flashcards_reviewed", 0) + 1
@@ -99,8 +96,11 @@ class ProgressService:
                 progress["status"] = "in_progress"
                 progress["started_at"] = now.isoformat()
             await self._log_activity(
-                user_id, "flashcard_reviewed", module_id, course_id,
-                {"cards_reviewed": progress["flashcards_reviewed"]}
+                user_id,
+                "flashcard_reviewed",
+                module_id,
+                course_id,
+                {"cards_reviewed": progress["flashcards_reviewed"]},
             )
 
         elif data.action == "submit_quiz":
@@ -136,12 +136,18 @@ class ProgressService:
         return ModuleProgress(**progress)
 
     async def get_module_progress(
-        self, user_id: str, module_id: str
+        self, user_id: str, module_id: str, course_id: str | None = None
     ) -> ModuleProgress | None:
-        """Get progress for a specific module."""
+        """Get progress for a specific module, only while its course is readable."""
+        if course_id is None:
+            module = await self.storage.get("modules", module_id)
+            if not module:
+                raise NotFoundException("Module not found")
+            course_id = module["course_id"]
+        await AccessService(self.storage).require_module(course_id, module_id, user_id)
         progress_records = await self.storage.list(
             "module_progress",
-            {"user_id": user_id, "module_id": module_id},
+            {"user_id": user_id, "course_id": course_id, "module_id": module_id},
         )
 
         if not progress_records:
@@ -151,17 +157,18 @@ class ProgressService:
 
     # Course Progress
 
-    async def get_course_progress(
-        self, user_id: str, course_id: str
-    ) -> CourseProgressStatus:
+    async def get_course_progress(self, user_id: str, course_id: str) -> CourseProgressStatus:
         """Get progress for a course including all modules."""
-        # Get course
-        course = await self.storage.get("courses", course_id)
-        if not course:
-            raise NotFoundException("Course not found", code=ErrorCode.COURSE_NOT_FOUND)
-
-        # Get modules
-        modules = await self.storage.list("modules", {"course_id": course_id})
+        course = await AccessService(self.storage).require_course(course_id, user_id)
+        if course.get("source") == "filesystem":
+            module_service = ModuleService(self.storage)
+            summaries = await module_service.list_modules(course_id)
+            modules = [
+                (await module_service.get_module(course_id, m.id, user_id)).model_dump()
+                for m in summaries
+            ]
+        else:
+            modules = await self.storage.list("modules", {"course_id": course_id})
         modules.sort(key=lambda m: m.get("order_index", 0))
 
         # Get progress for all modules in this course
@@ -252,16 +259,9 @@ class ProgressService:
 
     # Path Progress
 
-    async def get_path_progress(
-        self, user_id: str, path_id: str
-    ) -> PathProgressStatus:
+    async def get_path_progress(self, user_id: str, path_id: str) -> PathProgressStatus:
         """Get progress for a learning path including all courses."""
-        # Get path
-        path = await self.storage.get("learning_paths", path_id)
-        if not path:
-            raise NotFoundException(
-                "Learning path not found", code=ErrorCode.LEARNING_PATH_NOT_FOUND
-            )
+        path = await AccessService(self.storage).require_path(path_id, user_id)
 
         course_ids = path.get("course_ids", [])
 
@@ -290,7 +290,10 @@ class ProgressService:
                         earliest_start = course_progress.started_at
 
                 if course_progress.last_activity_at:
-                    if latest_activity is None or course_progress.last_activity_at > latest_activity:
+                    if (
+                        latest_activity is None
+                        or course_progress.last_activity_at > latest_activity
+                    ):
                         latest_activity = course_progress.last_activity_at
 
             except NotFoundException:
@@ -325,9 +328,7 @@ class ProgressService:
         all_progress = await self.storage.list("module_progress", {"user_id": user_id})
 
         # Count modules
-        modules_completed_total = sum(
-            1 for p in all_progress if p.get("status") == "completed"
-        )
+        modules_completed_total = sum(1 for p in all_progress if p.get("status") == "completed")
         modules_completed_week = 0
         modules_completed_month = 0
         for p in all_progress:
@@ -381,7 +382,10 @@ class ProgressService:
         active_paths = 0
         for path in paths:
             path_progress = await self.get_path_progress(user_id, path["id"])
-            if path_progress.completion_percentage > 0 and path_progress.completion_percentage < 100:
+            if (
+                path_progress.completion_percentage > 0
+                and path_progress.completion_percentage < 100
+            ):
                 active_paths += 1
 
         # Calculate streak
@@ -413,15 +417,15 @@ class ProgressService:
 
     # Recent Activity
 
-    async def get_recent_activity(
-        self, user_id: str, limit: int = 20
-    ) -> RecentActivityResponse:
+    async def get_recent_activity(self, user_id: str, limit: int = 20) -> RecentActivityResponse:
         """Get recent learning activity for a user."""
         activities = await self.storage.list("activities", {"user_id": user_id})
 
         # Sort by created_at descending
         activities.sort(
-            key=lambda a: ensure_datetime(a.get("created_at")) or datetime.min.replace(tzinfo=timezone.utc),
+            key=lambda a: (
+                ensure_datetime(a.get("created_at")) or datetime.min.replace(tzinfo=timezone.utc)
+            ),
             reverse=True,
         )
 
@@ -431,15 +435,20 @@ class ProgressService:
             module_title = None
             course_title = None
 
-            if activity.get("module_id"):
-                module = await self.storage.get("modules", activity["module_id"])
-                if module:
-                    module_title = module.get("title")
-
             if activity.get("course_id"):
-                course = await self.storage.get("courses", activity["course_id"])
-                if course:
+                try:
+                    course = await AccessService(self.storage).require_course(
+                        activity["course_id"], user_id
+                    )
                     course_title = course.get("title")
+                    if activity.get("module_id"):
+                        module = await AccessService(self.storage).require_module(
+                            activity["course_id"], activity["module_id"], user_id
+                        )
+                        module_title = module.get("title")
+                except NotFoundException:
+                    # Keep the learner's dated history and scores, not inaccessible titles.
+                    pass
 
             created_at = ensure_datetime(activity["created_at"])
             if created_at:
@@ -627,7 +636,9 @@ class ProgressService:
         activities = await self.storage.list("activities", {"user_id": user_id})
 
         activities.sort(
-            key=lambda a: ensure_datetime(a.get("created_at")) or datetime.min.replace(tzinfo=timezone.utc),
+            key=lambda a: (
+                ensure_datetime(a.get("created_at")) or datetime.min.replace(tzinfo=timezone.utc)
+            ),
             reverse=True,
         )
 
@@ -687,7 +698,9 @@ class ProgressService:
 
         now = datetime.now(timezone.utc)
         await self.storage.update(
-            "sessions", session_id, {"ended_at": now.isoformat(), "items_completed": items_completed}
+            "sessions",
+            session_id,
+            {"ended_at": now.isoformat(), "items_completed": items_completed},
         )
 
         started_at = ensure_datetime(session_data["started_at"])

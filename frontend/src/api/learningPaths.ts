@@ -8,6 +8,9 @@ import type {
 } from '../types';
 
 export const learningPathsApi = {
+  listFollowing: () => api.get<LearningPathResponse[]>('/paths/following'),
+  follow: (id: string) => api.post<{ is_following: boolean }>(`/paths/${id}/follow`, {}),
+  unfollow: (id: string) => api.delete<{ is_following: boolean }>(`/paths/${id}/follow`),
   /** List all learning paths accessible to the current user */
   list: () => api.get<LearningPathResponse[]>('/paths'),
 

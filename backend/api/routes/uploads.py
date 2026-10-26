@@ -1,12 +1,13 @@
 """Upload API routes for images and files."""
 
-from fastapi import APIRouter, Depends, UploadFile, File, HTTPException
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
-from dependencies import CurrentUser, StorageDep
-from services.image_service import ImageService
+from dependencies import CurrentUser, OptionalUser, StorageDep
+from services.access_service import AccessService
 from services.course_service import CourseService
+from services.image_service import ImageService
 
 router = APIRouter()
 
@@ -87,12 +88,12 @@ async def upload_image_from_url(
 async def get_image(
     course_id: str,
     filename: str,
+    user: OptionalUser,
+    storage: StorageDep,
     image_service: ImageService = Depends(get_image_service),
 ):
-    """Serve an uploaded image.
-
-    This endpoint is public to allow image display in markdown content.
-    """
+    """Serve uploaded images under the same live policy as their course."""
+    await AccessService(storage).require_course(course_id, user.id if user else None)
     file_path = image_service.get_image_path(course_id, filename)
 
     if not file_path:
@@ -110,4 +111,30 @@ async def get_image(
     ext = file_path.suffix.lower()
     media_type = media_types.get(ext, "application/octet-stream")
 
-    return FileResponse(file_path, media_type=media_type)
+    return FileResponse(file_path, media_type=media_type, headers={"Cache-Control": "no-store"})
+
+
+@router.get("/courses/{course_id}/{module_id}/visuals/{filename}")
+async def get_generated_visual(
+    course_id: str,
+    module_id: str,
+    filename: str,
+    user: OptionalUser,
+    storage: StorageDep,
+    image_service: ImageService = Depends(get_image_service),
+):
+    """Serve generated visuals, including author drafts, using course access."""
+    from pathlib import Path
+
+    await AccessService(storage).require_course(course_id, user.id if user else None)
+    if any(Path(value).name != value or value in (".", "..") for value in (module_id, filename)):
+        raise HTTPException(status_code=404, detail="Image not found")
+    root = (image_service.uploads_path / "courses" / course_id).resolve()
+    file = (root / module_id / "visuals" / filename).resolve()
+    if (
+        not file.is_relative_to(root)
+        or not file.is_file()
+        or file.suffix.lower() not in {".png", ".jpg", ".jpeg", ".webp", ".gif", ".svg"}
+    ):
+        raise HTTPException(status_code=404, detail="Image not found")
+    return FileResponse(file, headers={"Cache-Control": "no-store"})

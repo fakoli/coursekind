@@ -65,9 +65,7 @@ async def update_module_progress(
     - review_flashcard: Increment flashcard review count
     - submit_quiz: Record quiz attempt and score
     """
-    return await progress_service.update_module_progress(
-        user.id, module_id, course_id, data
-    )
+    return await progress_service.update_module_progress(user.id, module_id, course_id, data)
 
 
 @router.get(
@@ -81,7 +79,7 @@ async def get_module_progress(
     progress_service: ProgressService = Depends(get_progress_service),
 ):
     """Get progress for a specific module."""
-    return await progress_service.get_module_progress(user.id, module_id)
+    return await progress_service.get_module_progress(user.id, module_id, course_id)
 
 
 @router.get("/courses/{course_id}", response_model=CourseProgressStatus)

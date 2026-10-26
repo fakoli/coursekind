@@ -1,3 +1,4 @@
+import { CourseImage } from '../common/CourseImage';
 import { Link } from 'react-router-dom';
 import { Users, Sparkles, MoreVertical, Plus } from 'lucide-react';
 import { Card, CardContent } from '../common/Card';
@@ -31,7 +32,7 @@ export function CourseCard({ course, onOptions, onAddToPath, showAuthor = true }
         <CardContent className="flex flex-col h-full">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-3">
-              <img
+              <CourseImage
                 src={course.thumbnail_url || defaultThumbnails[course.difficulty]}
                 alt=""
                 className="w-10 h-10 rounded-lg object-cover"
@@ -89,10 +90,10 @@ export function CourseCard({ course, onOptions, onAddToPath, showAuthor = true }
           <div className="mt-auto pt-4 flex items-center justify-between text-sm text-gray-500">
             <div className="flex items-center gap-4">
               <span>{course.module_count} {course.module_count === 1 ? 'module' : 'modules'}</span>
-              {course.times_added > 0 && (
+              {(
                 <div className="flex items-center gap-1">
                   <Users className="w-4 h-4" aria-hidden="true" />
-                  <span>{course.times_added}</span>
+                  <span>{course.times_added} path references · {course.own_path_count ?? 0} by author · {course.other_path_count ?? 0} by others</span>
                 </div>
               )}
             </div>

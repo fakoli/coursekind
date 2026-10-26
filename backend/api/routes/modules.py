@@ -10,9 +10,9 @@ from models.module import (
     ModuleSummary,
     ModuleUpdate,
 )
-from services.module_service import ModuleService
-from services.image_service import ImageService
 from services.course_service import CourseService
+from services.image_service import ImageService
+from services.module_service import ModuleService
 
 router = APIRouter()
 
@@ -67,6 +67,7 @@ async def create_module(
     image_service: ImageService = Depends(get_image_service),
 ):
     """Create a new module in a course."""
+    await module_service._get_editable_course(course_id, user.id)
     # Process markdown to download external images
     if module_data.content_markdown:
         module_data.content_markdown = await image_service.process_markdown(
@@ -86,6 +87,17 @@ async def batch_create_modules(
     """Create multiple modules in a single request."""
     created = await module_service.batch_create_modules(course_id, user.id, data.modules)
     return {"created": created, "count": len(created)}
+
+
+@router.put("/{course_id}/modules/reorder", response_model=list[ModuleSummary])
+async def reorder_modules(
+    course_id: str,
+    data: ReorderModulesRequest,
+    user: CurrentUser,
+    module_service: ModuleService = Depends(get_module_service),
+):
+    """Reorder modules in a course (course author only)."""
+    return await module_service.reorder_modules(course_id, user.id, data.module_ids)
 
 
 @router.get("/{course_id}/modules/{module_id}", response_model=Module)
@@ -110,6 +122,7 @@ async def update_module(
     image_service: ImageService = Depends(get_image_service),
 ):
     """Update a module (course author only)."""
+    await module_service._get_editable_course(course_id, user.id)
     # Process markdown to download external images
     if update_data.content_markdown:
         update_data.content_markdown = await image_service.process_markdown(
@@ -129,14 +142,3 @@ async def delete_module(
     """Delete a module from a course (course author only)."""
     await module_service.delete_module(course_id, module_id, user.id)
     return {"message": "Module deleted successfully"}
-
-
-@router.put("/{course_id}/modules/reorder", response_model=list[ModuleSummary])
-async def reorder_modules(
-    course_id: str,
-    data: ReorderModulesRequest,
-    user: CurrentUser,
-    module_service: ModuleService = Depends(get_module_service),
-):
-    """Reorder modules in a course (course author only)."""
-    return await module_service.reorder_modules(course_id, user.id, data.module_ids)

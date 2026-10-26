@@ -21,6 +21,29 @@ from uuid import uuid4
 from config import Settings
 from exceptions import AIServiceException, ErrorCode, InsufficientTokensException, NotFoundException
 from logging_config import clear_operation_context, get_logger, set_operation_context
+from models.ai_generation import (
+    GeneratedModuleContent,
+    GeneratedVisual,
+    GenerateFlashcardsRequest,
+    GenerateFlashcardsResponse,
+    GenerateModuleContentRequest,
+    GenerateQuizRequest,
+    GenerateQuizResponse,
+    GenerateVisualRequest,
+    ModuleSuggestion,
+    SuggestModulesRequest,
+    SuggestModulesResponse,
+)
+from models.course import Course
+from models.module import FlashcardData, Module, QuizData, QuizQuestionData
+from services.access_service import AccessService
+from services.anvil_client import get_anvil_client
+from services.auth_service import AuthService
+from services.base_service import BaseService
+from services.course_service import CourseService
+from services.module_service import ModuleService
+from services.request_deduplication import get_request_deduplicator
+from storage.base import StorageBackend
 
 logger = get_logger(__name__)
 
@@ -98,27 +121,6 @@ def log_ai_operation(
     return decorator
 
 
-from models.ai_generation import (
-    GeneratedModuleContent,
-    GeneratedVisual,
-    GenerateFlashcardsRequest,
-    GenerateFlashcardsResponse,
-    GenerateModuleContentRequest,
-    GenerateQuizRequest,
-    GenerateQuizResponse,
-    GenerateVisualRequest,
-    ModuleSuggestion,
-    SuggestModulesRequest,
-    SuggestModulesResponse,
-)
-from models.course import Course
-from models.module import FlashcardData, Module, QuizData, QuizQuestionData
-from services.anvil_client import get_anvil_client
-from services.auth_service import AuthService
-from services.base_service import BaseService
-from services.request_deduplication import get_request_deduplicator
-from storage.base import StorageBackend
-
 # Token costs for each operation
 TOKEN_COSTS = {
     "suggest_modules": 10,
@@ -192,8 +194,7 @@ class AIGenerationService(BaseService):
         if not client.is_configured:
             logger.error("AI service not configured: missing Anvil router settings")
             raise AIServiceException(
-                "AI service not configured: ANVIL_ROUTER_BASE_URL and "
-                "ANVIL_ROUTER_TOKEN required",
+                "AI service not configured: ANVIL_ROUTER_BASE_URL and ANVIL_ROUTER_TOKEN required",
                 code=ErrorCode.AI_SERVICE_UNAVAILABLE,
             )
 
@@ -234,11 +235,13 @@ class AIGenerationService(BaseService):
 
         # Build context
         if not course.instructions:
-            context = f"Course: {course.title}\nDescription: {course.description or 'No description'}"
+            context = (
+                f"Course: {course.title}\nDescription: {course.description or 'No description'}"
+            )
         else:
             inst = course.instructions
             context = f"""Course: {course.title}
-Description: {course.description or 'No description'}
+Description: {course.description or "No description"}
 Difficulty: {course.difficulty}
 
 PURPOSE: {inst.purpose}
@@ -246,7 +249,7 @@ TARGET AUDIENCE: {inst.target_audience}
 TONE: {inst.tone}
 
 LEARNING OBJECTIVES:
-{chr(10).join(f'- {obj}' for obj in inst.learning_objectives)}
+{chr(10).join(f"- {obj}" for obj in inst.learning_objectives)}
 """
             if inst.additional_context:
                 context += f"\nADDITIONAL CONTEXT: {inst.additional_context}"
@@ -302,11 +305,12 @@ LEARNING OBJECTIVES:
         Returns:
             SuggestModulesResponse with list of suggested modules
         """
+        await AccessService(self.storage).require_course_owner(request.course_id, user_id)
         cost = TOKEN_COSTS["suggest_modules"]
         await self._check_token_balance(user_id, cost)
 
         # Get course with instructions
-        course = await self._get_course(request.course_id)
+        course = await CourseService(self.storage).get_course(request.course_id, user_id)
         if not course.ai_enabled:
             raise AIServiceException(
                 "AI generation is not enabled for this course",
@@ -349,7 +353,7 @@ Output format:
         # Parse JSON response
         try:
             # Extract JSON from response (handle markdown code blocks)
-            json_match = re.search(r'\[.*\]', response, re.DOTALL)
+            json_match = re.search(r"\[.*\]", response, re.DOTALL)
             if json_match:
                 modules_data = json.loads(json_match.group())
             else:
@@ -385,11 +389,12 @@ Output format:
         Returns:
             GeneratedModuleContent with markdown, flashcards, quiz, and visual suggestions
         """
+        await AccessService(self.storage).require_course_owner(request.course_id, user_id)
         cost = TOKEN_COSTS["generate_content"]
         await self._check_token_balance(user_id, cost)
 
         # Get course with instructions
-        course = await self._get_course(request.course_id)
+        course = await CourseService(self.storage).get_course(request.course_id, user_id)
         if not course.ai_enabled:
             raise AIServiceException(
                 "AI generation is not enabled for this course",
@@ -473,15 +478,13 @@ Requirements:
 
 Output the complete JSON object as specified."""
 
-        response = await self._call_llm(
-            prompt, system_prompt, max_tokens=8192
-        )
+        response = await self._call_llm(prompt, system_prompt, max_tokens=8192)
         await self._consume_tokens(user_id, cost)
 
         # Parse JSON response
         try:
             # Extract JSON from response (handle markdown code blocks)
-            json_match = re.search(r'\{.*\}', response, re.DOTALL)
+            json_match = re.search(r"\{.*\}", response, re.DOTALL)
             if json_match:
                 data = json.loads(json_match.group())
             else:
@@ -540,12 +543,15 @@ Output the complete JSON object as specified."""
         Returns:
             GenerateFlashcardsResponse with list of flashcards
         """
+        await AccessService(self.storage).require_course(request.course_id, user_id)
         cost = TOKEN_COSTS["generate_flashcards"]
         await self._check_token_balance(user_id, cost)
 
         # Get course and module
-        course = await self._get_course(request.course_id)
-        module = await self._get_module(request.course_id, request.module_id)
+        course = await CourseService(self.storage).get_course(request.course_id, user_id)
+        module = await ModuleService(self.storage).get_module(
+            request.course_id, request.module_id, user_id
+        )
 
         context = self._build_course_context(course)
 
@@ -584,7 +590,7 @@ Generate {request.count} high-quality flashcards that cover the key concepts in 
 
         # Parse JSON response
         try:
-            json_match = re.search(r'\[.*\]', response, re.DOTALL)
+            json_match = re.search(r"\[.*\]", response, re.DOTALL)
             if json_match:
                 cards_data = json.loads(json_match.group())
             else:
@@ -619,12 +625,15 @@ Generate {request.count} high-quality flashcards that cover the key concepts in 
         Returns:
             GenerateQuizResponse with quiz data
         """
+        await AccessService(self.storage).require_course(request.course_id, user_id)
         cost = TOKEN_COSTS["generate_quiz"]
         await self._check_token_balance(user_id, cost)
 
         # Get course and module
-        course = await self._get_course(request.course_id)
-        module = await self._get_module(request.course_id, request.module_id)
+        course = await CourseService(self.storage).get_course(request.course_id, user_id)
+        module = await ModuleService(self.storage).get_module(
+            request.course_id, request.module_id, user_id
+        )
 
         context = self._build_course_context(course)
 
@@ -661,7 +670,7 @@ Guidelines:
 
 IMPORTANT: Output ONLY valid JSON, no additional text."""
 
-        prompt = f"""Create a {request.question_count}-question quiz based on the following module content.
+        prompt = f"""Create a {request.question_count}-question quiz based on this module content.
 
 COURSE CONTEXT:
 {context}
@@ -678,7 +687,7 @@ Generate {request.question_count} high-quality multiple-choice questions."""
 
         # Parse JSON response
         try:
-            json_match = re.search(r'\{.*\}', response, re.DOTALL)
+            json_match = re.search(r"\{.*\}", response, re.DOTALL)
             if json_match:
                 data = json.loads(json_match.group())
             else:
@@ -717,6 +726,7 @@ Generate {request.question_count} high-quality multiple-choice questions."""
         Returns:
             GeneratedVisual with path and markdown reference
         """
+        await AccessService(self.storage).require_course_owner(request.course_id, user_id)
         cost = TOKEN_COSTS["generate_visual"]
         await self._check_token_balance(user_id, cost)
 
@@ -759,7 +769,9 @@ Requirements:
 """
 
         # Ensure directory exists
-        image_dir = self.uploads_path / "courses" / request.course_id / request.module_id / "visuals"
+        image_dir = (
+            self.uploads_path / "courses" / request.course_id / request.module_id / "visuals"
+        )
         image_dir.mkdir(parents=True, exist_ok=True)
 
         # Generate unique filename
@@ -806,7 +818,10 @@ Requirements:
         await self._consume_tokens(user_id, cost)
 
         # Build response
-        url = f"/api/v1/uploads/courses/{request.course_id}/{request.module_id}/visuals/{output_path.name}"
+        url = (
+            f"/api/v1/uploads/courses/{request.course_id}/{request.module_id}"
+            f"/visuals/{output_path.name}"
+        )
         markdown_ref = f"![{request.description[:50]}]({url})"
 
         return GeneratedVisual(

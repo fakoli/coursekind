@@ -1,3 +1,4 @@
+import { useAuthContext } from '../components/common/AuthProvider';
 import { useEffect, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -21,6 +22,7 @@ import { useToast } from '../hooks/useToast';
 import { saveModuleOutlines } from '../services/saveModuleOutlines';
 
 export function CourseEditor() {
+  const { user, isLoading: authLoading } = useAuthContext();
   const { courseId } = useParams<{ courseId: string }>();
   const navigate = useNavigate();
   const { success, error: showError } = useToast();
@@ -150,6 +152,11 @@ export function CourseEditor() {
       }
     );
   };
+
+  if (isEditing && authLoading) return <p>Checking editing access…</p>;
+  if (isEditing && existingCourse && (existingCourse.course.source !== 'database' || existingCourse.course.author_id !== user?.id)) {
+    return <p role="alert">Only the course author can edit this course.</p>;
+  }
 
   if (isEditing && courseLoadError && initializedCourse.current !== courseId) {
     return <div role="alert">

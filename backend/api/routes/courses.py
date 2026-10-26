@@ -15,6 +15,8 @@ from models.course import (
     CourseUpdate,
 )
 from models.module import ModuleSummary
+from models.sharing import ShareRequest, SharingResponse
+from services.access_service import AccessService
 from services.course_service import CourseService
 
 router = APIRouter()
@@ -48,6 +50,20 @@ async def list_my_courses(
 ):
     """List courses authored by the current user."""
     return await course_service.list_user_courses(user.id)
+
+
+@router.get("/shared", response_model=list[CourseResponse])
+async def list_shared_courses(
+    user: CurrentUser,
+    storage: StorageDep,
+    course_service: CourseService = Depends(get_course_service),
+):
+    shared_ids = {
+        c["id"]
+        for c in await storage.list("courses")
+        if user.id in c.get("shared_with", []) and c.get("author_id") != user.id
+    }
+    return [c for c in await course_service.list_courses(user.id) if c.id in shared_ids]
 
 
 @router.get("/discover", response_model=CourseDiscoveryResponse)
@@ -116,3 +132,18 @@ async def delete_course(
     """Delete a course and all its modules (author only)."""
     await course_service.delete_course(course_id, user.id)
     return {"message": "Course deleted successfully"}
+
+
+@router.get("/{course_id}/sharing", response_model=SharingResponse)
+async def get_sharing(course_id: str, user: CurrentUser, storage: StorageDep):
+    return await AccessService(storage).sharing("courses", course_id, user.id)
+
+
+@router.post("/{course_id}/sharing", response_model=SharingResponse)
+async def grant_sharing(course_id: str, data: ShareRequest, user: CurrentUser, storage: StorageDep):
+    return await AccessService(storage).grant("courses", course_id, user.id, str(data.email))
+
+
+@router.delete("/{course_id}/sharing/{recipient_id}", response_model=SharingResponse)
+async def revoke_sharing(course_id: str, recipient_id: str, user: CurrentUser, storage: StorageDep):
+    return await AccessService(storage).revoke("courses", course_id, user.id, recipient_id)

@@ -1,3 +1,4 @@
+import { AuthProvider } from '../components/common/AuthProvider';
 import type { ReactNode } from 'react';
 import { render } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -20,6 +21,7 @@ export function makeModule(id = 'm1', order = 0): Module {
 // A stateful HTTP boundary for component tests. Hooks, mutations, forms,
 // navigation, and rendering remain real; assertions inspect saved state.
 export function installJourneyApi(modules: Module[] = []) {
+  localStorage.setItem('token', 'synthetic-test-token');
   const state = {
     course: {
       id: 'c1', title: 'Test course', description: '', thumbnail_url: null,
@@ -45,6 +47,7 @@ export function installJourneyApi(modules: Module[] = []) {
     const method = init?.method || 'GET';
     const body = init?.body ? JSON.parse(String(init.body)) : {};
     const reply = (data: unknown, status = 200) => new Response(JSON.stringify(data), { status });
+    if (path === '/auth/me') return reply({ id: 'u1', name: 'Author', email: 'author@example.test', role: 'user', token_balance: 100 });
     if (path === '/courses' && method === 'POST') {
       state.course = { ...state.course, ...body };
       state.courseCreates++;
@@ -86,6 +89,10 @@ export function installJourneyApi(modules: Module[] = []) {
         state.modules.push(module);
         return reply(module);
       }
+    }
+    if (path === '/courses/c1/modules/reorder' && method === 'PUT') {
+      state.modules = body.module_ids.map((id: string, order: number) => ({ ...state.modules.find(m => m.id === id), order_index: order }));
+      return reply(summary());
     }
     const moduleMatch = path.match(/^\/courses\/c1\/modules\/([^/]+)$/);
     if (moduleMatch) {
@@ -134,10 +141,10 @@ export function renderJourney(page: ReactNode, route: string, path: string,
   } });
   prepare?.(queryClient);
   render(<QueryClientProvider client={queryClient}>
-    <MemoryRouter initialEntries={[route]}><ToastProvider><Routes>
+    <AuthProvider><MemoryRouter initialEntries={[route]}><ToastProvider><Routes>
       <Route path={path} element={page} />
       <Route path="/courses/:courseId" element={<p>Course saved</p>} />
-    </Routes></ToastProvider></MemoryRouter>
+    </Routes></ToastProvider></MemoryRouter></AuthProvider>
   </QueryClientProvider>);
   return queryClient;
 }

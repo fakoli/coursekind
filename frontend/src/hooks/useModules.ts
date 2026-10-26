@@ -97,6 +97,7 @@ export function useReorderModules() {
       modulesApi.reorder(courseId, moduleIds),
     onSuccess: (_, { courseId }) => {
       queryClient.invalidateQueries({ queryKey: ['modules', courseId] });
+      queryClient.invalidateQueries({ queryKey: ['course', courseId] });
     },
   });
 }

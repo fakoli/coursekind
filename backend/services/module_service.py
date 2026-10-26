@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from uuid import uuid4
 
-from exceptions import ErrorCode, ForbiddenException, NotFoundException
+from exceptions import ErrorCode, ForbiddenException, NotFoundException, StudyBuddyException
 from models.module import (
     FlashcardData,
     Module,
@@ -15,6 +15,7 @@ from models.module import (
     QuizData,
     QuizQuestionData,
 )
+from services.access_service import AccessService
 from services.base_service import BaseService
 from storage.base import StorageBackend
 
@@ -34,20 +35,11 @@ class ModuleService(BaseService):
         For filesystem courses, reads from disk.
         For database courses, reads from storage.
         """
-        # Check if this is a filesystem course
-        course_data = await self.storage.get("courses", course_id)
-        is_filesystem = course_data is None  # If not in DB, assume filesystem
-
-        if is_filesystem:
+        course_data = await AccessService(self.storage, str(self.content_path)).require_course(
+            course_id, user_id
+        )
+        if course_data.get("source") == "filesystem":
             return await self._get_filesystem_module(course_id, module_id)
-
-        # Check course access
-        visibility = course_data.get("visibility", "private")
-        if visibility == "private" and course_data.get("author_id") != user_id:
-            raise NotFoundException(
-                "Module not found",
-                code=ErrorCode.MODULE_NOT_FOUND,
-            )
 
         # Get database module
         module_data = await self.storage.get("modules", module_id)
@@ -87,9 +79,7 @@ class ModuleService(BaseService):
 
         return modules
 
-    async def create_module(
-        self, course_id: str, user_id: str, data: ModuleCreate
-    ) -> Module:
+    async def create_module(self, course_id: str, user_id: str, data: ModuleCreate) -> Module:
         """Create a new module in a database course."""
         # Verify course ownership (call raises if not authorized)
         await self._get_editable_course(course_id, user_id)
@@ -169,9 +159,7 @@ class ModuleService(BaseService):
 
         return self._parse_module(updated_data)
 
-    async def delete_module(
-        self, course_id: str, module_id: str, user_id: str
-    ) -> bool:
+    async def delete_module(self, course_id: str, module_id: str, user_id: str) -> bool:
         """Delete a module from a database course."""
         # Verify course ownership
         await self._get_editable_course(course_id, user_id)
@@ -190,25 +178,31 @@ class ModuleService(BaseService):
         self, course_id: str, user_id: str, module_ids: list[str]
     ) -> list[ModuleSummary]:
         """Reorder modules in a course."""
-        # Verify course ownership
-        await self._get_editable_course(course_id, user_id)
+        async with self.storage.transaction():
+            # Verify course ownership
+            await self._get_editable_course(course_id, user_id)
 
-        # Get all modules for this course
-        modules_data = await self.storage.list("modules", {"course_id": course_id})
-        module_ids_set = {m["id"] for m in modules_data}
+            # Get all modules for this course
+            modules_data = await self.storage.list("modules", {"course_id": course_id})
+            module_ids_set = {m["id"] for m in modules_data}
 
-        # Verify all provided IDs belong to this course
-        for idx, module_id in enumerate(module_ids):
-            if module_id not in module_ids_set:
-                raise NotFoundException(
-                    f"Module {module_id} not found in course",
-                    code=ErrorCode.MODULE_NOT_FOUND,
+            if len(module_ids) != len(module_ids_set) or set(module_ids) != module_ids_set:
+                raise StudyBuddyException(
+                    "Module IDs must match existing membership exactly",
+                    code=ErrorCode.INVALID_MODULE_ORDER,
                 )
-            # Update order
-            await self.storage.update("modules", module_id, {"order_index": idx})
+            # Verify all provided IDs belong to this course
+            for idx, module_id in enumerate(module_ids):
+                if module_id not in module_ids_set:
+                    raise NotFoundException(
+                        f"Module {module_id} not found in course",
+                        code=ErrorCode.MODULE_NOT_FOUND,
+                    )
+                # Update order
+                await self.storage.update("modules", module_id, {"order_index": idx})
 
-        # Return updated summaries
-        return await self.list_modules(course_id)
+            # Return updated summaries
+            return await self.list_modules(course_id)
 
     # Private helpers
 
@@ -245,6 +239,8 @@ class ModuleService(BaseService):
 
     async def _get_filesystem_module(self, course_id: str, module_id: str) -> Module:
         """Load a module from filesystem."""
+        if Path(module_id).name != module_id or module_id in (".", ".."):
+            raise NotFoundException("Module not found")
         module_path = self.content_path / course_id / "modules" / module_id
 
         if not module_path.exists():

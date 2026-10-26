@@ -1,3 +1,4 @@
+import { useAuthContext } from '../components/common/AuthProvider';
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Save, Sparkles } from 'lucide-react';
@@ -22,6 +23,7 @@ import { useToast } from '../hooks/useToast';
 import type { FlashcardData, SandboxData } from '../types';
 
 export function ModuleEditor() {
+  const { user, isLoading: authLoading } = useAuthContext();
   const { courseId, moduleId } = useParams<{ courseId: string; moduleId: string }>();
   const navigate = useNavigate();
   const { success, error: showError } = useToast();
@@ -172,6 +174,11 @@ export function ModuleEditor() {
       showError('Failed to save module. Please try again.');
     }
   };
+
+  if (authLoading) return <p>Checking editing access…</p>;
+  if (courseData && (courseData.course.source !== 'database' || courseData.course.author_id !== user?.id)) {
+    return <p role="alert">Only the course author can edit modules.</p>;
+  }
 
   if (isLoading) {
     return (

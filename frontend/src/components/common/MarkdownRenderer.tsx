@@ -1,3 +1,4 @@
+import { CourseImage } from './CourseImage';
 import { useEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -194,7 +195,7 @@ export function MarkdownRenderer({ content, className = '', enableRunnable = fal
           // Enhanced image styling
           img({ src, alt }) {
             return (
-              <img
+              <CourseImage
                 src={src}
                 alt={alt || ''}
                 className="rounded-lg shadow-md max-w-full h-auto my-4"

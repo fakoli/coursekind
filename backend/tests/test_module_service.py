@@ -6,17 +6,15 @@ reorder, permission checks, and the filesystem reader logic.
 """
 
 import json
+from contextlib import asynccontextmanager
 from datetime import datetime, timezone
-from unittest.mock import AsyncMock
 from uuid import uuid4
 
 import pytest
 
-from exceptions import ErrorCode, ForbiddenException, NotFoundException
-from models.course import Course
-from models.module import FlashcardData, ModuleCreate, ModuleUpdate, QuizData
+from exceptions import ErrorCode, ForbiddenException, NotFoundException, StudyBuddyException
+from models.module import ModuleCreate, ModuleUpdate
 from services.module_service import ModuleService
-from storage.json_storage import JSONStorage
 
 
 def _now() -> str:
@@ -29,6 +27,10 @@ class FakeStorage:
 
     def __init__(self):
         self.data: dict[str, dict] = {}
+
+    @asynccontextmanager
+    async def transaction(self):
+        yield self
 
     async def get(self, collection, key):
         return self.data.get(collection, {}).get(key)
@@ -75,7 +77,9 @@ def service(storage, tmp_path):
     return ModuleService(storage=storage, content_path=str(tmp_path))
 
 
-async def _seed_course(storage, author_id="owner-1", visibility="private", course_id=None, source="db"):
+async def _seed_course(
+    storage, author_id="owner-1", visibility="private", course_id=None, source="db"
+):
     if course_id is None:
         course_id = str(uuid4())
     record = {
@@ -91,7 +95,9 @@ async def _seed_course(storage, author_id="owner-1", visibility="private", cours
     return course_id
 
 
-async def _seed_module(storage, course_id, title="Module", order_index=0, flashcards=None, quiz=None):
+async def _seed_module(
+    storage, course_id, title="Module", order_index=0, flashcards=None, quiz=None
+):
     module_id = str(uuid4())
     record = {
         "id": module_id,
@@ -128,7 +134,7 @@ class TestGetModule:
         course_path.mkdir()
         with pytest.raises(NotFoundException) as exc:
             await service.get_module("fs-course", "missing-module", "user-1")
-        assert exc.value.code == ErrorCode.MODULE_NOT_FOUND
+        assert exc.value.code == ErrorCode.COURSE_NOT_FOUND
 
     @pytest.mark.asyncio
     async def test_get_private_course_other_user_forbidden(self, service, storage):
@@ -136,7 +142,7 @@ class TestGetModule:
         module_id = await _seed_module(storage, course_id)
         with pytest.raises(NotFoundException) as exc:
             await service.get_module(course_id, module_id, "other")
-        assert exc.value.code == ErrorCode.MODULE_NOT_FOUND
+        assert exc.value.code == ErrorCode.COURSE_NOT_FOUND
 
     @pytest.mark.asyncio
     async def test_get_private_course_owner_ok(self, service, storage):
@@ -172,7 +178,10 @@ class TestListModules:
     async def test_list_sorted_and_counts(self, service, storage):
         course_id = await _seed_course(storage)
         await _seed_module(
-            storage, course_id, title="B", order_index=1,
+            storage,
+            course_id,
+            title="B",
+            order_index=1,
             flashcards=[{"front": "f", "back": "b"}],
         )
         await _seed_module(storage, course_id, title="A", order_index=0)
@@ -186,7 +195,8 @@ class TestListModules:
     async def test_list_flashcards_none_has_quiz(self, service, storage):
         course_id = await _seed_course(storage)
         await _seed_module(
-            storage, course_id,
+            storage,
+            course_id,
             quiz={"questions": [{"question": "q", "options": ["a"], "correct_index": 0}]},
         )
         summaries = await service.list_modules(course_id)
@@ -230,7 +240,8 @@ class TestBatchCreateModules:
     async def test_batch_creates_multiple(self, service, storage):
         course_id = await _seed_course(storage)
         modules = await service.batch_create_modules(
-            course_id, "owner-1",
+            course_id,
+            "owner-1",
             [_module_create(title="M1", order_index=0), _module_create(title="M2", order_index=1)],
         )
         assert len(modules) == 2
@@ -245,9 +256,13 @@ class TestUpdateModule:
         course_id = await _seed_course(storage, author_id="owner")
         module_id = await _seed_module(storage, course_id, title="Old")
         with pytest.raises(ForbiddenException):
-            await service.update_module(course_id, module_id, "intruder", ModuleUpdate(title="Hacked"))
+            await service.update_module(
+                course_id, module_id, "intruder", ModuleUpdate(title="Hacked")
+            )
 
-        updated = await service.update_module(course_id, module_id, "owner", ModuleUpdate(title="New"))
+        updated = await service.update_module(
+            course_id, module_id, "owner", ModuleUpdate(title="New")
+        )
         assert updated.title == "New"
         assert updated.updated_at >= updated.created_at
 
@@ -289,9 +304,9 @@ class TestReorderModules:
     async def test_reorder_mismatch_404(self, service, storage):
         course_id = await _seed_course(storage)
         m1 = await _seed_module(storage, course_id)
-        with pytest.raises(NotFoundException) as exc:
+        with pytest.raises(StudyBuddyException) as exc:
             await service.reorder_modules(course_id, "owner-1", [m1, "ghost"])
-        assert exc.value.code == ErrorCode.MODULE_NOT_FOUND
+        assert exc.value.code == ErrorCode.INVALID_MODULE_ORDER
 
 
 class TestFilesystem:
@@ -301,12 +316,24 @@ class TestFilesystem:
         course_id = "fs-course"
         module_dir = tmp_path / course_id / "modules" / "01-intro"
         module_dir.mkdir(parents=True)
+        (tmp_path / course_id / "meta.json").write_text('{"title":"Filesystem course"}')
         (module_dir / "content.md").write_text("# Intro")
         (module_dir / "flashcards.json").write_text(
             json.dumps({"cards": [{"front": "F", "back": "B", "visual": None}]})
         )
         (module_dir / "quiz.json").write_text(
-            json.dumps({"questions": [{"question": "Q", "options": ["a", "b"], "correct_index": 0, "explanation": None}]})
+            json.dumps(
+                {
+                    "questions": [
+                        {
+                            "question": "Q",
+                            "options": ["a", "b"],
+                            "correct_index": 0,
+                            "explanation": None,
+                        }
+                    ]
+                }
+            )
         )
 
         module = await service.get_module(course_id, "01-intro", "anyone")

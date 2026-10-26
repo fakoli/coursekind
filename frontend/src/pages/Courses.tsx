@@ -7,13 +7,13 @@ import { Modal } from '../components/common/Modal';
 import { Button } from '../components/common/Button';
 import { Card, CardContent } from '../components/common/Card';
 import { SkeletonDeckGrid } from '../components/common/Skeleton';
-import { useMyCourses, useDiscoverCourses } from '../hooks/useCourses';
+import { useMyCourses, useDiscoverCourses, useSharedCourses } from '../hooks/useCourses';
 import { useMyLearningPaths, useAddCourseToPath } from '../hooks/useLearningPaths';
 import { useToast } from '../hooks/useToast';
 import { useDebouncedValue } from '../hooks/useDebouncedSearch';
 import type { CourseDifficulty, CourseDiscoveryFilters } from '../types';
 
-type Tab = 'mine' | 'discover';
+type Tab = 'mine' | 'discover' | 'shared';
 
 export function Courses() {
   const navigate = useNavigate();
@@ -22,7 +22,7 @@ export function Courses() {
 
   // Tab state
   const [activeTab, setActiveTab] = useState<Tab>(
-    searchParams.get('tab') === 'discover' ? 'discover' : 'mine'
+    searchParams.get('tab') === 'discover' ? 'discover' : searchParams.get('tab') === 'shared' ? 'shared' : 'mine'
   );
 
   // Discovery filters
@@ -48,12 +48,13 @@ export function Courses() {
   // Hooks
   const { data: myCourses, isLoading: loadingMyCourses } = useMyCourses();
   const { data: discoverData, isLoading: loadingDiscover } = useDiscoverCourses(filters);
+  const { data: accessible, isLoading: loadingAccessible } = useSharedCourses();
   const { data: myPaths } = useMyLearningPaths();
   const addCourseToPath = useAddCourseToPath();
 
   const handleTabChange = (tab: Tab) => {
     setActiveTab(tab);
-    setSearchParams(tab === 'discover' ? { tab: 'discover' } : {});
+    setSearchParams(tab === 'mine' ? {} : { tab });
   };
 
   const handleAddToPath = (courseId: string) => {
@@ -74,7 +75,8 @@ export function Courses() {
     }
   };
 
-  const isLoading = activeTab === 'mine' ? loadingMyCourses : loadingDiscover;
+  const visibleCourses = activeTab === 'shared' ? accessible : discoverData?.courses;
+  const isLoading = activeTab === 'mine' ? loadingMyCourses : activeTab === 'shared' ? loadingAccessible : loadingDiscover;
 
   return (
     <div className="space-y-6 page-enter">
@@ -112,6 +114,7 @@ export function Courses() {
           >
             Discover
           </button>
+          <button onClick={() => handleTabChange('shared')} className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === 'shared' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500'}`}>Shared with me</button>
         </nav>
       </div>
 
@@ -171,14 +174,14 @@ export function Courses() {
         />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {discoverData?.courses.map((course) => (
+          {visibleCourses?.map((course) => (
             <CourseCard
               key={course.id}
               course={course}
               onAddToPath={() => handleAddToPath(course.id)}
             />
           ))}
-          {discoverData?.courses.length === 0 && (
+          {visibleCourses?.length === 0 && (
             <div className="col-span-full">
               <div className="text-center py-12 px-4">
                 <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
@@ -188,7 +191,7 @@ export function Courses() {
                 <p className="text-sm text-gray-500 max-w-sm mx-auto">
                   {searchQuery || difficultyFilter
                     ? "Try adjusting your search or filters to find more courses."
-                    : "No public courses are available yet. Check back soon!"}
+                    : activeTab === 'shared' ? 'Courses shared with your email will appear here.' : 'No public courses are available yet. Check back soon!'}
                 </p>
               </div>
             </div>

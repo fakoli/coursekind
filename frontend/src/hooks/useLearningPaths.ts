@@ -35,6 +35,10 @@ export function useCreateLearningPath() {
     mutationFn: (data: LearningPathCreate) => learningPathsApi.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['paths'] });
+      queryClient.invalidateQueries({ queryKey: ['courses'] });
+      queryClient.invalidateQueries({ queryKey: ['course'] });
+      queryClient.invalidateQueries({ queryKey: ['path'] });
+      queryClient.invalidateQueries({ queryKey: ['progress'] });
     },
   });
 }
@@ -48,6 +52,10 @@ export function useUpdateLearningPath() {
       learningPathsApi.update(pathId, data),
     onSuccess: (_, { pathId }) => {
       queryClient.invalidateQueries({ queryKey: ['paths'] });
+      queryClient.invalidateQueries({ queryKey: ['courses'] });
+      queryClient.invalidateQueries({ queryKey: ['course'] });
+      queryClient.invalidateQueries({ queryKey: ['path'] });
+      queryClient.invalidateQueries({ queryKey: ['progress'] });
       queryClient.invalidateQueries({ queryKey: ['path', pathId] });
     },
   });
@@ -61,6 +69,10 @@ export function useDeleteLearningPath() {
     mutationFn: (pathId: string) => learningPathsApi.delete(pathId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['paths'] });
+      queryClient.invalidateQueries({ queryKey: ['courses'] });
+      queryClient.invalidateQueries({ queryKey: ['course'] });
+      queryClient.invalidateQueries({ queryKey: ['path'] });
+      queryClient.invalidateQueries({ queryKey: ['progress'] });
     },
   });
 }
@@ -74,6 +86,10 @@ export function useAddCourseToPath() {
       learningPathsApi.addCourse(pathId, courseId),
     onSuccess: (_, { pathId }) => {
       queryClient.invalidateQueries({ queryKey: ['paths'] });
+      queryClient.invalidateQueries({ queryKey: ['courses'] });
+      queryClient.invalidateQueries({ queryKey: ['course'] });
+      queryClient.invalidateQueries({ queryKey: ['path'] });
+      queryClient.invalidateQueries({ queryKey: ['progress'] });
       queryClient.invalidateQueries({ queryKey: ['path', pathId] });
       // Also invalidate course discovery since times_added may have changed
       queryClient.invalidateQueries({ queryKey: ['courses', 'discover'] });
@@ -90,6 +106,10 @@ export function useRemoveCourseFromPath() {
       learningPathsApi.removeCourse(pathId, courseId),
     onSuccess: (_, { pathId }) => {
       queryClient.invalidateQueries({ queryKey: ['paths'] });
+      queryClient.invalidateQueries({ queryKey: ['courses'] });
+      queryClient.invalidateQueries({ queryKey: ['course'] });
+      queryClient.invalidateQueries({ queryKey: ['path'] });
+      queryClient.invalidateQueries({ queryKey: ['progress'] });
       queryClient.invalidateQueries({ queryKey: ['path', pathId] });
       queryClient.invalidateQueries({ queryKey: ['courses', 'discover'] });
     },
@@ -105,6 +125,23 @@ export function useReorderCoursesInPath() {
       learningPathsApi.reorderCourses(pathId, courseIds),
     onSuccess: (_, { pathId }) => {
       queryClient.invalidateQueries({ queryKey: ['path', pathId] });
+    },
+  });
+}
+
+export function useFollowingPaths() {
+  return useQuery({ queryKey: ['paths', 'following'], queryFn: learningPathsApi.listFollowing });
+}
+
+export function useFollowPath() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: ({ pathId, following }: { pathId: string; following: boolean }) =>
+      following ? learningPathsApi.follow(pathId) : learningPathsApi.unfollow(pathId),
+    onSuccess: () => {
+      client.invalidateQueries({ queryKey: ['paths'] });
+      client.invalidateQueries({ queryKey: ['path'] });
+      client.invalidateQueries({ queryKey: ['progress'] });
     },
   });
 }
