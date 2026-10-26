@@ -1,3 +1,4 @@
+import { useMyCourses } from './useCourses';
 import type { ReactNode } from 'react';
 import { act, cleanup, renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -44,4 +45,24 @@ it('refreshes an open path after suggested modules with content are created', as
     }], [], () => {});
   });
   await waitFor(() => expect(result.current.path.data?.courses[0].module_count).toBe(2));
+});
+
+it.each(['create','batch','delete'] as const)('refreshes a warmed My Courses count after %s', async operation => {
+  const state = installJourneyApi([makeModule()]);
+  const original = fetch;
+  vi.stubGlobal('fetch', (input: string, init?: RequestInit) => {
+    if (String(input).endsWith('/courses/mine')) return Promise.resolve(new Response(JSON.stringify([{...state.course,module_count:state.modules.length}])));
+    return original(input,init);
+  });
+  const client = new QueryClient({defaultOptions:{queries:{retry:false,staleTime:Infinity}}});
+  const {result} = renderHook(()=>({courses:useMyCourses(),create:useCreateModule(),batch:useBatchCreateModules(),remove:useDeleteModule()}), {
+    wrapper:({children}:{children:ReactNode})=><QueryClientProvider client={client}>{children}</QueryClientProvider>,
+  });
+  await waitFor(()=>expect(result.current.courses.data?.[0].module_count).toBe(1));
+  await act(async()=>{
+    if(operation==='create') await result.current.create.mutateAsync({courseId:'c1',data:{title:'Second',order_index:1}});
+    if(operation==='batch') await result.current.batch.mutateAsync({courseId:'c1',modules:[{title:'Second',order_index:1}]});
+    if(operation==='delete') await result.current.remove.mutateAsync({courseId:'c1',moduleId:'m1'});
+  });
+  await waitFor(()=>expect(result.current.courses.data?.[0].module_count).toBe(operation==='delete'?0:2));
 });

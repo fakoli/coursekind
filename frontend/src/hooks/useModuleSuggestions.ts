@@ -145,6 +145,8 @@ export function useModuleSuggestions() {
       await queryClient.invalidateQueries({ queryKey: ['modules', courseId] });
       await queryClient.invalidateQueries({ queryKey: ['course', courseId] });
       await queryClient.invalidateQueries({ queryKey: ['path'] });
+      await queryClient.invalidateQueries({ queryKey: ['courses'] });
+      await queryClient.invalidateQueries({ queryKey: ['progress'] });
       await queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
       onSuccess(newOutlines, mode === 'replace');
       success(`Created ${newOutlines.length} modules. Used ${result.total_tokens_used} application credits.`);

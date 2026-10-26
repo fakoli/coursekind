@@ -87,7 +87,7 @@ class TestListPaths:
     @pytest.mark.asyncio
     async def test_list_paths_empty(self, learning_path_service):
         """No paths -> empty list."""
-        paths = await learning_path_service.list_paths()
+        paths = await learning_path_service.list_paths("reader")
         assert paths == []
 
     @pytest.mark.asyncio
@@ -105,8 +105,8 @@ class TestListPaths:
         assert len(paths) == 3  # own private, own public, other public
 
     @pytest.mark.asyncio
-    async def test_list_paths_no_user_gets_public_only(self, learning_path_service):
-        """Anonymous sees public paths only."""
+    async def test_list_paths_no_user_gets_no_paths(self, learning_path_service):
+        """Every visibility requires sign-in under D2."""
         await _create_path_direct(
             learning_path_service, "user-1", visibility="private", path_id="p1"
         )
@@ -115,7 +115,7 @@ class TestListPaths:
         )
 
         paths = await learning_path_service.list_paths(None)
-        assert len(paths) == 1
+        assert paths == []
 
     @pytest.mark.asyncio
     async def test_list_paths_course_count(self, learning_path_service):
@@ -127,7 +127,7 @@ class TestListPaths:
             visibility="public",
             path_id="p1",
         )
-        paths = await learning_path_service.list_paths()
+        paths = await learning_path_service.list_paths("reader")
         assert paths[0].course_count == 2
 
 

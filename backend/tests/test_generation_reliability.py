@@ -222,8 +222,16 @@ async def test_full_course_failure_keeps_old_modules_and_balance(generation, mon
 
 async def test_full_course_atomic_replace_replay_metadata(generation, monkeypatch):
     from models.ai_generation import GenerateFullCourseRequest, ModuleSuggestion
+    from models.module import ModuleCreate
     from services.course_orchestrator import get_course_orchestrator
+    from services.course_service import CourseService
+    from services.module_service import ModuleService
 
+    courses = CourseService(generation.storage)
+    await ModuleService(generation.storage).create_module(
+        "c", "u", ModuleCreate(title="Second old module", order_index=1)
+    )
+    assert (await courses.list_user_courses("u"))[0].module_count == 2
     orchestrator = get_course_orchestrator(generation.storage, generation.settings)
     monkeypatch.setattr(
         orchestrator.ai_service,
@@ -245,6 +253,7 @@ async def test_full_course_atomic_replace_replay_metadata(generation, monkeypatc
     result = await orchestrator.generate_request("u", request)
     replay = await orchestrator.generate_request("u", request)
     assert replay == result
+    assert (await courses.list_user_courses("u"))[0].module_count == 1
     modules = await generation.storage.list("modules")
     assert len(modules) == 1 and modules[0]["id"] != "m"
     assert modules[0]["description"] == "Detailed description"

@@ -40,7 +40,8 @@ class Settings(BaseSettings):
         if not self.debug and self.jwt_secret == "change-me-in-production":
             raise ValueError(
                 "JWT_SECRET must be set to a secure value in production (DEBUG=false). "
-                "Generate a secure secret with: python -c \"import secrets; print(secrets.token_urlsafe(32))\""
+                "Generate a secure secret with: python -c "
+                '"import secrets; print(secrets.token_urlsafe(32))"'
             )
         return self
 

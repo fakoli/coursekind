@@ -54,7 +54,8 @@ it.each(['close', 'escape', 'append', 'replace'] as const)('handles generated fl
   const state = installJourneyApi([makeModule()]);
   state.course.ai_enabled = true;
   renderJourney(<ModuleEditor />, '/courses/c1/modules/m1/edit', '/courses/:courseId/modules/:moduleId/edit');
-  await screen.findByDisplayValue('Lesson m1');
+  fireEvent.change(await screen.findByDisplayValue('Lesson m1'), {target:{value:'Unsaved generated draft'}});
+  fireEvent.change(screen.getByDisplayValue('Existing lesson content'), {target:{value:'Retain local lesson draft'}});
   fireEvent.click(screen.getByRole('button', { name: /^Flashcards/ }));
   fireEvent.click(screen.getByRole('button', { name: 'Generate with AI' }));
   await screen.findByRole('dialog', { name: 'Replace Flashcards?' });
@@ -65,6 +66,8 @@ it.each(['close', 'escape', 'append', 'replace'] as const)('handles generated fl
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: 'Save' }));
   await screen.findByText('Module updated successfully');
+  expect(state.modules[0].title).toBe('Unsaved generated draft');
+  expect(state.modules[0].content_markdown).toBe('Retain local lesson draft');
   expect(state.modules[0].flashcards).toHaveLength(choice === 'replace' ? 1 : choice === 'append' ? 3 : 2);
   if (choice === 'close' || choice === 'escape') expect(state.modules[0].flashcards.map(c => c.front)).toEqual(['First question','Last question']);
 });
@@ -102,4 +105,17 @@ it('preserves dirty title, lesson, cards and quiz when a changed response arrive
   expect(state.modules[0].content_markdown).toBe('Unsaved local lesson');
   expect(state.modules[0].flashcards[0].front).toBe('My draft card');
   expect(state.modules[0].quiz?.questions[0].question).toBe('My draft quiz');
+});
+
+
+it('reloads the server version only after an explicit discard choice', async () => {
+  const state = installJourneyApi([makeModule()]);
+  const client = renderJourney(<ModuleEditor />, '/courses/c1/modules/m1/edit', '/courses/:courseId/modules/:moduleId/edit');
+  fireEvent.change(await screen.findByDisplayValue('Lesson m1'), {target:{value:'Local draft'}});
+  state.modules[0] = {...state.modules[0],title:'Updated remotely',content_markdown:'Remote lesson'};
+  await act(async()=>{await client.invalidateQueries({queryKey:['module','c1','m1']});});
+  fireEvent.click(await screen.findByRole('button',{name:'Reload server version'}));
+  expect(screen.getByDisplayValue('Updated remotely')).toBeInTheDocument();
+  expect(screen.getByDisplayValue('Remote lesson')).toBeInTheDocument();
+  expect(screen.queryByDisplayValue('Local draft')).not.toBeInTheDocument();
 });

@@ -31,6 +31,8 @@ export function useCreateModule() {
       queryClient.invalidateQueries({ queryKey: ['modules', courseId] });
       queryClient.invalidateQueries({ queryKey: ['course', courseId] });
       queryClient.invalidateQueries({ queryKey: ['path'] });
+      queryClient.invalidateQueries({ queryKey: ['courses'] });
+      queryClient.invalidateQueries({ queryKey: ['progress'] });
     },
   });
 }
@@ -46,6 +48,8 @@ export function useBatchCreateModules() {
       queryClient.invalidateQueries({ queryKey: ['modules', courseId] });
       queryClient.invalidateQueries({ queryKey: ['course', courseId] });
       queryClient.invalidateQueries({ queryKey: ['path'] });
+      queryClient.invalidateQueries({ queryKey: ['courses'] });
+      queryClient.invalidateQueries({ queryKey: ['progress'] });
     },
   });
 }
@@ -84,6 +88,8 @@ export function useDeleteModule() {
       queryClient.invalidateQueries({ queryKey: ['modules', courseId] });
       queryClient.invalidateQueries({ queryKey: ['course', courseId] });
       queryClient.invalidateQueries({ queryKey: ['path'] });
+      queryClient.invalidateQueries({ queryKey: ['courses'] });
+      queryClient.invalidateQueries({ queryKey: ['progress'] });
     },
   });
 }

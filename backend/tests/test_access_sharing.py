@@ -258,7 +258,8 @@ async def test_filesystem_public_study_and_read_only(client, auth_headers, tmp_p
     (module / "content.md").write_text("# Intro")
     (module / "flashcards.json").write_text('{"cards":[{"front":"Q","back":"A"}]}')
     assert (await client.get("/api/v1/courses/sample", headers=auth_headers)).status_code == 200
-    assert (await client.get("/api/v1/courses/sample/modules/01-intro", headers=auth_headers)).status_code == 200
+    response = await client.get("/api/v1/courses/sample/modules/01-intro", headers=auth_headers)
+    assert response.status_code == 200
     assert (
         await client.post(
             "/api/v1/progress/modules/sample/01-intro",

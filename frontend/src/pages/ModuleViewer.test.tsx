@@ -234,3 +234,43 @@ it('retains earlier failed encounters after a later success and retries original
   expect(state.progress.get('m1')?.reviews).toBe(2);
   expect(new Set(attempts.filter(a=>a.flashcard_id === 'first').map(a=>a.event_id)).size).toBe(1);
 });
+
+it('keeps multiple settled review failures until each original encounter is acknowledged', async () => {
+  const module = makeModule();
+  module.flashcards = [
+    {id:'a',front:'Card A',back:'Answer A'}, {id:'b',front:'Card B',back:'Answer B'},
+    {id:'c',front:'Card C',back:'Answer C'},
+  ];
+  const state = installJourneyApi([module]);
+  const original = fetch;
+  const failing = new Set(['a','b']);
+  const requests: Record<string,unknown>[] = [];
+  vi.stubGlobal('fetch', (input: string, init?: RequestInit) => {
+    const body = init?.body ? JSON.parse(String(init.body)) : {};
+    if (body.action === 'review_flashcard') {
+      requests.push(body);
+      if (failing.has(body.flashcard_id)) return Promise.resolve(new Response(JSON.stringify({detail:'Unavailable'}),{status:503}));
+    }
+    return original(input,init);
+  });
+  renderJourney(<ModuleViewer />, '/courses/c1/modules/m1', '/courses/:courseId/modules/:moduleId');
+  fireEvent.click(await screen.findByRole('button',{name:'Flashcards (3)'}));
+  fireEvent.click(screen.getByText('Card A'));
+  await screen.findByRole('button',{name:'Retry study save'});
+  fireEvent.click(screen.getByRole('button',{name:'Next flashcard'}));
+  fireEvent.click(screen.getByText('Card B'));
+  await screen.findByText(/2 study action\(s\)/);
+  fireEvent.click(screen.getByRole('button',{name:'Next flashcard'}));
+  fireEvent.click(screen.getByText('Card C'));
+  await waitFor(()=>expect(state.progress.get('m1')?.reviews).toBe(1));
+  failing.delete('a');
+  fireEvent.click(screen.getByRole('button',{name:'Finish'}));
+  await screen.findByText('Could not save your progress. Please try again.');
+  expect(state.progress.get('m1')?.reviews).toBe(2);
+  expect(state.progress.get('m1')?.completed).not.toBe(true);
+  failing.delete('b');
+  fireEvent.click(screen.getByRole('button',{name:'Finish'}));
+  await screen.findByText('Course saved');
+  expect(state.progress.get('m1')?.reviews).toBe(3);
+  for (const id of ['a','b']) expect(new Set(requests.filter(r=>r.flashcard_id === id).map(r=>r.event_id)).size).toBe(1);
+});
