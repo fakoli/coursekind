@@ -24,7 +24,7 @@ function PreferenceForm({prefs,userId}: {prefs:AIPreferenceData;userId?:string})
   const catalog = useQuery({queryKey:['ai-models',userId,provider],queryFn:()=>userSettingsApi.models(provider),retry:false});
   const models = validatedModels || catalog.data?.models || [];
   const credential = prefs.credentials[provider];
-  const validate = useMutation({mutationFn:()=>userSettingsApi.validate(provider,key || undefined),
+  const validate = useMutation({mutationFn:()=>userSettingsApi.validate(provider,key || undefined,provider === 'codex_subscription' ? model : undefined),
     onSuccess:data=>{setValidatedModels(data.models);setMessage(data.message);},
     onError:err=>{setValidatedModels(null);setMessage(err.message);}});
   const save = useMutation({mutationFn:()=>userSettingsApi.savePreferences({provider,model,...(key ? {api_key:key} : {})}),
@@ -40,14 +40,23 @@ function PreferenceForm({prefs,userId}: {prefs:AIPreferenceData;userId?:string})
       <select aria-label="Provider" value={provider} disabled={busy} className="block mt-1 border rounded p-2 w-full" onChange={e=>{
         setProvider(e.target.value as AIProvider);setModel('');setKey('');setValidatedModels(null);setMessage('');
       }}>
-        <option value="anvil">Anvil (shared local AI)</option><option value="openai">OpenAI / Codex (API key)</option>
+        <option value="anvil">Anvil (shared local AI)</option><option value="openai">OpenAI (API key)</option>
+        {(prefs.codex_subscription_available || prefs.provider === 'codex_subscription') && <option value="codex_subscription">Codex (local subscription)</option>}
         <option value="gemini">Google Gemini</option><option value="anthropic">Anthropic Claude</option>
       </select>
     </label>
     <p className="text-sm text-gray-600">{provider === 'anvil'
       ? 'Anvil uses application credits to account for shared local AI usage: outlines 10, module content 25, flashcards 8, quiz 10.'
-      : 'Your provider bills your API key. Successful usage is recorded with no application-credit deduction. OpenAI subscription login is not supported.'}</p>
-    {provider !== 'anvil' && <div className="space-y-2">
+      : provider === 'codex_subscription'
+        ? 'Uses the existing local Codex ChatGPT sign-in for this account only. Subscription usage limits apply. Successful requests record zero application-credit debit. Configured candidates are not proof of model access; run an inference check to verify the selected model.'
+        : 'Your provider bills your API key. Successful usage is recorded with no application-credit deduction.'}</p>
+    {provider === 'codex_subscription' && <div className="space-y-2">
+      {prefs.subscription_connection && <p role="status">{prefs.subscription_connection.message}</p>}
+      {catalog.data?.is_available && <p>Local ChatGPT sign-in detected; configured candidates loaded.</p>}
+      <Button variant="secondary" disabled={busy || !models.includes(model)} onClick={()=>validate.mutate()}>Check selected model</Button>
+      <p className="text-sm text-gray-600">This check sends a small inference request using your subscription. Changing providers never signs Codex out.</p>
+    </div>}
+    {provider !== 'anvil' && provider !== 'codex_subscription' && <div className="space-y-2">
       <p className="text-sm">{credential ? `Saved credential: ${credential.mask}` : 'No saved credential for this provider.'}</p>
       <label className="block text-sm font-medium">API key
         <input aria-label="API key" type="password" autoComplete="off" value={key} disabled={busy}
@@ -57,16 +66,16 @@ function PreferenceForm({prefs,userId}: {prefs:AIPreferenceData;userId?:string})
       <Button variant="secondary" disabled={busy || (!key && !credential)} onClick={()=>validate.mutate()}>Validate credential</Button>
       {credential && <Button variant="secondary" disabled={busy} onClick={()=>remove.mutate()}>Remove saved credential</Button>}
     </div>}
-    {catalog.isPending && <p>Loading advertised models…</p>}
+    {catalog.isPending && <p>{provider === 'codex_subscription' ? 'Loading configured candidates…' : 'Loading advertised models…'}</p>}
     {!catalog.isPending && !validatedModels && !catalog.data?.is_available && <p role="status">{catalog.data?.message || 'Model catalog unavailable.'}</p>}
     <label className="block text-sm font-medium">Model
-      <select aria-label="Model" value={model} disabled={busy} className="block mt-1 border rounded p-2 w-full" onChange={e=>setModel(e.target.value)}>
+      <select aria-label="Model" value={model} disabled={busy} className="block mt-1 border rounded p-2 w-full" onChange={e=>{setModel(e.target.value);setMessage('');}}>
         <option value="">Select a model</option>
         {model && !models.includes(model) && <option value={model}>{model} (unavailable)</option>}
         {models.map(item=><option key={item} value={item}>{item}</option>)}
       </select>
     </label>
-    {model && !catalog.isPending && !models.includes(model) && <p role="alert">Selected model is unavailable. Choose another advertised model explicitly.</p>}
+    {model && !catalog.isPending && !models.includes(model) && <p role="alert">Selected model is unavailable. Choose another model explicitly.</p>}
     <p className="text-sm text-gray-600">No automatic fallback. To use Anvil instead, select Anvil, choose its model and save. An operation already in progress keeps its original provider and model.</p>
     <p className="text-sm text-gray-600">Image generation is currently unavailable; text model selection does not enable images.</p>
     {message && <p role="status">{message}</p>}

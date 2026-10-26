@@ -7,6 +7,7 @@ from cryptography.fernet import Fernet, InvalidToken
 
 from exceptions import AIServiceException
 from services.ai_provider import ProviderClient, ProviderSnapshot
+from services.codex_subscription import CodexSubscription
 
 
 class AIPreferencesService:
@@ -59,7 +60,17 @@ class AIPreferencesService:
             if provider == "anvil"
             else bool(credential)
         )
+        codex = CodexSubscription(self.settings)
+        connection = None
+        if provider == "codex_subscription":
+            if codex.allowed(user_id):
+                connection = await codex.status(user_id)
+                configured = connection["is_connected"]
+            else:
+                configured = False
         return {
+            "codex_subscription_available": codex.allowed(user_id),
+            "subscription_connection": connection,
             "provider": provider,
             "model": record["model"],
             "is_configured": configured,
@@ -68,13 +79,24 @@ class AIPreferencesService:
                 p: {"is_configured": True, "mask": c["mask"]}
                 for p, c in record["credentials"].items()
             },
-            "accounting": "application_credits" if provider == "anvil" else "provider_billed",
+            "accounting": (
+                "application_credits"
+                if provider == "anvil"
+                else "subscription"
+                if provider == "codex_subscription"
+                else "provider_billed"
+            ),
             "automatic_fallback": False,
         }
 
     async def snapshot(self, user_id, provider=None, api_key=None):
         record = await self._record(user_id)
         provider = provider or record["provider"]
+        if provider == "codex_subscription":
+            CodexSubscription(self.settings).authorize(user_id)
+            if api_key is not None:
+                raise AIServiceException("Codex subscription does not accept an API key")
+            return ProviderSnapshot(provider, record["model"], "", user_id=user_id)
         if provider == "anvil":
             key = self.settings.anvil_router_token or ""
         elif api_key is not None:
@@ -122,6 +144,10 @@ class AIPreferencesService:
         return await self.get(user_id)
 
     async def delete_credential(self, user_id, provider):
+        if provider == "codex_subscription":
+            CodexSubscription(self.settings).authorize(user_id)
+            # App selection never changes the host CLI login.
+            return await self.get(user_id)
         async with self.storage.transaction():
             record = await self.storage.get("ai_preferences", user_id)
             if record:

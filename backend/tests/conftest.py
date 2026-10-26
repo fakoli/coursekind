@@ -7,6 +7,7 @@ import tempfile
 # which would fail at `from main import app` below. Set DEBUG=true before
 # any app import (a real value is also set per-test in the autouse fixture).
 os.environ.setdefault("DEBUG", "true")
+os.environ["CODEX_SUBSCRIPTION_ENABLED"] = "false"
 
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -38,6 +39,7 @@ def use_test_storage(temp_storage_path, monkeypatch):
     get_settings.cache_clear()
 
     monkeypatch.setenv("STORAGE_PATH", temp_storage_path)
+    monkeypatch.setenv("CODEX_SUBSCRIPTION_ENABLED", "false")
     monkeypatch.setenv("DEBUG", "true")  # Allow default JWT secret in tests
 
     yield
@@ -153,3 +155,13 @@ async def other_user_course(client, other_user_headers):
     return await _create_course(
         client, other_user_headers, title="Other User Course", description="Should not be accessible"
     )
+
+
+@pytest.fixture(autouse=True)
+def never_launch_real_codex(monkeypatch):
+    from services.codex_subscription import ProcessBoundary
+
+    async def deny(*args, **kwargs):
+        raise AssertionError("Tests must install a fake Codex process boundary")
+
+    monkeypatch.setattr(ProcessBoundary, "run", deny)

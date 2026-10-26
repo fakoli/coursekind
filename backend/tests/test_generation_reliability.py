@@ -511,3 +511,80 @@ async def test_outline_only_save_needs_no_provider_credential(generation, monkey
     )
     assert result.total_tokens_used == 0
     call.assert_not_awaited()
+
+
+async def test_subscription_snapshot_zero_debit_replay_and_failed_output(generation, monkeypatch):
+    from services.codex_subscription import ProcessBoundary
+
+    generation.settings.codex_subscription_enabled = True
+    generation.settings.codex_subscription_user_id = "u"
+    generation.settings.codex_subscription_binary = "/synthetic/codex"
+    await generation.storage.create(
+        "ai_preferences",
+        {
+            "id": "u",
+            "provider": "codex_subscription",
+            "model": "gpt-6-luna",
+            "credentials": {},
+        },
+    )
+    calls = []
+    bad = False
+
+    async def process(argv, **kwargs):
+        if "--version" in argv:
+            return 0, b"codex-cli 0.162.1"
+        if "login" in argv:
+            return 0, b"Logged in using ChatGPT"
+        calls.append(argv)
+        # A concurrent preference change must not alter this operation's routing/accounting.
+        await generation.storage.update("ai_preferences", "u", {"provider": "anvil"})
+        text = "invalid" if bad else '[{"front":"Q","back":"A"}]'
+        return 0, (
+            json.dumps(
+                {
+                    "type": "item.completed",
+                    "item": {"type": "agent_message", "text": json.dumps({"text": text})},
+                }
+            )
+            + '\n{"type":"turn.completed"}'
+        ).encode()
+
+    monkeypatch.setattr(ProcessBoundary, "run", staticmethod(process))
+    request = GenerateFlashcardsRequest(course_id="c", module_id="m", count=1, request_id="sub")
+    result = await generation.generate_flashcards("u", request)
+    assert result.tokens_used == 0
+    assert await generation.generate_flashcards("u", request) == result
+    assert len(calls) == 1
+    ledger = await generation.storage.list("token_transactions")
+    assert len(ledger) == 1 and ledger[0]["amount"] == 0
+    assert "subscription" in ledger[0]["reason"]
+    saved = (await generation.storage.list("generation_operations"))[0]
+    assert saved["provider"] == "codex_subscription" and saved["model"] == "gpt-6-luna"
+    bad = True
+    await generation.storage.update("ai_preferences", "u", {"provider": "codex_subscription"})
+    with pytest.raises(AIServiceException):
+        await generation.generate_flashcards("u", request.model_copy(update={"request_id": "bad"}))
+    assert len(await generation.storage.list("token_transactions")) == 1
+    assert (await generation.storage.get("users", "u"))["token_balance"] == 100
+
+
+async def test_outline_prompt_states_per_module_objective_bounds(generation, monkeypatch):
+    async def call(prompt, system_prompt, max_tokens=4096):
+        # A single course-level objective must not override per-module requirements.
+        count = 2 if "2–4 nonempty learning objectives per module" in prompt else 1
+        return json.dumps(
+            [
+                {
+                    "title": "Module",
+                    "description": "Description",
+                    "objectives": [f"Objective {i}" for i in range(count)],
+                }
+            ]
+        )
+
+    monkeypatch.setattr(generation, "_call_llm", call)
+    result = await generation.suggest_modules(
+        "u", SuggestModulesRequest(course_id="c", module_count=1)
+    )
+    assert len(result.suggestions[0].objectives) == 2

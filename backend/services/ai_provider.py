@@ -7,6 +7,7 @@ import httpx
 
 from config import Settings
 from exceptions import AIServiceException
+from services.codex_subscription import CodexSubscription
 
 
 class ProviderOutputError(AIServiceException):
@@ -29,6 +30,7 @@ class ProviderSnapshot:
     provider: str
     model: str
     api_key: str = field(repr=False)
+    user_id: str | None = field(default=None, repr=False)
 
 
 class ProviderClient:
@@ -83,6 +85,8 @@ class ProviderClient:
             ) from None
 
     async def models(self, snapshot: ProviderSnapshot) -> list[str]:
+        if snapshot.provider == "codex_subscription":
+            return await CodexSubscription(self.settings).models(snapshot.user_id)
         result = []
         params = {}
         for _ in range(20):
@@ -139,6 +143,10 @@ class ProviderClient:
 
     async def complete(self, snapshot, prompt, system_prompt, max_tokens=4096):
         p = snapshot.provider
+        if p == "codex_subscription":
+            return await CodexSubscription(self.settings).complete(
+                snapshot.user_id, snapshot.model, prompt, system_prompt, max_tokens
+            )
         if p == "openai":
             path = "/responses"
             payload = {

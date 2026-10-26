@@ -2,9 +2,9 @@
 
 Last reviewed: 2026-10-26 against the repaired baseline and its regression suites.
 
-This is the acceptance catalog for the 40 named browser tests in `frontend/e2e`. It combines the product owner's description with the current screens and code. The intended outcome is that a person can author learning material, combine it into a goal, share it, study it, and see their progress and the usefulness of their contributions.
+This is the acceptance catalog for the 40 baseline browser tests plus the optional AI-06 subscription scenario in `frontend/e2e`. It combines the product owner's description with the current screens and code. The intended outcome is that a person can author learning material, combine it into a goal, share it, study it, and see their progress and the usefulness of their contributions.
 
-The 40 journeys below have stable IDs so test names, issues, and results can refer to the same behavior. This document defines expectations and current behavior. Implementation availability is separate from execution evidence; see the current audit for measured subflows, unresolved limits, and CI status.
+The 40 baseline journeys below retain their stable IDs; the additional AI-06 scenario covers the optional local subscription. The journeys have stable IDs so test names, issues, and results can refer to the same behavior. This document defines expectations and current behavior. Implementation availability is separate from execution evidence; see the current audit for measured subflows, unresolved limits, and CI status.
 
 The [26 October baseline audit](audits/2026-10-26/README.md) maps every ID to real rendered evidence and durable tests. The [25 October walkthrough](audits/2026-10-25/README.md) remains unchanged historical evidence. The [AI workspace proposal](ai-workspace-proposal.md) describes deferred follow-on work.
 
@@ -58,7 +58,7 @@ Each journey supplies its actor and starting state, the UI actions, visible and 
 | Learning paths | PATH-01–PATH-05 | 5 |
 | Sharing and contribution | SHARE-01–SHARE-05 | 5 |
 | Personal statistics | STATS-01–STATS-04 | 4 |
-| AI provider and model choice | AI-01–AI-05 | 5 |
+| AI provider and model choice | AI-01–AI-06 | 6 |
 | Supporting screens | SUPPORT-01–SUPPORT-02 | 2 |
 
 ## Test personas and fixtures
@@ -470,6 +470,16 @@ Repeat applicable module journeys with content-only, flashcards-only, quiz-only,
 
 **Validate:** A pending request prevents accidental duplicate submission and has a recoverable error state. The draft and previously saved content survive. Retries do not duplicate modules or charges. The UI identifies the provider/model used and does not silently send material to another provider. Request routing, cancellation/in-flight preference changes, and any charging/refund rules need explicit tests under D6/D7. Protocol-shaped fake HTTP tests cover all four adapters; real primary Anvil generation is separately evidenced. Successful Anvil artifacts debit application accounting credits exactly once; BYOK success records zero application-credit debit. These are local usage units, not external inference spending.
 
+### AI-06 — Use an account-bound local Codex subscription
+
+**Persona:** The single app account explicitly authorized by a trusted local operator.
+
+**Flow:** Open Settings, select Codex (local subscription), choose a configured candidate, run its inference check, save and reload. Generate outlines and a full module with cards/quiz, refine the result manually, save/reopen, then explicitly return to Anvil.
+
+**Validate:** Anvil stays the default. Unauthorized accounts cannot select or call the host subscription. Codex has no API-key field. Configured candidates are clearly distinguished from a successful inference check. Subscription limits and missing CLI/login/model access produce actionable errors with no fallback. Selection persists; successful generation records zero Anvil debit; failure preserves drafts. Switching providers does not sign Codex out. CI uses a fake process boundary; real subscription UI validation is separate evidence.
+
+See [local subscription configuration](local-codex-subscription.md) for the supported CLI version and isolation boundary.
+
 ## Supporting screens
 
 ### SUPPORT-01 — Set notification preferences
@@ -527,7 +537,7 @@ Use separate browser contexts for A/B/C and signed-out scenarios, isolated fixtu
 | `path-curation-and-learning` | PATH-01–PATH-05 | Accurate course membership/order/counts and independent learner adoption/progress. |
 | `sharing-and-contributions` | SHARE-01–SHARE-05 | Real cross-account access/revocation, preserved authorship, correct reuse accounting. |
 | `personal-statistics` | STATS-01–STATS-04 | Reproducible session, streak, selection, progress, and activity totals. |
-| `ai-preferences` | AI-01–AI-05 | Default Anvil works; saved choice routes requests correctly; credentials/failures handled. |
+| `ai-preferences` | AI-01–AI-06 | Default Anvil works; saved choice routes requests correctly; credentials/failures handled. |
 | `settings-and-navigation` | SUPPORT-01–SUPPORT-02 | Persistent settings, accessible navigation, useful empty/error states on desktop/mobile. |
 
 The [Playwright suite](../frontend/e2e/README.md) has one named test per ID across four files. It uses real HTTP routes and disposable storage, with mocked provider HTTP and captured notification transports. The [current audit matrix](audits/2026-10-26/README.md) identifies scenario scope, companion negative-case regressions and external limits. Real Anvil evidence remains separate from deterministic CI.

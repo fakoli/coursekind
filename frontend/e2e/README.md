@@ -1,6 +1,6 @@
 # Browser acceptance
 
-`npm run test:e2e` runs 40 named Chromium journeys against real API routes and a
+`npm run test:e2e` runs 41 named Chromium journeys (40 stable baseline IDs plus AI-06) against real API routes and a
 fresh temporary JSON database. `npm run test:e2e:list` and `npm run test:e2e:types`
 do not launch a browser. Install Python/uv dependencies in `backend`, npm
 packages in `frontend`, and Chromium with `npx playwright install chromium`.
@@ -13,7 +13,7 @@ never accesses the normal development ports 8010/5173 or existing user data.
 control routes set the study clock and external failure modes. Provider requests
 use the real adapter code with `httpx.MockTransport`; notification `send` methods
 are captured and delivery remains unconfigured in the browser scenario. No real
-key, provider request, email or SMS is used. The non-browser fixture smoke is
+key, provider request, email or SMS is used. AI-06 exercises the subscription adapter with an unconditional fake OS process boundary, explicit disabled-by-default test configuration and a synthetic account opt-in; it never launches a real Codex binary. The non-browser fixture smoke is
 `cd backend && uv run python ../frontend/e2e/smoke.py`.
 
 API calls prepare fixtures and verify persistence; user flows use rendered UI

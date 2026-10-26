@@ -168,7 +168,8 @@ class AIGenerationService:
             return items
 
         suggestions = await self._structured(
-            f"Design exactly {count} logically ordered course modules. Course: {context}",
+            f"Design exactly {count} logically ordered course modules. "
+            f"Include 2–4 nonempty learning objectives per module. Course: {context}",
             '[{"title":"Title","description":"Description","objectives":["Objective","Objective"]}]',
             validate,
         )

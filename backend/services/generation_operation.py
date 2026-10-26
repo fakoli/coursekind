@@ -135,6 +135,8 @@ class GenerationOperation:
                     + (
                         "local AI usage"
                         if snapshot.provider == "anvil"
+                        else "Codex subscription usage; no application debit"
+                        if snapshot.provider == "codex_subscription"
                         else "BYOK usage; provider bills user"
                     ),
                     "admin_id": None,

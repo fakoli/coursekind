@@ -2,7 +2,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
-from pydantic import model_validator
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Define paths for hierarchical .env loading
@@ -65,6 +65,13 @@ class Settings(BaseSettings):
     anvil_model: str = "llm.primary"
     # Legacy image setting; application image generation is currently unavailable.
     anvil_image_model: str = "gemini-nano-banana"
+
+    # Local-only Codex subscription: explicit operator opt-in and one app account.
+    codex_subscription_enabled: bool = False
+    codex_subscription_user_id: str | None = None
+    codex_subscription_binary: str | None = None
+    codex_subscription_models: list[str] = ["gpt-6-luna"]
+    codex_subscription_timeout_seconds: float = Field(default=180, ge=1, le=300)
 
     # CORS
     cors_origins: list[str] = ["http://localhost:5173", "http://localhost:3000"]
