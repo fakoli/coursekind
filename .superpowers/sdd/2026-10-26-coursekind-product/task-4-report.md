@@ -43,3 +43,19 @@ Backend cases additionally cover exact endpoint/model/header presence, no accoun
 4. One authorized bounded synthetic three-dimension live call through `JevClient` after secure backend key setup, recording only model/status/usage. Existing two-dimension research connectivity is not this task's qualification. All worker Jev evidence is mocked; live three-dimension qualification remains pending root.
 
 Known limits: single-process locking/storage guarantees remain; no distributed admission claim. Jev probabilities are advisory and uncalibrated for educational correctness. Review receipts survive reload and are accessible through GET/cache; the UI currently shows results from its current explicit review interaction rather than a separate historical-review listing. No learner material was used for a live provider call.
+
+## Independent review repair — current-revision selection recovery
+
+The reviewer found that same-module source refreshes left initialized objective, excerpt end and question index in component state. After accepting current material, a sole replacement objective, shorter lesson or removed selected question could leave the form invalid with no obvious recovery.
+
+The scoped repair adds an explicit acceptance version to the selection component identity. Background source refreshes keep the old result visibly stale. “Review current material” first completes a fresh authorized read, then resets all selection and prior request/result state together from the newly accepted source. Loading cannot send inference, and errors are handled without an unhandled rejected promise. The current-source query key is consistent when switching from staged to current content.
+
+Verification on Node v24.18.0, explicit PATH and `login:false`:
+
+- Added all three requested same-module regression cases before fixing production: **3 failed / 7 passed**, each reproducing the disabled send action.
+- `npm test -- MaterialReview.test.tsx`: **10 passed** after the repair. Each regression checks stale-result preservation before acceptance, reset values, no implicit provider request, and the next explicit request's new marker/fingerprint/selection.
+- `npm test`: **191 passed / 39 files**.
+- `npm run lint` and `npm run build`: passed; inherited large-chunk warning remains.
+- `git diff --check`: passed.
+
+Only `MaterialReview.tsx`, its test file and this task report belong to the repair commit. Shared root documentation/screenshots remain untouched. No backend, browser execution, live provider or runtime-server changes were made. Root owns independent re-review and actual UI/CI acceptance of the repair SHA.

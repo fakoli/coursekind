@@ -36,8 +36,10 @@ export function MaterialReview({
   const [open, setOpen] = useState(false);
   const [current, setCurrent] = useState(false);
   const [sourceId, setSourceId] = useState('');
+  const [acceptedSelection, setAcceptedSelection] = useState(0);
+  const client = useQueryClient();
   const sources = useQuery({
-    queryKey: ['workspace-review-sources', user?.id, workspaceId, current ? null : changeId],
+    queryKey: ['workspace-review-sources', user?.id, workspaceId, current ? undefined : changeId],
     queryFn: () => workspacesApi.reviewSources(workspaceId, current ? undefined : changeId),
     enabled: open,
   });
@@ -92,13 +94,20 @@ export function MaterialReview({
                     </select>
                   </label>
                   <SelectedMaterial
-                    key={`${source.snapshot.target.resource_id}:${source.change_id}`}
+                    key={`${source.snapshot.target.resource_id}:${source.change_id}:${acceptedSelection}`}
                     workspaceId={workspaceId}
                     source={source}
                     configured={!!sources.data?.configured}
                     onCurrent={async () => {
+                      // Reset all selection state only after the user accepts a fresh read.
+                      // Background refreshes must keep the previous result visibly stale.
+                      await client.fetchQuery({
+                        queryKey: ['workspace-review-sources', user?.id, workspaceId, undefined],
+                        queryFn: () => workspacesApi.reviewSources(workspaceId),
+                        staleTime: 0,
+                      });
                       setCurrent(true);
-                      if (current || !changeId) await sources.refetch();
+                      setAcceptedSelection((version) => version + 1);
                     }}
                   />
                 </>
@@ -327,10 +336,19 @@ function SelectedMaterial({
               <p>Review stale. The material or selection has changed.</p>
               <Button
                 variant="secondary"
-                onClick={() => {
-                  setReviewId(null);
-                  setReviewedSelection(null);
-                  void onCurrent();
+                disabled={busy}
+                onClick={async () => {
+                  setBusy(true);
+                  setError('');
+                  try {
+                    await onCurrent();
+                  } catch {
+                    setError(
+                      'Current material could not be loaded. Retry when source access is available.',
+                    );
+                  } finally {
+                    setBusy(false);
+                  }
                 }}
               >
                 Review current material

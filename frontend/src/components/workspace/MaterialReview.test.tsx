@@ -63,8 +63,12 @@ function setup(result: Result = ready, available = true) {
     .mockResolvedValue({ ...sources, configured: available });
   const review = vi.spyOn(workspacesApi, 'review').mockResolvedValue(result);
   vi.spyOn(workspacesApi, 'getReview').mockResolvedValue(result);
-  renderJourney(<MaterialReview workspaceId="w1" />, '/workspaces/w1', '/workspaces/:workspaceId');
-  return { load, review };
+  const client = renderJourney(
+    <MaterialReview workspaceId="w1" />,
+    '/workspaces/w1',
+    '/workspaces/:workspaceId',
+  );
+  return { load, review, client };
 }
 async function select() {
   fireEvent.click(
@@ -164,3 +168,73 @@ it('generation completion and opening a saved draft never request a TypeSafe rev
   expect(review).not.toHaveBeenCalled();
   expect(sources).not.toHaveBeenCalled();
 });
+
+it.each(['sole objective', 'shortened lesson', 'removed selected question'] as const)(
+  'accepting current material resets selection after a same-module %s change',
+  async (change) => {
+    const { load, review, client } = setup();
+    const initial = structuredClone(sources);
+    const initialFields = initial.sources[0].snapshot.fields;
+    if (change === 'removed selected question') {
+      initialFields.quiz = {
+        questions: [
+          { question: 'One plus one?', options: ['Two', 'Three'], correct_index: 0 },
+          { question: 'Two plus two?', options: ['Four', 'Five'], correct_index: 0 },
+        ],
+      };
+    }
+    load.mockResolvedValue(initial);
+    const send = await select();
+    if (change === 'removed selected question') {
+      fireEvent.change(screen.getByLabelText('Review question'), { target: { value: '1' } });
+    }
+    fireEvent.click(send);
+    await screen.findByText('Advisory');
+    const latest = structuredClone(initial);
+    latest.sources[0].revision_marker = 'revision-2';
+    latest.sources[0].snapshot.fingerprint = 'hash-2';
+    if (change === 'sole objective')
+      latest.sources[0].snapshot.fields.objectives = ['Explain addition'];
+    if (change === 'shortened lesson')
+      latest.sources[0].snapshot.fields.content_markdown = 'One plus one is two.';
+    if (change === 'removed selected question')
+      latest.sources[0].snapshot.fields.quiz = {
+        questions: [{ question: 'One plus one?', options: ['Two', 'Three'], correct_index: 0 }],
+      };
+    load.mockResolvedValue(latest);
+    await client.invalidateQueries({ queryKey: ['workspace-review-sources'] });
+    // Background source updates retain the old result as stale until explicitly accepted.
+    await screen.findByText('Review stale. The material or selection has changed.');
+    expect(review).toHaveBeenCalledOnce();
+    fireEvent.click(screen.getByRole('button', { name: 'Review current material' }));
+    await waitFor(() =>
+      expect(
+        screen.getByRole('button', { name: 'Send selected material to TypeSafe for review' }),
+      ).toBeEnabled(),
+    );
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('status', { name: 'Material review result' }),
+      ).not.toBeInTheDocument(),
+    );
+    expect(screen.getByLabelText('Review objective')).toHaveValue(
+      change === 'sole objective' ? 'Explain addition' : 'Add numbers',
+    );
+    expect(screen.getByLabelText('Excerpt end character')).toHaveValue(
+      String(latest.sources[0].snapshot.fields.content_markdown).length,
+    );
+    expect(screen.getByLabelText('Review question')).toHaveValue('0');
+    expect(review).toHaveBeenCalledOnce();
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Send selected material to TypeSafe for review' }),
+    );
+    await waitFor(() => expect(review).toHaveBeenCalledTimes(2));
+    expect(review.mock.calls[1][1]).toMatchObject({
+      objective: change === 'sole objective' ? 'Explain addition' : 'Add numbers',
+      question_index: 0,
+      lesson_excerpt: latest.sources[0].snapshot.fields.content_markdown,
+      expected_revision_marker: 'revision-2',
+      expected_fingerprint: 'hash-2',
+    });
+  },
+);
