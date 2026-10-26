@@ -309,5 +309,28 @@
     "duration_ms": 31168,
     "evidence": "31-generated-card-dismissal-fixed.png",
     "notes": "External HTTP mocked. Close+Save+reload and Escape+Save+reload both preserve2; Append saves17; Replace saves15. No live vendor inference."
+  },
+  {
+    "journey": "COURSE-05 / AI-05",
+    "scenario": "Replace All fails after staged lesson, retry atomically replaces only selected module",
+    "status": "pass",
+    "duration_ms": 30269,
+    "evidence": "32-ai-replacement-failure-preserves-draft.png",
+    "notes": "External provider HTTP mocked; forced second stage503. Original2module IDs/content preserved on failure, selected draft retained. Explicit retry succeeded, Save/reload shows exactly1 selected module. Prior synthetic AI course modules intentionally replaced."
+  },
+  {
+    "journey": "STUDY-04 / MODULE-05",
+    "scenario": "Personal generated questions persist through reload",
+    "status": "pass",
+    "duration_ms": 9691,
+    "evidence": "33-personal-extra-quiz-persisted.png",
+    "notes": "Submitted2-question fixture100%, generated10 mocked questions; reload shows12 and savedattempt1. Mock transport repeats question labels acrossbatches; this is fixture behavior."
+  },
+  {
+    "journey": "AI-03 / AI-04",
+    "scenario": "Gemini and Claude select/validate/save/generate; explicit return to Anvil",
+    "status": "pass",
+    "duration_ms": null,
+    "notes": "Mocked external HTTP only. Both catalog and generated15card requests use selected adapter; dismiss preserved2savedcards. Claude reload persisted. Balance remains65. Anvilprimary explicitly reselected. Timing not separately measured."
   }
 ]
