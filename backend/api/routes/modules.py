@@ -3,12 +3,13 @@
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
-from dependencies import CurrentUser, OptionalUser, StorageDep
+from dependencies import CurrentUser, StorageDep
 from models.module import (
     Module,
     ModuleCreate,
     ModuleSummary,
     ModuleUpdate,
+    ReconcileOutlinesRequest,
 )
 from services.course_service import CourseService
 from services.image_service import ImageService
@@ -44,14 +45,12 @@ class BatchModuleCreateRequest(BaseModel):
 @router.get("/{course_id}/modules", response_model=list[ModuleSummary])
 async def list_modules(
     course_id: str,
-    user: OptionalUser,
+    user: CurrentUser,
     course_service: CourseService = Depends(get_course_service),
 ):
     """List all modules for a course (visibility-enforced).
 
-    Anonymous callers may list modules only for public courses; private
-    courses are visible only to their author. (Previously this endpoint
-    had no ownership check and leaked module metadata for any course.)
+    Sign-in is required; private courses additionally require ownership or a grant.
     """
     user_id = user.id if user else None
     _course, modules = await course_service.get_course_with_modules(course_id, user_id)
@@ -89,6 +88,17 @@ async def batch_create_modules(
     return {"created": created, "count": len(created)}
 
 
+@router.put("/{course_id}/modules/outlines", response_model=list[ModuleSummary])
+async def reconcile_outlines(
+    course_id: str, data: ReconcileOutlinesRequest, user: CurrentUser,
+    module_service: ModuleService = Depends(get_module_service),
+):
+    return await module_service.reconcile_outlines(
+        course_id, user.id, [m.model_dump(mode="json") for m in data.initial],
+        [m.model_dump() for m in data.outlines], data.request_id,
+    )
+
+
 @router.put("/{course_id}/modules/reorder", response_model=list[ModuleSummary])
 async def reorder_modules(
     course_id: str,
@@ -104,7 +114,7 @@ async def reorder_modules(
 async def get_module(
     course_id: str,
     module_id: str,
-    user: OptionalUser,
+    user: CurrentUser,
     module_service: ModuleService = Depends(get_module_service),
 ):
     """Get a module by ID."""

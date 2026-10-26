@@ -18,24 +18,17 @@ it('shows unavailable stored model honestly and requires explicit selection', as
   await waitFor(() => expect(screen.getByRole('button',{name:'Save AI preferences'})).toBeEnabled());
 });
 
-it('offers authorized local subscription without API key and distinguishes inference check', async () => {
-  vi.mocked(userSettingsApi.getPreferences).mockResolvedValue({ provider:'anvil',model:'llm.primary',is_configured:true,credential_mask:null,credentials:{},accounting:'application_credits',automatic_fallback:false,codex_subscription_available:true });
-  vi.mocked(userSettingsApi.models).mockResolvedValue({models:['gpt-6-luna'],is_available:true,message:'Advertised'});
-  vi.mocked(userSettingsApi.validate).mockResolvedValue({models:['gpt-6-luna'],is_valid:true,message:'Inference check succeeded for gpt-6-luna.'});
-  render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false}}})}><AIPreferences userId="owner" /></QueryClientProvider>);
-  fireEvent.change(await screen.findByLabelText('Provider'),{target:{value:'codex_subscription'}});
+it('shows a retired stored subscription and requires an explicit replacement without catalog traffic', async () => {
+  vi.clearAllMocks();
+  vi.mocked(userSettingsApi.getPreferences).mockResolvedValue({provider:'codex_subscription',model:'old-model',is_configured:false,unavailable_reason:'Codex subscription is retired. Choose a provider explicitly.',credential_mask:null,credentials:{},accounting:'provider_billed',automatic_fallback:false});
+  vi.mocked(userSettingsApi.models).mockResolvedValue({models:['llm.primary'],is_available:true,message:'Advertised'});
+  render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false}}})}><AIPreferences userId="retired" /></QueryClientProvider>);
+  expect(await screen.findByText(/Codex subscription is retired/)).toBeInTheDocument();
+  expect(screen.getByLabelText('Provider')).toHaveValue('codex_subscription');
+  expect(userSettingsApi.models).not.toHaveBeenCalled();
+  expect(userSettingsApi.savePreferences).not.toHaveBeenCalled();
   expect(screen.queryByLabelText('API key')).not.toBeInTheDocument();
-  expect(screen.getByText(/Configured candidates are not proof/)).toBeInTheDocument();
-  await screen.findByRole('option',{name:'gpt-6-luna'});
-  fireEvent.change(screen.getByLabelText('Model'),{target:{value:'gpt-6-luna'}});
-  fireEvent.click(screen.getByRole('button',{name:'Check selected model'}));
-  expect(await screen.findByText('Inference check succeeded for gpt-6-luna.')).toBeInTheDocument();
-  expect(userSettingsApi.validate).toHaveBeenCalledWith('codex_subscription',undefined,'gpt-6-luna');
-});
-
-it('hides the subscription option when the operator has not authorized this account', async () => {
-  vi.mocked(userSettingsApi.getPreferences).mockResolvedValue({ provider:'anvil',model:'llm.primary',is_configured:true,credential_mask:null,credentials:{},accounting:'application_credits',automatic_fallback:false,codex_subscription_available:false });
-  render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false}}})}><AIPreferences userId="other" /></QueryClientProvider>);
-  await screen.findByLabelText('Provider');
-  expect(screen.queryByRole('option',{name:'Codex (local subscription)'})).not.toBeInTheDocument();
+  fireEvent.change(screen.getByLabelText('Provider'),{target:{value:'anvil'}});
+  await waitFor(()=>expect(userSettingsApi.models).toHaveBeenCalledWith('anvil'));
+  expect(userSettingsApi.savePreferences).not.toHaveBeenCalled();
 });

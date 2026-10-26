@@ -73,7 +73,7 @@ it('persists outline order and removal while retaining the remaining lessons', a
   expect(state.modules.every(m => m.content_markdown === 'Existing lesson content')).toBe(true);
 });
 
-it('retries a partially saved outline without duplicating modules', async () => {
+it('retries an atomic failed outline without duplicating modules', async () => {
   const state = installJourneyApi();
   state.failModuleCreateAfter = 1;
   renderJourney(<CourseEditor />, '/courses/new', '/courses/new');
@@ -83,7 +83,7 @@ it('retries a partially saved outline without duplicating modules', async () => 
   fireEvent.click(screen.getByRole('button', { name: 'Add Module' }));
   fireEvent.click(screen.getByRole('button', { name: 'Create Course' }));
   await screen.findByText('Failed to save course. Please try again.');
-  expect(state.modules).toHaveLength(1);
+  expect(state.modules).toHaveLength(0);
   state.failModuleCreateAfter = null;
   fireEvent.click(screen.getByRole('button', { name: 'Create Course' }));
   await screen.findByText('Course saved');
@@ -149,4 +149,19 @@ it('refreshes a cached path card when course outlines add a module', async () =>
   fireEvent.click(screen.getByRole('button', { name: 'Save Changes' }));
   await screen.findByText('Course saved');
   expect((await client.fetchQuery(query)).courses[0].module_count).toBe(2);
+});
+
+
+it('keeps the stale outline draft and a concurrently added lesson after Save conflicts', async () => {
+  const state = installJourneyApi([makeModule()]);
+  renderJourney(<CourseEditor />, '/courses/c1/edit', '/courses/:courseId/edit');
+  await screen.findByDisplayValue('Test course');
+  fireEvent.click(screen.getByRole('button', {name:'Next'}));
+  fireEvent.change(screen.getByDisplayValue('Lesson m1'), {target:{value:'My outline draft'}});
+  state.modules.push(makeModule('concurrent', 1));
+  fireEvent.click(screen.getByRole('button', {name:'Save Changes'}));
+  await screen.findAllByText(/outline changed on the server/);
+  expect(screen.getByDisplayValue('My outline draft')).toBeInTheDocument();
+  expect(state.modules.map(m=>m.id)).toEqual(['m1','concurrent']);
+  expect(screen.queryByText('Course saved')).not.toBeInTheDocument();
 });

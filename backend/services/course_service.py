@@ -1,6 +1,5 @@
 """Course service - manages courses from both filesystem and database sources."""
 
-import asyncio
 import json
 from datetime import datetime, timezone
 from pathlib import Path
@@ -35,12 +34,12 @@ class CourseService(BaseService):
         Returns:
             - User's own courses (if user_id provided)
             - Public courses
-            - Filesystem courses (always visible)
+            - Filesystem courses (visible to signed-in users)
         """
         courses = []
 
         # Get filesystem courses
-        fs_courses = await self._get_filesystem_courses()
+        fs_courses = await self._get_filesystem_courses() if user_id else []
         courses.extend(fs_courses)
 
         # Get database courses
@@ -245,31 +244,13 @@ class CourseService(BaseService):
         if not course_ids:
             return {}
 
-        cache = get_cache()
-        results: dict[str, int] = {}
-        uncached_ids: list[str] = []
-
-        # Check cache first
-        for course_id in course_ids:
-            cache_key = f"modules:count:{course_id}"
-            value, found = cache.get(cache_key)
-            if found:
-                results[course_id] = value
-            else:
-                uncached_ids.append(course_id)
-
-        # Fetch uncached counts in parallel
-        if uncached_ids:
-            tasks = [self.storage.count("modules", {"course_id": cid}) for cid in uncached_ids]
-            counts = await asyncio.gather(*tasks)
-
-            # Cache and store results
-            for course_id, count in zip(uncached_ids, counts):
-                cache_key = f"modules:count:{course_id}"
-                cache.set(cache_key, count, ttl_seconds=60)
-                results[course_id] = count
-
-        return results
+        # Small local collections: read current membership after every committed write,
+        # including orchestrator replacements that do not pass through module CRUD.
+        counts = {course_id: 0 for course_id in course_ids}
+        for module in await self.storage.list("modules"):
+            if module.get("course_id") in counts:
+                counts[module["course_id"]] += 1
+        return counts
 
     async def _get_cached_course(self, course_id: str) -> dict | None:
         """Get a course from cache or database.
@@ -482,6 +463,7 @@ class CourseService(BaseService):
             modules.append(
                 ModuleSummary(
                     id=module_data["id"],
+                    updated_at=module_data.get("updated_at"),
                     title=module_data["title"],
                     description=module_data.get("description", ""),
                     objectives=module_data.get("objectives", []),

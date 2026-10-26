@@ -1,5 +1,5 @@
 import { useAuthContext } from '../components/common/AuthContext';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Save, Sparkles } from 'lucide-react';
 import { Button } from '../components/common/Button';
@@ -78,15 +78,13 @@ function ModuleEditorDraft() {
   const { setAll: setFlashcards } = flashcards;
   const { setAll: setQuizQuestions } = quiz;
 
-  // Populate form when editing
-  useEffect(() => {
-    if (existingModule && isEditing && !acceptedModule) {
+  // Initialize once for this keyed editor, before rendering any editable fields.
+  if (existingModule && isEditing && !acceptedModule) {
       setAcceptedModule(existingModule);
       populateFromModule(existingModule);
       setFlashcards(existingModule.flashcards || []);
       setQuizQuestions(existingModule.quiz?.questions || []);
-    }
-  }, [existingModule, isEditing, acceptedModule, populateFromModule, setFlashcards, setQuizQuestions]);
+  }
 
   const serverChanged = !!(acceptedModule && existingModule
     && JSON.stringify(acceptedModule) !== JSON.stringify(existingModule));

@@ -111,6 +111,7 @@ class ModuleSummary(BaseModel):
     order_index: int
     flashcard_count: int = 0
     has_quiz: bool = False
+    updated_at: datetime | None = None
 
 
 class GenerateModuleRequest(BaseModel):
@@ -133,3 +134,15 @@ class ModuleSuggestion(BaseModel):
     description: str
     objectives: list[str]
     suggested: bool = True  # True if AI suggested, False if user-added
+
+
+class OutlineDraft(BaseModel):
+    id: str = Field(min_length=1, max_length=200)
+    title: str = Field(min_length=1, max_length=200)
+    description: str = ""
+
+
+class ReconcileOutlinesRequest(BaseModel):
+    initial: list[ModuleSummary]
+    outlines: list[OutlineDraft]
+    request_id: str = Field(min_length=1, max_length=100)

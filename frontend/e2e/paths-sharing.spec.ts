@@ -25,6 +25,19 @@ test('PATH-01 — create a goal, edit its details and reload the empty path', as
   await page.reload();
   await expect(page.getByText('0 courses · 0 unavailable')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Add First Course' })).toBeVisible();
+  const ownPathUrl = page.url();
+  await page.getByRole('button', {name:'Follow path',exact:true}).click();
+  await expect(page.getByRole('button', {name:'Unfollow',exact:true})).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole('button', {name:'Unfollow',exact:true})).toBeVisible();
+  await page.goto('/');
+  await expect(page.getByText('Selected Paths',{exact:true}).locator('..').locator(':scope > div').first()).toHaveText('1');
+  await page.goto(ownPathUrl);
+  await page.getByRole('button', {name:'Unfollow',exact:true}).click();
+  await expect(page.getByRole('button', {name:'Edit',exact:true})).toBeVisible();
+  await page.goto('/');
+  await expect(page.getByText('Selected Paths',{exact:true}).locator('..').locator(':scope > div').first()).toHaveText('0');
+
 });
 
 test('PATH-02 — add owned and discovered courses as references, reject duplicate membership', async ({ page, world, request }) => {

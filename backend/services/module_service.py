@@ -5,7 +5,13 @@ from datetime import datetime, timezone
 from pathlib import Path
 from uuid import uuid4
 
-from exceptions import ErrorCode, ForbiddenException, NotFoundException, StudyBuddyException
+from exceptions import (
+    ConflictException,
+    ErrorCode,
+    ForbiddenException,
+    NotFoundException,
+    StudyBuddyException,
+)
 from models.module import (
     FlashcardData,
     Module,
@@ -75,6 +81,7 @@ class ModuleService(BaseService):
             modules.append(
                 ModuleSummary(
                     id=module_data["id"],
+                    updated_at=module_data.get("updated_at"),
                     title=module_data["title"],
                     description=module_data.get("description", ""),
                     objectives=module_data.get("objectives", []),
@@ -203,6 +210,63 @@ class ModuleService(BaseService):
             )
 
         return await self.storage.delete("modules", module_id)
+
+    async def reconcile_outlines(self, course_id, user_id, initial, outlines, request_id):
+        """Compare the editor snapshot and atomically persist an idempotent outline edit."""
+        import hashlib
+
+        payload = json.dumps({"initial": initial, "outlines": outlines}, sort_keys=True)
+        fingerprint = hashlib.sha256(payload.encode()).hexdigest()
+        operation_id = hashlib.sha256(f"{user_id}:{course_id}:{request_id}".encode()).hexdigest()
+        async with self.storage.transaction():
+            await self._get_editable_course(course_id, user_id)
+            previous = await self.storage.get("outline_operations", operation_id)
+            if previous:
+                if previous["fingerprint"] != fingerprint:
+                    raise ConflictException("Outline retry changed; start a new save explicitly")
+                return previous["result"]
+            current = [m.model_dump(mode="json") for m in await self.list_modules(course_id)]
+
+            def canonical(items):
+                return sorted(items, key=lambda item: item["id"])
+
+            if canonical(current) != canonical(initial):
+                raise ConflictException(
+                    "The course outline changed on the server. Your draft is kept. "
+                    "Open the latest course before saving; no modules were changed."
+                )
+            original_ids = {m["id"] for m in initial}
+            if len({m["id"] for m in outlines}) != len(outlines):
+                raise ConflictException("Duplicate outline identities")
+            kept = set()
+            for index, outline in enumerate(outlines):
+                data = {
+                    "title": outline["title"].strip(),
+                    "description": outline.get("description", "").strip(),
+                    "order_index": index,
+                }
+                if not data["title"]:
+                    raise StudyBuddyException("Every module needs a title")
+                if outline["id"] in original_ids:
+                    await self.update_module(
+                        course_id, outline["id"], user_id, ModuleUpdate(**data)
+                    )
+                    kept.add(outline["id"])
+                else:
+                    created = await self.create_module(course_id, user_id, ModuleCreate(**data))
+                    kept.add(created.id)
+            for module_id in original_ids - kept:
+                await self.delete_module(course_id, module_id, user_id)
+            result = [m.model_dump(mode="json") for m in await self.list_modules(course_id)]
+            await self.storage.create(
+                "outline_operations",
+                {
+                    "id": operation_id,
+                    "fingerprint": fingerprint,
+                    "result": result,
+                },
+            )
+            return result
 
     async def reorder_modules(
         self, course_id: str, user_id: str, module_ids: list[str]
@@ -418,6 +482,7 @@ class ModuleService(BaseService):
             course_id=data["course_id"],
             title=data["title"],
             description=data.get("description", ""),
+            objectives=data.get("objectives", []),
             order_index=data.get("order_index", 0),
             content_markdown=data.get("content_markdown", ""),
             flashcards=flashcards,

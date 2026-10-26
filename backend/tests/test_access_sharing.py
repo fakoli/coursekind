@@ -129,11 +129,11 @@ async def test_follow_unavailable_and_distinct_contributions(
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "visibility,anonymous_ok,discovered",
+    "visibility,signed_in_ok,discovered",
     [("private", False, False), ("unlisted", True, False), ("public", True, True)],
 )
 async def test_visibility_policy(
-    client, auth_headers, other_user_headers, visibility, anonymous_ok, discovered
+    client, auth_headers, other_user_headers, visibility, signed_in_ok, discovered
 ):
     c = (
         await client.post(
@@ -153,8 +153,12 @@ async def test_visibility_policy(
         for headers in [{}, other_user_headers]:
             assert (
                 await client.get(f"/api/v1/{kind}/{resource['id']}", headers=headers)
-            ).status_code == (200 if anonymous_ok else 404)
-            listing = (await client.get(f"/api/v1/{kind}", headers=headers)).json()
+            ).status_code == (401 if not headers else 200 if signed_in_ok else 404)
+            listing_response = await client.get(f"/api/v1/{kind}", headers=headers)
+            if not headers:
+                assert listing_response.status_code == 401
+                continue
+            listing = listing_response.json()
             assert (resource["id"] in [r["id"] for r in listing]) == discovered
         assert (
             await client.get(f"/api/v1/{kind}/{resource['id']}", headers=auth_headers)
@@ -253,8 +257,8 @@ async def test_filesystem_public_study_and_read_only(client, auth_headers, tmp_p
     (course / "meta.json").write_text('{"title":"Sample","modules":["01-intro"]}')
     (module / "content.md").write_text("# Intro")
     (module / "flashcards.json").write_text('{"cards":[{"front":"Q","back":"A"}]}')
-    assert (await client.get("/api/v1/courses/sample")).status_code == 200
-    assert (await client.get("/api/v1/courses/sample/modules/01-intro")).status_code == 200
+    assert (await client.get("/api/v1/courses/sample", headers=auth_headers)).status_code == 200
+    assert (await client.get("/api/v1/courses/sample/modules/01-intro", headers=auth_headers)).status_code == 200
     assert (
         await client.post(
             "/api/v1/progress/modules/sample/01-intro",
@@ -348,12 +352,12 @@ async def test_concurrent_follow_and_membership_are_idempotent(backend, tmp_path
         )
         await asyncio.gather(*[paths.follow(path.id, "learner") for _ in range(8)])
         assert len(await storage.list("path_follows")) == 1
-        assert (await paths.get_path(path.id)).course_ids == [course.id]
-        counts = await courses.get_course(course.id)
+        assert (await paths.get_path(path.id, "curator")).course_ids == [course.id]
+        counts = await courses.get_course(course.id, "owner")
         assert (counts.times_added, counts.own_path_count, counts.other_path_count) == (1, 0, 1)
         await paths.delete_path(path.id, "curator")
         assert await storage.list("path_follows") == []
-        assert (await courses.get_course(course.id)).times_added == 0
+        assert (await courses.get_course(course.id, "owner")).times_added == 0
     finally:
         if backend == "sqlite":
             await storage.close()
@@ -369,13 +373,14 @@ async def test_uploaded_and_generated_media_obey_course_access(
     for relative in [f"{cid}/images/test.png", f"{cid}/{mid}/visuals/test.png"]:
         file = tmp_path / "uploads/courses" / relative
         file.parent.mkdir(parents=True, exist_ok=True)
-        file.write_bytes(b"synthetic image bytes")
+        from PIL import Image
+        Image.new("RGB", (1, 1)).save(file)
     urls = [
         f"/api/v1/uploads/courses/{cid}/images/test.png",
         f"/api/v1/uploads/courses/{cid}/{mid}/visuals/test.png",
     ]
     for url in urls:
-        assert (await client.get(url)).status_code == 404
+        assert (await client.get(url)).status_code == 401
         assert (await client.get(url, headers=other_user_headers)).status_code == 404
         response = await client.get(url, headers=auth_headers)
         assert response.status_code == 200
@@ -394,4 +399,5 @@ async def test_uploaded_and_generated_media_obey_course_access(
             f"/api/v1/courses/{cid}", json={"visibility": visibility}, headers=auth_headers
         )
         for url in urls:
-            assert (await client.get(url)).status_code == 200
+            assert (await client.get(url)).status_code == 401
+            assert (await client.get(url, headers=other_user_headers)).status_code == 200

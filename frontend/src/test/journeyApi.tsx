@@ -92,6 +92,17 @@ export function installJourneyApi(modules: Module[] = []) {
       content_markdown: '# Generated lesson', flashcards: [], quiz: null,
       suggested_visuals: [], tokens_used: 25,
     });
+    if (path === '/courses/c1/modules/outlines' && method === 'PUT') {
+      if (state.failModuleCreate || state.failModuleCreateAfter !== null) return reply({detail:'Module save failed'}, 500);
+      if (JSON.stringify(body.initial.map((m: Module)=>m.id).sort()) !== JSON.stringify(state.modules.map(m=>m.id).sort())) {
+        return reply({detail:'The course outline changed on the server. Your draft is kept.'}, 409);
+      }
+      state.modules = body.outlines.map((outline: {id:string;title:string;description:string}, index:number) => ({
+        ...(state.modules.find(m=>m.id === outline.id) || {...makeModule(`new-${index+1}`),content_markdown:'',flashcards:[],quiz:null}),
+        title:outline.title, description:outline.description, order_index:index,
+      }));
+      return reply(summary());
+    }
     if (path === '/courses/c1/modules/batch' && method === 'POST') {
       const created = body.modules.map((data: Partial<Module>, index: number) => ({
         ...makeModule(`batch-${state.modules.length + index + 1}`), ...data,

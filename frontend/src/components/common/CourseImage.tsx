@@ -45,6 +45,7 @@ export function CourseImage({ src, alt = '', ...props }: ImgHTMLAttributes<HTMLI
         });
         if (!response.ok) throw new Error('Image unavailable');
         const blob = await response.blob();
+        if (!['image/png', 'image/jpeg', 'image/gif', 'image/webp'].includes(blob.type)) throw new Error('Unsafe image type');
         if (!active || current.signal.aborted) return;
         blobUrl = URL.createObjectURL(blob);
         setLoaded({ identity, url: blobUrl, failed: false });

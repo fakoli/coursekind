@@ -96,6 +96,21 @@ test('COURSE-02 — rename, reorder, remove and add outlines without losing acti
   expect(saved.content_markdown).toBe(world.lessons[0].content_markdown);
   const outlines = await api<{modules: Lesson[]}>(request, world.author, `/courses/${world.course.id}`);
   expect(outlines.modules.map(module => module.title)).toEqual(['Renamed Variables', 'Added outline']);
+  // Warm the server list, then change membership while the original editor is open.
+  await api(request, world.author, '/courses/mine');
+  await page.goto(`/courses/${world.course.id}/edit`);
+  await page.getByRole('button', {name:'Next', exact:true}).click();
+  await page.getByRole('button', {name:'Next', exact:true}).click();
+  await page.getByPlaceholder('Module title').first().fill('Retained stale draft');
+  const concurrent = await api<Lesson>(request, world.author, `/courses/${world.course.id}/modules`, 'POST',
+    {title:'Concurrent saved lesson',order_index:2,content_markdown:'Preserve concurrent content'});
+  await page.getByRole('button', {name:'Save Changes'}).click();
+  await expect(page.getByRole('link', {name:'Open latest course in a new tab'})).toBeVisible();
+  await expect(page.getByPlaceholder('Module title').first()).toHaveValue('Retained stale draft');
+  expect((await api<Lesson>(request, world.author, `/courses/${world.course.id}/modules/${concurrent.id}`)).content_markdown).toBe('Preserve concurrent content');
+  const counts = await api<{id:string;module_count:number}[]>(request, world.author, '/courses/mine');
+  expect(counts.find(course=>course.id === world.course.id)?.module_count).toBe(3);
+
 });
 
 test('COURSE-03 — edit metadata, cancel deletion, then delete and reopen old URL', async ({ page, world }) => {

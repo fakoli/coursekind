@@ -20,7 +20,7 @@ expected course, module, study, learning-path, sharing, statistics, and AI-model
 workflows, adopted policies, and acceptance boundaries. The [26 October baseline
 audit](docs/audits/2026-10-26/README.md) separates real rendered evidence, mocked
 external integrations, durable tests, timings and remaining limits. The
-[41-journey Playwright suite](frontend/e2e/README.md) runs in GitHub Actions against
+[40-journey Playwright suite](frontend/e2e/README.md) runs in GitHub Actions against
 isolated synthetic storage and reports each journey independently.
 
 The historical [25 October walkthrough](docs/audits/2026-10-25/README.md) records outcomes,
@@ -203,4 +203,4 @@ npm run lint --prefix frontend
 
 Apache-2.0 - See [LICENSE](LICENSE) for details.
 
-Optional [local Codex ChatGPT subscription](docs/local-codex-subscription.md) is disabled by default and restricted to one explicitly authorized app account. Anvil remains the default. The additional AI-06 scenario is separate from the original 40 baseline journeys.
+The [local Codex subscription prototype](docs/local-codex-subscription.md) is deferred after failed isolation qualification and has no executable provider path. Historical AI-06 evidence is retained; the active browser suite contains the original 40 IDs. Stored subscription selections require explicit replacement in Settings, with no fallback.

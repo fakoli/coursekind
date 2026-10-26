@@ -558,6 +558,7 @@ export interface ModuleSummary {
   order_index: number;
   flashcard_count: number;
   has_quiz: boolean;
+  updated_at?: string | null;
 }
 
 export interface ModuleCreate {

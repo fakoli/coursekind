@@ -44,7 +44,7 @@ async def test_list_modules_private_course_owner_ok(client, auth_headers):
 
 
 @pytest.mark.asyncio
-async def test_list_modules_public_course_anyone_ok(client, auth_headers):
+async def test_list_modules_public_course_requires_sign_in(client, auth_headers):
     """A public course's modules are listable by anyone."""
     create_resp = await client.post(
         "/api/v1/courses",
@@ -61,9 +61,10 @@ async def test_list_modules_public_course_anyone_ok(client, auth_headers):
     assert mod_resp.status_code == 200, mod_resp.text
 
     anon_resp = await client.get(f"/api/v1/courses/{course_id}/modules")
-    assert anon_resp.status_code == 200
-    assert len(anon_resp.json()) == 1
-    assert anon_resp.json()[0]["title"] == "Mod 1"
+    assert anon_resp.status_code == 401
+    signed_in = await client.get(f"/api/v1/courses/{course_id}/modules", headers=auth_headers)
+    assert signed_in.status_code == 200
+    assert signed_in.json()[0]["title"] == "Mod 1"
 
 
 @pytest.mark.asyncio

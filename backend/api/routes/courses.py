@@ -5,7 +5,7 @@ from typing import Literal
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 
-from dependencies import CurrentUser, OptionalUser, StorageDep
+from dependencies import CurrentUser, StorageDep
 from models.course import (
     Course,
     CourseCreate,
@@ -35,7 +35,7 @@ class CourseWithModulesResponse(BaseModel):
 
 @router.get("", response_model=list[CourseResponse])
 async def list_courses(
-    user: OptionalUser,
+    user: CurrentUser,
     course_service: CourseService = Depends(get_course_service),
 ):
     """List all courses accessible to the current user."""
@@ -68,6 +68,7 @@ async def list_shared_courses(
 
 @router.get("/discover", response_model=CourseDiscoveryResponse)
 async def discover_courses(
+    user: CurrentUser,
     q: str | None = Query(None, description="Search query"),
     tags: str | None = Query(None, description="Comma-separated tags"),
     difficulty: Literal["beginner", "intermediate", "advanced"] | None = Query(None),
@@ -103,7 +104,7 @@ async def create_course(
 @router.get("/{course_id}", response_model=CourseWithModulesResponse)
 async def get_course(
     course_id: str,
-    user: OptionalUser,
+    user: CurrentUser,
     course_service: CourseService = Depends(get_course_service),
 ):
     """Get a course with its modules."""

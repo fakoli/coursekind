@@ -1,4 +1,4 @@
-"""One live access policy. Unlisted links grant reads; discovery does not.
+"""One live signed-in access policy. Unlisted links grant reads; discovery does not.
 
 Recipient IDs are stored only in raw documents, never serialized in public models.
 A path grant never grants access to its referenced courses.
@@ -12,17 +12,19 @@ from storage.base import StorageBackend
 
 
 def can_read(resource: dict, user_id: str | None, owner_key: str) -> bool:
-    return resource.get("visibility", "private") in ("public", "unlisted") or bool(
-        user_id
-        and (resource.get(owner_key) == user_id or user_id in resource.get("shared_with", []))
-    )
+    return bool(user_id and (
+        resource.get("visibility", "private") in ("public", "unlisted")
+        or resource.get(owner_key) == user_id
+        or user_id in resource.get("shared_with", [])
+    ))
 
 
 def can_discover(resource: dict, user_id: str | None, owner_key: str) -> bool:
-    return resource.get("visibility") == "public" or bool(
-        user_id
-        and (resource.get(owner_key) == user_id or user_id in resource.get("shared_with", []))
-    )
+    return bool(user_id and (
+        resource.get("visibility") == "public"
+        or resource.get(owner_key) == user_id
+        or user_id in resource.get("shared_with", [])
+    ))
 
 
 class AccessService:
@@ -32,7 +34,7 @@ class AccessService:
 
     async def require_course(self, course_id: str, user_id: str | None) -> dict:
         data = await self.storage.get("courses", course_id)
-        if data is None:
+        if data is None and user_id:
             path = (self.content_path / course_id).resolve()
             if path.parent == self.content_path and (path / "meta.json").is_file():
                 with (path / "meta.json").open() as file:

@@ -9,7 +9,6 @@ from models.ai_preferences import AIPreferencesUpdate, Provider, ValidateCredent
 from models.user import User
 from services.ai_preferences_service import AIPreferencesService
 from services.anvil_client import check_anvil_health
-from services.codex_subscription import CodexSubscription
 
 router = APIRouter()
 
@@ -63,11 +62,7 @@ async def get_ai_models(
             "provider": provider,
             "models": models,
             "is_available": True,
-            "message": (
-                "Configured candidates only; model access requires a successful inference check"
-                if provider == "codex_subscription"
-                else "Advertised text models; generation availability is checked per request"
-            ),
+            "message": "Advertised text models; generation availability is checked per request",
         }
     except AIServiceException as exc:
         return {"provider": provider, "models": [], "is_available": False, "message": exc.message}
@@ -80,27 +75,6 @@ async def validate_ai_credential(
     models = await AIPreferencesService(storage, get_settings()).catalog(
         user.id, request.provider, request.api_key
     )
-    if request.provider == "codex_subscription":
-        if not request.model or request.model not in models:
-            raise AIServiceException(
-                "Choose a configured Codex candidate model for the inference check"
-            )
-        result = await CodexSubscription(get_settings()).complete(
-            user.id,
-            request.model,
-            "Return exactly subscription-check-ok",
-            "This is a connection check. Follow the requested response exactly.",
-            128,
-        )
-        if result != "subscription-check-ok":
-            raise AIServiceException("Codex inference check returned an unexpected response")
-        return {
-            "provider": request.provider,
-            "is_valid": True,
-            "models": models,
-            "message": f"Inference check succeeded for {request.model}. "
-            "Future requests remain subject to subscription limits.",
-        }
     return {
         "provider": request.provider,
         "is_valid": True,

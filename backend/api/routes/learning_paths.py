@@ -3,7 +3,7 @@
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 
-from dependencies import CurrentUser, OptionalUser, StorageDep
+from dependencies import CurrentUser, StorageDep
 from exceptions import NotFoundException
 from models.course import CourseResponse
 from models.learning_path import (
@@ -53,7 +53,7 @@ class LearningPathWithCoursesResponse(BaseModel):
 
 @router.get("", response_model=list[LearningPathResponse])
 async def list_paths(
-    user: OptionalUser,
+    user: CurrentUser,
     path_service: LearningPathService = Depends(get_learning_path_service),
 ):
     """List all learning paths accessible to the current user."""
@@ -108,7 +108,7 @@ async def unfollow_path(
 @router.get("/{path_id}", response_model=LearningPathWithCoursesResponse)
 async def get_path(
     path_id: str,
-    user: OptionalUser,
+    user: CurrentUser,
     path_service: LearningPathService = Depends(get_learning_path_service),
     course_service: CourseService = Depends(get_course_service),
 ):

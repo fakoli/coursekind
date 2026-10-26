@@ -19,6 +19,7 @@ import { useCourseSteps } from '../hooks/useCourseSteps';
 import { useModuleOutlines } from '../hooks/useModuleOutlines';
 import { useModuleSuggestions } from '../hooks/useModuleSuggestions';
 import { useToast } from '../hooks/useToast';
+import type { ModuleSummary } from '../types';
 import { saveModuleOutlines } from '../services/saveModuleOutlines';
 
 export function CourseEditor() {
@@ -30,7 +31,9 @@ export function CourseEditor() {
   const queryClient = useQueryClient();
   const initializedCourse = useRef<string | null>(null);
   const createdCourseId = useRef<string | null>(null);
-  const createdOutlineIds = useRef(new Map<string, string>());
+  const initialOutlines = useRef<ModuleSummary[]>([]);
+  const outlineSave = useRef<{signature:string;id:string} | null>(null);
+  const [outlineConflict, setOutlineConflict] = useState('');
   const [savingOutlines, setSavingOutlines] = useState(false);
 
   // Data fetching
@@ -56,6 +59,7 @@ export function CourseEditor() {
       && initializedCourse.current !== courseId) {
       populateFromCourse(existingCourse.course);
       populateFromModules(existingCourse.modules);
+      initialOutlines.current = existingCourse.modules.map(module => ({...module}));
       initializedCourse.current = courseId!;
     }
   }, [existingCourse, isEditing, refreshingCourse, courseLoadError, courseId,
@@ -107,7 +111,11 @@ export function CourseEditor() {
         targetId = newCourse.id;
         createdCourseId.current = targetId;
       }
-      await saveModuleOutlines(targetId, desiredOutlines, createdOutlineIds.current);
+      const signature = JSON.stringify(desiredOutlines);
+      if (outlineSave.current?.signature !== signature) {
+        outlineSave.current = {signature, id:crypto.randomUUID()};
+      }
+      await saveModuleOutlines(targetId, desiredOutlines, initialOutlines.current, outlineSave.current.id);
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['course', targetId] }),
         queryClient.invalidateQueries({ queryKey: ['modules', targetId] }),
@@ -121,7 +129,9 @@ export function CourseEditor() {
       navigate(`/courses/${targetId}`);
     } catch (err) {
       console.error('Failed to save course:', err);
-      showError('Failed to save course. Please try again.');
+      if (err instanceof Error && err.message.includes('outline changed')) setOutlineConflict(err.message);
+      showError(err instanceof Error && err.message.includes('outline changed')
+        ? err.message : 'Failed to save course. Please try again.');
     } finally {
       setSavingOutlines(false);
     }
@@ -144,6 +154,13 @@ export function CourseEditor() {
       existingModules,
       outlines.outlines,
       (newOutlines, isReplace) => {
+        // Only acknowledge modules created by this explicit generation operation.
+        // Never adopt unfamiliar server additions into a stale destructive draft.
+        const generatedIds = new Set(newOutlines.map(outline => outline.id));
+        const refreshed = queryClient.getQueryData<ModuleSummary[]>(['modules', courseId]) || [];
+        const generated = refreshed.filter(module => generatedIds.has(module.id));
+        initialOutlines.current = isReplace ? generated : [...initialOutlines.current, ...generated];
+        outlineSave.current = null;
         if (isReplace) {
           outlines.replaceOutlines(newOutlines);
         } else {
@@ -198,6 +215,9 @@ export function CourseEditor() {
         </div>
       </div>
 
+      {outlineConflict && <div role="alert"><p>{outlineConflict}</p>
+        <a href={`/courses/${courseId || createdCourseId.current}/edit`} target="_blank" rel="noopener noreferrer" className="underline">Open latest course in a new tab</a>
+      </div>}
       {/* Stepper */}
       <CourseStepper
         steps={steps.visibleSteps}

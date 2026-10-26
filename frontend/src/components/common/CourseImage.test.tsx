@@ -22,7 +22,7 @@ beforeEach(() => {
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); localStorage.clear(); });
 
 it('loads local markdown images using a header and revokes their blob on unmount', async () => {
-  const fetcher = vi.fn().mockResolvedValue(new Response('synthetic'));
+  const fetcher = vi.fn().mockResolvedValue(new Response('synthetic', {headers:{'Content-Type':'image/png'}}));
   vi.stubGlobal('fetch', fetcher);
   const view = render(<MarkdownRenderer content="![Private diagram](/api/v1/uploads/courses/c1/images/test.png)" />);
   const image = await screen.findByAltText('Private diagram');
@@ -66,7 +66,7 @@ it('aborts pending image reads on identity changes and never mounts the old resu
 });
 
 it('clears a loaded blob immediately when the identity changes', async () => {
-  const fetcher = vi.fn().mockResolvedValueOnce(new Response('secret'))
+  const fetcher = vi.fn().mockResolvedValueOnce(new Response('secret', {headers:{'Content-Type':'image/png'}}))
     .mockResolvedValue(new Response('', { status: 404 }));
   vi.stubGlobal('fetch', fetcher);
   const view = render(<CourseImage src="/api/v1/uploads/courses/c1/images/x.png" alt="Secret" />);
@@ -79,11 +79,19 @@ it('clears a loaded blob immediately when the identity changes', async () => {
 });
 
 it('uses the same protected renderer for course thumbnails', async () => {
-  const fetcher = vi.fn().mockResolvedValue(new Response('thumbnail'));
+  const fetcher = vi.fn().mockResolvedValue(new Response('thumbnail', {headers:{'Content-Type':'image/png'}}));
   vi.stubGlobal('fetch', fetcher);
   const course = { id: 'c1', title: 'Shared course', thumbnail_url: '/api/v1/uploads/courses/c1/images/x.png',
     difficulty: 'beginner', tags: [], author_name: 'Author', module_count: 1, times_added: 0 } as unknown as CourseResponse;
   const { container } = render(<MemoryRouter><CourseCard course={course} /></MemoryRouter>);
   await waitFor(() => expect(container.querySelector('img')).toHaveAttribute('src', 'blob:synthetic'));
   expect(fetcher).toHaveBeenCalledTimes(1);
+});
+
+
+it('never rehosts legacy active SVG as a blob document', async () => {
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('<svg onload="marker()"/>', {headers:{'Content-Type':'image/svg+xml'}})));
+  render(<CourseImage src="/api/v1/uploads/courses/c1/images/legacy.svg" alt="Legacy" />);
+  expect(await screen.findByText('Image unavailable: Legacy')).toBeInTheDocument();
+  expect(URL.createObjectURL).not.toHaveBeenCalled();
 });
