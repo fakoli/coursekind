@@ -37,6 +37,7 @@ function WorkspaceDetail({ workspace }: { workspace: WorkspaceData }) {
   const archive = useUpdateWorkspace(workspace.id);
   const request = useRef<WorkspaceUpdate | null>(null);
   const [archiveError, setArchiveError] = useState('');
+  const [confirmedArchive, setConfirmedArchive] = useState<WorkspaceData | null>(null);
   const handleArchive = async () => {
     request.current ??= {
       request_id: crypto.randomUUID(),
@@ -44,7 +45,8 @@ function WorkspaceDetail({ workspace }: { workspace: WorkspaceData }) {
       archived: !workspace.archived,
     };
     try {
-      await archive.mutateAsync(request.current);
+      const result = await archive.mutateAsync(request.current);
+      setConfirmedArchive(result);
       request.current = null;
       setArchiveError('');
     } catch (err) {
@@ -79,7 +81,7 @@ function WorkspaceDetail({ workspace }: { workspace: WorkspaceData }) {
       )}
       <div className="grid lg:grid-cols-[minmax(180px,1fr)_minmax(0,2fr)_minmax(180px,1fr)] gap-5 items-start">
         <WorkspaceOutline workspace={workspace} />
-        <WorkspaceBriefEditor workspace={workspace} />
+        <WorkspaceBriefEditor workspace={workspace} confirmedArchive={confirmedArchive} />
         <aside
           className="bg-white border rounded-xl p-5 space-y-3 min-w-0"
           aria-label="Workspace assistant"

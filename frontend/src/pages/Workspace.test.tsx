@@ -190,3 +190,63 @@ it('retains the draft when reloading a conflicting brief temporarily fails', asy
     'Keep through reload failure',
   );
 });
+it('saves a newly edited brief at the confirmed version after archiving and restoring', async () => {
+  const state = installWorkspaceApi();
+  renderJourney(<Workspace />, '/workspaces/w1', '/workspaces/:workspaceId');
+  await screen.findByRole('textbox', { name: 'Learning goal' });
+  fireEvent.click(screen.getByRole('button', { name: 'Archive workspace' }));
+  fireEvent.click(await screen.findByRole('button', { name: 'Restore workspace' }));
+  await screen.findByRole('button', { name: 'Archive workspace' });
+  fireEvent.change(screen.getByRole('textbox', { name: 'Learning goal' }), {
+    target: { value: 'Edited after restore' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Save brief' }));
+  await waitFor(() => expect(state.workspaces[0].brief.goal).toBe('Edited after restore'));
+  expect(state.writes.map((write) => write.expected_version)).toEqual([1, 2, 3]);
+  expect(state.workspaces[0].version).toBe(4);
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+});
+it('preserves a dirty brief through archive and restore and saves with the confirmed version', async () => {
+  const state = installWorkspaceApi();
+  renderJourney(<Workspace />, '/workspaces/w1', '/workspaces/:workspaceId');
+  await screen.findByRole('textbox', { name: 'Learning goal' });
+  fireEvent.change(screen.getByRole('textbox', { name: 'Learning goal' }), {
+    target: { value: 'Dirty draft before archive' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Archive workspace' }));
+  const restore = await screen.findByRole('button', { name: 'Restore workspace' });
+  expect(screen.getByRole('textbox', { name: 'Learning goal' })).toHaveValue(
+    'Dirty draft before archive',
+  );
+  expect(state.workspaces[0].brief.goal).toBe('Learn Python');
+  fireEvent.click(restore);
+  await screen.findByRole('button', { name: 'Archive workspace' });
+  expect(screen.getByRole('textbox', { name: 'Learning goal' })).toHaveValue(
+    'Dirty draft before archive',
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'Save brief' }));
+  await waitFor(() => expect(state.workspaces[0].brief.goal).toBe('Dirty draft before archive'));
+  expect(state.writes.map((write) => write.expected_version)).toEqual([1, 2, 3]);
+  expect(state.workspaces[0].version).toBe(4);
+});
+it('does not accept an archive response version when another save changed the server brief', async () => {
+  const state = installWorkspaceApi();
+  const client = renderJourney(<Workspace />, '/workspaces/w1', '/workspaces/:workspaceId');
+  await screen.findByRole('textbox', { name: 'Learning goal' });
+  fireEvent.change(screen.getByRole('textbox', { name: 'Learning goal' }), {
+    target: { value: 'My unsaved draft' },
+  });
+  state.workspaces[0].brief = { ...state.workspaces[0].brief, goal: 'Different server brief' };
+  state.workspaces[0].version = 2;
+  await client.invalidateQueries({ queryKey: ['workspace'] });
+  await screen.findByRole('heading', { name: 'Different server brief' });
+  fireEvent.click(screen.getByRole('button', { name: 'Archive workspace' }));
+  fireEvent.click(await screen.findByRole('button', { name: 'Restore workspace' }));
+  await screen.findByRole('button', { name: 'Archive workspace' });
+  fireEvent.click(screen.getByRole('button', { name: 'Save brief' }));
+  expect(await screen.findByRole('alert')).toHaveTextContent(/workspace changed/i);
+  expect(state.writes.map((write) => write.expected_version)).toEqual([2, 3, 1]);
+  expect(state.workspaces[0].brief.goal).toBe('Different server brief');
+  expect(state.workspaces[0].version).toBe(4);
+  expect(screen.getByRole('textbox', { name: 'Learning goal' })).toHaveValue('My unsaved draft');
+});

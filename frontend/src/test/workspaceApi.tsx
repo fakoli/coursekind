@@ -79,7 +79,8 @@ export function installWorkspaceApi(initial = true) {
     if (!w) return reply({ detail: 'Workspace not found' }, 404);
     if (method === 'PUT') {
       state.writes.push(body);
-      if (state.stale) return reply({ detail: 'Workspace changed' }, 409);
+      if (state.stale || body.expected_version !== w.version)
+        return reply({ detail: 'Workspace changed' }, 409);
       if (state.failSave) return reply({ detail: 'Save unavailable' }, 500);
       Object.assign(
         w,
