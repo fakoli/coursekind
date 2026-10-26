@@ -77,3 +77,11 @@ See `walkthrough-log.json` for subflows, measured times, and limitations. Final 
 
 - Negative authoring checks reproduced [silent partial-card removal](screenshots/20-incomplete-card-silently-discarded.png) and [acceptance of blank quiz options](screenshots/21-invalid-quiz-accepted.png); explicit validation/draft-preservation repairs are planned.
 - Course Save during a stopped local API retained the draft and showed failure; after restart, retry and reload [preserved the outline edit without duplicates](screenshots/22-course-save-retry-persisted.png).
+
+- Hosted model selection survives reload ([secondary selected](screenshots/23-hosted-model-selection.png)). Initial live generation returned503 during concurrent model benchmarking/restoration; the draft and100-credit balance remained intact. Live retry follows restoration.
+- With external HTTP explicitly mocked, [BYOK preferences persist masked](screenshots/25-mocked-byok-saved.png), outline→one module→two cards/two questions→manual refinement [saves and reloads](screenshots/26-mocked-generation-editable-saved.png), and [credential removal does not silently fall back](screenshots/28-provider-key-removal-no-fallback.png). These are mocked-provider UI results, not live external-vendor validation.
+- Closing the generated-card dialog incorrectly [appended cards](screenshots/27-ai-card-dialog-close-appends-before-fix.png); reported for repair and browser retest.
+
+- After restoration, real Anvil primary returned [eight coherent outlines](screenshots/29-live-anvil-outline.png). A full module retry saved a complete lesson, two flashcards and [two quiz questions](screenshots/30-live-anvil-quiz-saved.png); an author note persisted after Save/reload. First module attempt failed safely; its precise output failure cause was not captured. Successful stage times were22.548s content,1.988s cards,5.193s quiz, all finish_reason=stop. Only the successful outline/module charged10+25 local application credits (100→65); failed attempts charged zero.
+
+- Generated-card dialog repair now passes actual UI checks: [Close/Escape preserve the two-card deck](screenshots/31-generated-card-dismissal-fixed.png) through Save/reload, explicit Append saves17 cards, and explicit Replace saves15. External HTTP was mocked for these checks.

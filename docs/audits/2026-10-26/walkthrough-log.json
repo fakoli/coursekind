@@ -247,5 +247,67 @@
     "status": "pass-subflow",
     "elapsed_seconds": 27.226,
     "notes": "Stopped disposable API before Save: explicit save error, outline draft retained. Restarted API, retried same Save, reload/reopen confirms edited description and original two modules without duplicates."
+  },
+  {
+    "journey": "COURSE-04",
+    "status": "pass-subflow",
+    "elapsed_seconds": 51.292,
+    "notes": "Discover→no-match search shows helpful empty state→Fixture+Intermediate+A-Z finds public course→open verifies author,2modules,own/other reuse→Back retains Discover tab (filters reset). Only one public result: cross-item sort order not yet exercised."
+  },
+  {
+    "journey": "AI-02",
+    "status": "pass-subflow",
+    "elapsed_seconds": 22.789,
+    "notes": "Selected llm.secondary from live hosted catalog→Save→reload: Selected anvil/llm.secondary persisted. Preference persistence only; generation on secondary not yet tested."
+  },
+  {
+    "journey": "COURSE-05/AI-01/AI-05",
+    "status": "blocked-live-provider",
+    "elapsed_seconds": 252.595,
+    "notes": "Live llm.primary outline request and one UI retry failed HTTP503. Direct minimal chat request confirms configured model service unavailable in0.09s; model catalog reachable. Draft retained, no modules written, balance100 unchanged. Elapsed includes diagnosis, not generation latency. No fallback used."
+  },
+  {
+    "journey": "AI-03",
+    "status": "pass-mocked-provider-subflow",
+    "elapsed_seconds": 34.866,
+    "notes": "External HTTP transport mocked: OpenAI invalid credential401 rejected; synthetic valid credential discoversgpt-test, Save/reload retains provider/model and masked key with empty input. No real vendor call; balance100."
+  },
+  {
+    "journey": "COURSE-05/MODULE-05/AI-03",
+    "status": "pass-mocked-provider-subflow",
+    "elapsed_seconds": 51.336,
+    "notes": "Mocked external HTTP through actual OpenAI adapter: suggest8→select1→2cards+2quiz→create→Savecourse→editgeneratedlesson→save/refinement→reload. One module with2cards/2quiz persisted, description+2objectives preserved, ledger records openai/gpt-test, balance100 unchanged. Not live vendor validation."
+  },
+  {
+    "journey": "MODULE-05",
+    "status": "fail-subflow",
+    "elapsed_seconds": null,
+    "notes": "Mocked provider returned15cards; close X in Replace Flashcards dialog appended them to existing2 (17draftcards) instead of cancelling. Reported Task4 worker; reload discards unsaved change."
+  },
+  {
+    "journey": "AI-04",
+    "status": "pass-mocked-provider-subflow",
+    "elapsed_seconds": 119.499,
+    "notes": "Replaced synthetic OpenAI key v1→v2; subsequent actual adapter card generation used v2 in two mocked requests. Removed key→reload shows credentialnotconfigured/unavailablemodel without fallback. Explicitly selected Anvil+llm.primary and saved. No real external calls. Time includes card-dialog defect investigation."
+  },
+  {
+    "journey": "COURSE-05/AI-01",
+    "status": "pass-live-anvil-subflow",
+    "elapsed_seconds": 63.422,
+    "notes": "After model restoration, real llm.primary returned8 coherent Python collection suggestions with descriptions and objectives; existing mocked lesson preserved. Timing includes result inspection."
+  },
+  {
+    "journey": "COURSE-05/MODULE-05/AI-01/AI-05",
+    "status": "pass-live-anvil-subflow",
+    "elapsed_seconds": 191.273,
+    "notes": "Real llm.primary staged module retry completed: content22.548s, cards1.988s, quiz5.193s HTTP durations. Allfinishstop; prior rejected attempt uncharged. CreatingYourFirstList saved with2cards,2validquizquestions,description+2objectives; manually appended authornote,Save/reload verified. Originalmockmodule retained. Balance100→90outline→65successfulmodule; ledgerexact-10/-25, nofaileddebit. Elapsed includes inspection/manualedit. ExternalvendorHTTPmock remainsenabled but Anvilrequestspassthroughlive."
+  },
+  {
+    "journey": "MODULE-05",
+    "scenario": "Generated card dialog Close and Escape discard; explicit Append and Replace persist",
+    "status": "pass",
+    "duration_ms": 31168,
+    "evidence": "31-generated-card-dismissal-fixed.png",
+    "notes": "External HTTP mocked. Close+Save+reload and Escape+Save+reload both preserve2; Append saves17; Replace saves15. No live vendor inference."
   }
 ]
