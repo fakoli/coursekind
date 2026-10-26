@@ -41,6 +41,7 @@ class ProcessBoundary:
 
     async def run(self, argv, *, cwd, env, stdin=b"", timeout=20):
         process = None
+        process_group = None
         tasks = []
         output = []
         size = 0
@@ -55,9 +56,11 @@ class ProcessBoundary:
                     output.append(chunk)
 
         def kill():
-            if process is not None and process.returncode is None:
+            # Descendants can outlive an already-exited group leader and keep
+            # pipes or background work alive. Always signal the created group.
+            if process_group is not None:
                 try:
-                    os.killpg(process.pid, signal.SIGKILL)
+                    os.killpg(process_group, signal.SIGKILL)
                 except ProcessLookupError:
                     pass
 
@@ -72,6 +75,7 @@ class ProcessBoundary:
                     stderr=asyncio.subprocess.PIPE,
                     start_new_session=True,
                 )
+                process_group = process.pid  # start_new_session makes PID the PGID.
                 tasks = [
                     asyncio.create_task(read(process.stdout, True)),
                     asyncio.create_task(read(process.stderr, False)),
@@ -98,10 +102,14 @@ class ProcessBoundary:
             for task in tasks:
                 if not task.done():
                     task.cancel()
-            if tasks:
-                await asyncio.gather(*tasks, return_exceptions=True)
-            if process is not None:
-                await process.wait()
+            try:
+                async with asyncio.timeout(2):
+                    if tasks:
+                        await asyncio.gather(*tasks, return_exceptions=True)
+                    if process is not None:
+                        await process.wait()
+            except TimeoutError:
+                raise AIServiceException("Codex process cleanup exceeded its deadline") from None
 
 
 class CodexSubscription:

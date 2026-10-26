@@ -333,3 +333,66 @@ async def test_unsupported_platform_fails_before_process(settings, boundary, mon
     with pytest.raises(AIServiceException, match="macOS or Linux"):
         await CodexSubscription(settings).models("owner")
     assert not boundary.calls
+
+
+@pytest.mark.skipif(not hasattr(__import__("os"), "fork"), reason="POSIX process-group contract")
+@pytest.mark.parametrize("keep_pipes", [True, False], ids=["timeout", "normal-exit"])
+async def test_exited_leader_descendant_is_terminated(monkeypatch, tmp_path, keep_pipes):
+    """Use harmless local Python, never Codex; always clean the synthetic group."""
+    import os
+    import signal
+    import sys
+
+    script = """
+import os, pathlib, sys, time
+root = pathlib.Path(sys.argv[1])
+child = os.fork()
+if child:
+    (root / 'child.pid').write_text(str(child))
+    while not (root / 'heartbeat').exists():
+        time.sleep(0.005)
+    os._exit(0)
+(root / 'heartbeat').write_text('0')
+if sys.argv[2] == 'close':
+    for fd in (0, 1, 2):
+        os.close(fd)
+for n in range(3000):
+    (root / 'heartbeat').write_text(str(n))
+    time.sleep(0.01)
+"""
+    process = None
+    original_spawn = asyncio.create_subprocess_exec
+
+    async def spawn(*args, **kwargs):
+        nonlocal process
+        process = await original_spawn(*args, **kwargs)
+        return process
+
+    monkeypatch.setattr(asyncio, "create_subprocess_exec", spawn)
+    monkeypatch.setattr(ProcessBoundary, "run", REAL_BOUNDARY_RUN)
+    try:
+        call = ProcessBoundary().run(
+            [sys.executable, "-c", script, str(tmp_path), "hold" if keep_pipes else "close"],
+            cwd=tmp_path,
+            env={},
+            timeout=0.2,
+        )
+        if keep_pipes:
+            with pytest.raises(AIServiceException, match="timed out"):
+                await call
+        else:
+            assert await call == (0, b"")
+        assert process.returncode == 0  # Leader exited before cleanup.
+        # A surviving orphan can be a zombie briefly on Linux; prove that no
+        # descendant can continue executing rather than treating zombies as live.
+        await asyncio.sleep(0.05)
+        heartbeat = (tmp_path / "heartbeat").read_text()
+        await asyncio.sleep(0.06)
+        assert (tmp_path / "heartbeat").read_text() == heartbeat
+    finally:
+        if process is not None:
+            try:
+                os.killpg(process.pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+            await asyncio.wait_for(process.wait(), timeout=2)
