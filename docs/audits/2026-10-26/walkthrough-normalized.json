@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "source": "walkthrough-log.json",
-  "record_count": 70,
+  "record_count": 77,
   "note": "Historical outcomes and source notes are preserved, not promoted into final journey passes. Record indices are zero-based.",
   "records": [
     {
@@ -1378,6 +1378,144 @@
         "status": "pass",
         "duration_ms": 34467,
         "notes": "On20c9c59 source/dependencies, author appended Mermaid Learn\u2192Practice and benign strong HTML through editor; saved, reloaded course and opened lesson. RealSVG135.56\u00d7162 rendered withbothlabels, protectedimagecomplete300px, boldtextpreserved; embeddedJSprintsHello,learner! Screenshot51. Durationincludesbrowserinspection/toolcoordination,notuninterruptedhumanbenchmark."
+      }
+    },
+    {
+      "record": 70,
+      "journey_ids": [
+        "AI-06"
+      ],
+      "scenario": "Select local subscription and inspect existing ChatGPT sign-in",
+      "observed_status": "fail",
+      "elapsed_seconds": 41.541,
+      "timing_source": "duration_ms",
+      "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
+      "later_retest_records": [],
+      "source": {
+        "journey": "AI-06",
+        "scenario": "Select local subscription and inspect existing ChatGPT sign-in",
+        "status": "fail",
+        "duration_ms": 41541,
+        "notes": "First integration checkpoint incorrectly reports ChatGPT sign-in required despite verified CLI sign-in. Provider remains saved as Anvil; no inference or debit. Investigating command compatibility. Screenshot52; interval includes diagnosis and coordination."
+      }
+    },
+    {
+      "record": 71,
+      "journey_ids": [
+        "AI-06"
+      ],
+      "scenario": "Select, live validate and persist local Codex subscription",
+      "observed_status": "pass",
+      "elapsed_seconds": 22.812,
+      "timing_source": "duration_ms",
+      "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
+      "later_retest_records": [],
+      "source": {
+        "journey": "AI-06",
+        "scenario": "Select, live validate and persist local Codex subscription",
+        "status": "pass",
+        "duration_ms": 22812,
+        "notes": "Actual Codex CLI0.162.1 with existing ChatGPT sign-in and gpt-6-luna: inference check succeeds, selection saves and reloads;65Anvil application credits unchanged. No API key entered. Retests raw70 missing-login integration failure."
+      }
+    },
+    {
+      "record": 72,
+      "journey_ids": [
+        "AI-06",
+        "COURSE-05"
+      ],
+      "scenario": "Generate course outlines through Codex subscription",
+      "observed_status": "fail",
+      "elapsed_seconds": 53.989,
+      "timing_source": "duration_ms",
+      "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
+      "later_retest_records": [],
+      "source": {
+        "journey": "AI-06 / COURSE-05",
+        "scenario": "Generate course outlines through Codex subscription",
+        "status": "fail",
+        "duration_ms": 53989,
+        "notes": "Actual gpt-6-luna request rejected after two structured-output validation attempts; server503 with no application-credit charge and no modules created. Inference connection check had passed. Root investigating with implementer; durationincludesinspection."
+      }
+    },
+    {
+      "record": 73,
+      "journey_ids": [
+        "AI-06",
+        "AUTH-02"
+      ],
+      "scenario": "Other learner cannot select the host Codex subscription",
+      "observed_status": "pass",
+      "elapsed_seconds": 15.753,
+      "timing_source": "duration_ms",
+      "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
+      "later_retest_records": [],
+      "source": {
+        "journey": "AI-06 / AUTH-02",
+        "scenario": "Other learner cannot select the host Codex subscription",
+        "status": "pass",
+        "duration_ms": 15753,
+        "notes": "Actual separate localhost origin signed into Baseline Student; Settings remains Anvil/llm.primary and Provider choices omit Codex subscription. Author on127 origin remains selected Codex. API denial independently covered by backend tests."
+      }
+    },
+    {
+      "record": 74,
+      "journey_ids": [
+        "AI-06",
+        "COURSE-05"
+      ],
+      "scenario": "Generate eight valid outlines through live Codex subscription",
+      "observed_status": "pass",
+      "elapsed_seconds": 45.316,
+      "timing_source": "duration_ms",
+      "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
+      "later_retest_records": [],
+      "source": {
+        "journey": "AI-06 / COURSE-05",
+        "scenario": "Generate eight valid outlines through live Codex subscription",
+        "status": "pass",
+        "duration_ms": 45316,
+        "notes": "Actual gpt-6-luna returned8 coherent dictionary modules, each2objectives, displayed in selection modal. Prompt explicitly states2\u20134objectives after reproduced earlier failure; validator unchanged. Zero application-credit cost shown. Screenshot54."
+      }
+    },
+    {
+      "record": 75,
+      "journey_ids": [
+        "AI-06",
+        "COURSE-05",
+        "MODULE-05"
+      ],
+      "scenario": "Generate lesson, two cards and two quiz questions; refine, save and reopen",
+      "observed_status": "pass",
+      "elapsed_seconds": 127.285,
+      "timing_source": "duration_ms",
+      "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
+      "later_retest_records": [],
+      "source": {
+        "journey": "AI-06 / COURSE-05 / MODULE-05",
+        "scenario": "Generate lesson, two cards and two quiz questions; refine, save and reopen",
+        "status": "pass",
+        "duration_ms": 127285,
+        "notes": "Actual Codex gpt-6-luna generated Create a Dictionary module4f8f1bfa-dd6b-46c9-a0da-7e9030310419 with coherent Markdown,2cards,2quizquestions/correct answer keys/explanations. Saved course and appended Author refinement through editor; saved/reloaded/navigated learner view confirms refinement and2activitycounts; quizrenders. Screenshot55. Durationincludesinspection/refinement/toolcoordination."
+      }
+    },
+    {
+      "record": 76,
+      "journey_ids": [
+        "AI-06"
+      ],
+      "scenario": "Return explicitly to Anvil and verify zero subscription debit",
+      "observed_status": "pass",
+      "elapsed_seconds": 16.885,
+      "timing_source": "duration_ms",
+      "timing_interpretation": "Tool-assisted subflow wall time; not whole-journey or human benchmark",
+      "later_retest_records": [],
+      "source": {
+        "journey": "AI-06",
+        "scenario": "Return explicitly to Anvil and verify zero subscription debit",
+        "status": "pass",
+        "duration_ms": 16885,
+        "notes": "After live subscription validation/outlines/module and failed outline, Settingsstill65credits. Explicitly selectAnvil/llm.primary,save,reload verified; Codex remains an availableoptionalchoice. GlobalCodexauthunchanged."
       }
     }
   ]
