@@ -88,7 +88,7 @@ it('manual path removal prepares a free proposal and never deletes a source', as
 
 it('returns focus to the saved manual proposal after another review used a different trigger', async () => {
   const state = installWorkspaceBuildApi();
-  vi.spyOn(workspacesApi, 'changes').mockResolvedValue([{ ...state.change, origin_job_id: null }]);
+  vi.spyOn(workspacesApi, 'discoverChanges').mockResolvedValue({ items: [{ ...state.change, origin_job_id: null }], unavailable_count: 0 });
   renderJourney(
     <RevisionPanel workspace={state.workspace} jobs={[{ ...jobFixture(), kind: 'revision' }]}
       preferences={preferences} onChanged={async () => {}} />,

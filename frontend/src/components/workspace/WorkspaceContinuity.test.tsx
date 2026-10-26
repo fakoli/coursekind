@@ -83,11 +83,11 @@ it('refetches fresh index-based rating and filter data after replacement and res
   state.change.patches[0].fields = { flashcards: [{ id: 'replacement-card', front: 'New', back: 'New answer' }] };
   vi.spyOn(workspacesApi, 'applyChange').mockImplementation(async () => { originalCard = false; return { ...state.change, status: 'applied' }; });
   vi.spyOn(workspacesApi, 'restore').mockImplementation(async () => { originalCard = true; return state.change; });
-  vi.spyOn(workspacesApi, 'history').mockResolvedValue([{
+  vi.spyOn(workspacesApi, 'discoverHistory').mockResolvedValue({ unavailable_count: 0, items: [{
     id: 'r1', change_id: state.change.id, before: [], after: [], touched_fields: [['flashcards']],
     fingerprint: 'after', current_fingerprint: 'after', parent_revision_id: null,
     restorable: true, kind: 'editorial', created_at: '2026-10-26T12:00:00Z',
-  } as WorkspaceRevision]);
+  } as WorkspaceRevision] });
   const client = renderJourney(<Harness action="content" />, '/', '/');
   await screen.findByText('Easy cards: 1');
   expect(screen.getByText('Card at index 0: easy')).toBeInTheDocument();

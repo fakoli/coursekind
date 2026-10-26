@@ -14,6 +14,7 @@ from models.workspace_change import (
     Revision,
     RevisionRequest,
 )
+from models.workspace_discovery import WorkspaceDiscovery
 from models.workspace_job import BuildRequest, MutationRequest, RetryRequest, WorkspaceJob
 from models.workspace_plan import ApplyPlanRequest, PlanProposal, PlanRequest, PlanUpdateRequest
 from models.workspace_review import MaterialReview, MaterialReviewRequest, ReviewSources
@@ -77,10 +78,18 @@ async def plan_workspace(
     return await WorkspaceJobService(storage, settings).start(user.id, workspace_id, "plan", data)
 
 
-@router.get("/{workspace_id}/plans", response_model=list[PlanProposal])
+@router.get(
+    "/{workspace_id}/plans", response_model=list[PlanProposal] | WorkspaceDiscovery[PlanProposal]
+)
 async def list_plans(
-    workspace_id: str, user: CurrentUser, storage: StorageDep, settings: SettingsDep
+    workspace_id: str,
+    user: CurrentUser,
+    storage: StorageDep,
+    settings: SettingsDep,
+    partial: bool = False,
 ):
+    if partial:
+        return await WorkspacePlanService(storage, settings).discover(user.id, workspace_id)
     return await WorkspacePlanService(storage, settings).list(user.id, workspace_id)
 
 
@@ -137,10 +146,18 @@ async def build_workspace(
     return await WorkspaceJobService(storage, settings).start(user.id, workspace_id, "build", data)
 
 
-@router.get("/{workspace_id}/jobs", response_model=list[WorkspaceJob])
+@router.get(
+    "/{workspace_id}/jobs", response_model=list[WorkspaceJob] | WorkspaceDiscovery[WorkspaceJob]
+)
 async def list_jobs(
-    workspace_id: str, user: CurrentUser, storage: StorageDep, settings: SettingsDep
+    workspace_id: str,
+    user: CurrentUser,
+    storage: StorageDep,
+    settings: SettingsDep,
+    partial: bool = False,
 ):
+    if partial:
+        return await WorkspaceJobService(storage, settings).discover(user.id, workspace_id)
     return await WorkspaceJobService(storage, settings).list(user.id, workspace_id)
 
 
@@ -227,8 +244,12 @@ async def manual_change(
     return await WorkspaceChangeService(storage).manual(user.id, workspace_id, data)
 
 
-@router.get("/{workspace_id}/history", response_model=list[Revision])
-async def workspace_history(workspace_id: str, user: CurrentUser, storage: StorageDep):
+@router.get("/{workspace_id}/history", response_model=list[Revision] | WorkspaceDiscovery[Revision])
+async def workspace_history(
+    workspace_id: str, user: CurrentUser, storage: StorageDep, partial: bool = False
+):
+    if partial:
+        return await WorkspaceChangeService(storage).discover_history(user.id, workspace_id)
     return await WorkspaceChangeService(storage).history(user.id, workspace_id)
 
 
@@ -257,8 +278,14 @@ async def workspace_snapshots(workspace_id: str, user: CurrentUser, storage: Sto
     return [await ctx.snapshot(user.id, target, editable=False) for target in targets]
 
 
-@router.get("/{workspace_id}/changes", response_model=list[ChangeSet])
-async def list_changes(workspace_id: str, user: CurrentUser, storage: StorageDep):
+@router.get(
+    "/{workspace_id}/changes", response_model=list[ChangeSet] | WorkspaceDiscovery[ChangeSet]
+)
+async def list_changes(
+    workspace_id: str, user: CurrentUser, storage: StorageDep, partial: bool = False
+):
+    if partial:
+        return await WorkspaceChangeService(storage).discover_changes(user.id, workspace_id)
     return await WorkspaceChangeService(storage).list_changes(user.id, workspace_id)
 
 

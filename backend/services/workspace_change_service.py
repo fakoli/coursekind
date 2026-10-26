@@ -16,11 +16,13 @@ from models.workspace_change import (
     RestoreRequest,
     Revision,
 )
+from models.workspace_discovery import WorkspaceDiscovery
 from models.workspace_job import MutationRequest
 from services.course_service import CourseService
 from services.learning_path_service import LearningPathService
 from services.module_service import ModuleService
 from services.workspace_context import WorkspaceContext, fingerprint
+from services.workspace_discovery import discover_records
 from services.workspace_requests import WorkspaceRequests
 
 CONFLICT = (
@@ -162,6 +164,15 @@ class WorkspaceChangeService:
                     user_id, workspace_id, request.patches, request_id=request.request_id
                 ),
             )
+
+    async def discover_changes(self, user_id, workspace_id) -> WorkspaceDiscovery[ChangeSet]:
+        return await discover_records(
+            self.ctx,
+            user_id,
+            workspace_id,
+            "workspace_changes",
+            lambda record_id: self.get(user_id, workspace_id, record_id),
+        )
 
     async def list_changes(self, user_id, workspace_id) -> list[ChangeSet]:
         await self.ctx.workspace(user_id, workspace_id)
@@ -310,6 +321,26 @@ class WorkspaceChangeService:
             revision.fingerprint = revision_fingerprint(revision.after, revision.touched_fields)
         return revision
 
+    async def _history_entry(self, user_id, workspace_id, revision_id):
+        revision = await self._revision(user_id, workspace_id, revision_id)
+        if revision.kind == "editorial" and revision.touched_fields:
+            current = [
+                await self.ctx.snapshot(user_id, s.target, editable=False) for s in revision.after
+            ]
+            revision.current_snapshots = current
+            revision.current_fingerprint = revision_fingerprint(current, revision.touched_fields)
+            revision.restorable = True
+        return revision
+
+    async def discover_history(self, user_id, workspace_id) -> WorkspaceDiscovery[Revision]:
+        return await discover_records(
+            self.ctx,
+            user_id,
+            workspace_id,
+            "workspace_revisions",
+            lambda record_id: self._history_entry(user_id, workspace_id, record_id),
+        )
+
     async def history(self, user_id, workspace_id) -> list[Revision]:
         await self.ctx.workspace(user_id, workspace_id)
         docs = await self.storage.list(
@@ -317,17 +348,7 @@ class WorkspaceChangeService:
         )
         result = []
         for doc in sorted(docs, key=lambda d: d["created_at"], reverse=True):
-            revision = await self._revision(user_id, workspace_id, doc["id"])
-            if revision.kind == "editorial" and revision.touched_fields:
-                current = [
-                    await self.ctx.snapshot(user_id, s.target, editable=False)
-                    for s in revision.after
-                ]
-                revision.current_snapshots = current
-                revision.current_fingerprint = revision_fingerprint(
-                    current, revision.touched_fields
-                )
-                revision.restorable = True
+            revision = await self._history_entry(user_id, workspace_id, doc["id"])
             result.append(revision)
         return result
 

@@ -111,7 +111,9 @@ export function installWorkspaceBuildApi() {
     const path = new URL(input, 'http://localhost').pathname.replace('/api/v1', '');
     const method = init?.method || 'GET';
     const body = init?.body ? JSON.parse(String(init.body)) : {};
-    const reply = (data: unknown, status = 200) => new Response(JSON.stringify(data), { status });
+    const reply = (data: unknown, status = 200) => new Response(JSON.stringify(
+      input.includes('partial=true') && Array.isArray(data) ? { items: data, unavailable_count: 0 } : data,
+    ), { status });
     if (!path.startsWith('/workspaces')) return fallback(input, init);
     if (method !== 'GET') {
       state.writes.push({ path, body });

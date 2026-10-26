@@ -18,7 +18,7 @@ export function WorkspaceHistory({
   const { user } = useAuthContext();
   const history = useQuery({
     queryKey: ['workspace-history', user?.id, workspaceId],
-    queryFn: () => workspacesApi.history(workspaceId),
+    queryFn: () => workspacesApi.discoverHistory(workspaceId),
   });
   return (
     <section
@@ -34,10 +34,13 @@ export function WorkspaceHistory({
       {history.error && (
         <p role="alert">History unavailable. Current source access may have changed.</p>
       )}
-      {!history.error && history.data?.length === 0 && (
+      {!!history.data?.unavailable_count && (
+        <p role="status">{history.data.unavailable_count} earlier history entry/entries unavailable because source access changed.</p>
+      )}
+      {!history.error && history.data?.items.length === 0 && !history.data.unavailable_count && (
         <p>No recorded changes yet. Earlier manual edits are not reconstructed.</p>
       )}
-      {!history.error && history.data?.map((revision) => (
+      {!history.error && history.data?.items.map((revision) => (
         <HistoryEntry
           key={revision.id}
           revision={revision}

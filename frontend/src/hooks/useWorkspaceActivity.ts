@@ -9,18 +9,20 @@ import { modulesApi } from '../api/modules';
 export function useWorkspaceActivity(id: string) {
   const { user } = useAuthContext();
   const client = useQueryClient();
-  const jobs = useQuery({
+  const jobDiscovery = useQuery({
     queryKey: ['workspace-jobs', user?.id, id],
-    queryFn: () => workspacesApi.jobs(id),
+    queryFn: () => workspacesApi.discoverJobs(id),
     enabled: !!user,
     refetchInterval: (query) =>
-      query.state.data?.some((j) => ['queued', 'running'].includes(j.state)) ? 2000 : false,
+      query.state.data?.items.some((j) => ['queued', 'running'].includes(j.state)) ? 2000 : false,
   });
-  const plans = useQuery({
+  const planDiscovery = useQuery({
     queryKey: ['workspace-plans', user?.id, id],
-    queryFn: () => workspacesApi.plans(id),
+    queryFn: () => workspacesApi.discoverPlans(id),
     enabled: !!user,
   });
+  const jobs = { ...jobDiscovery, data: jobDiscovery.data?.items };
+  const plans = { ...planDiscovery, data: planDiscovery.data?.items };
   const outputs = jobs.data
     ?.flatMap((j) => j.steps.map((s) => s.output_ref))
     .filter(Boolean)
@@ -59,7 +61,11 @@ export function useWorkspaceActivity(id: string) {
       ].map((key) => client.invalidateQueries({ queryKey: [key] })),
     );
   };
-  return { jobs, plans, refresh };
+  return {
+    jobs, plans, refresh,
+    unavailableJobs: jobDiscovery.data?.unavailable_count || 0,
+    unavailablePlans: planDiscovery.data?.unavailable_count || 0,
+  };
 }
 
 export function useWorkspaceModules(workspace: Workspace) {

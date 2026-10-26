@@ -39,7 +39,9 @@ export function installWorkspaceApi(initial = true) {
     if (!url.pathname.includes('/workspaces')) return baseline(input, init);
     const body = init?.body ? JSON.parse(String(init.body)) : {};
     const method = init?.method || 'GET';
-    const reply = (data: unknown, status = 200) => new Response(JSON.stringify(data), { status });
+    const reply = (data: unknown, status = 200) => new Response(JSON.stringify(
+      input.includes('partial=true') && Array.isArray(data) ? { items: data, unavailable_count: 0 } : data,
+    ), { status });
     if (method === 'GET' && /\/(jobs|plans|history|snapshots|changes)$/.test(url.pathname)) return reply([]);
     if (method === 'POST') {
       const existing = state.workspaces.find(

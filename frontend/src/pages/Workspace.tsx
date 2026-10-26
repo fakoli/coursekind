@@ -126,6 +126,14 @@ function WorkspaceDetail({ workspace }: { workspace: WorkspaceData }) {
           </>
         )}
       </p>
+      {(activity.unavailableJobs > 0 || activity.unavailablePlans > 0) && (
+        <p role="status">
+          {activity.unavailableJobs} earlier job(s) and {activity.unavailablePlans} earlier plan(s)
+          {' '}are unavailable because source access changed. Counts and controls above cover only
+          visible jobs. Current authorized drafts remain available below; restore source access
+          to review unavailable history.
+        </p>
+      )}
       {!workspace.archived && (
         <a
           className="inline-block rounded bg-indigo-700 text-white px-4 py-2"

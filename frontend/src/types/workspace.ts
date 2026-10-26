@@ -239,3 +239,8 @@ export interface ReviewSources {
   configured: boolean;
   sources: ReviewSource[];
 }
+
+export interface WorkspaceDiscovery<T> {
+  items: T[];
+  unavailable_count: number;
+}

@@ -1,6 +1,7 @@
 import { api } from './client';
 import type {
   Workspace,
+  WorkspaceDiscovery,
   WorkspaceCreate,
   WorkspaceUpdate,
   WorkspaceJob,
@@ -18,6 +19,10 @@ import type {
 } from '../types/workspace';
 
 export const workspacesApi = {
+  discoverJobs: (id: string) => api.get<WorkspaceDiscovery<WorkspaceJob>>(`/workspaces/${id}/jobs?partial=true`),
+  discoverPlans: (id: string) => api.get<WorkspaceDiscovery<PlanProposal>>(`/workspaces/${id}/plans?partial=true`),
+  discoverChanges: (id: string) => api.get<WorkspaceDiscovery<ChangeSet>>(`/workspaces/${id}/changes?partial=true`),
+  discoverHistory: (id: string) => api.get<WorkspaceDiscovery<WorkspaceRevision>>(`/workspaces/${id}/history?partial=true`),
   reviewSources: (id: string, changeId?: string) =>
     api.get<ReviewSources>(
       `/workspaces/${id}/review-sources${changeId ? `?change_id=${encodeURIComponent(changeId)}` : ''}`,

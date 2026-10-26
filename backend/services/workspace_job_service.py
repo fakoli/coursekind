@@ -10,11 +10,13 @@ from pydantic import BaseModel
 
 from exceptions import ConflictException, NotFoundException
 from models.workspace_change import ResourceTarget, RevisionRequest
+from models.workspace_discovery import WorkspaceDiscovery
 from models.workspace_job import BuildRequest, JobStep, MutationRequest, RetryRequest, WorkspaceJob
 from models.workspace_plan import PlanRequest
 from services.ai_preferences_service import AIPreferencesService
 from services.ai_provider import ProviderSnapshot
 from services.workspace_context import WorkspaceContext
+from services.workspace_discovery import discover_records
 from services.workspace_plan_service import WorkspacePlanService
 from services.workspace_requests import WorkspaceRequests
 from services.workspace_revision_generator import COSTS
@@ -62,6 +64,15 @@ class WorkspaceJobService:
             await self.ctx.check(user_id, step.source_snapshots)
             steps.append(step)
         return WorkspaceJob.model_validate({**doc, "steps": steps})
+
+    async def discover(self, user_id, workspace_id) -> WorkspaceDiscovery[WorkspaceJob]:
+        return await discover_records(
+            self.ctx,
+            user_id,
+            workspace_id,
+            "workspace_jobs",
+            lambda record_id: self.get(user_id, workspace_id, record_id),
+        )
 
     async def list(self, user_id: str, workspace_id: str) -> list[WorkspaceJob]:
         await self.ctx.workspace(user_id, workspace_id)

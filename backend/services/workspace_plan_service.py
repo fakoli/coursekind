@@ -11,6 +11,7 @@ from models.course import CourseCreate
 from models.learning_path import LearningPathCreate
 from models.module import ModuleCreate
 from models.workspace_change import ResourceSnapshot, ResourceTarget, Revision
+from models.workspace_discovery import WorkspaceDiscovery
 from models.workspace_plan import (
     ApplyPlanRequest,
     PlanProposal,
@@ -23,6 +24,7 @@ from services.course_service import CourseService
 from services.learning_path_service import LearningPathService
 from services.module_service import ModuleService
 from services.workspace_context import WorkspaceContext
+from services.workspace_discovery import discover_records
 from services.workspace_requests import WorkspaceRequests
 
 
@@ -138,6 +140,15 @@ class WorkspacePlanService:
             if c.kind == "reuse":
                 await self.ctx.access.require_course(c.course_id, user_id)
         return p
+
+    async def discover(self, user_id, workspace_id) -> WorkspaceDiscovery[PlanProposal]:
+        return await discover_records(
+            self.ctx,
+            user_id,
+            workspace_id,
+            "workspace_plans",
+            lambda record_id: self.get(user_id, workspace_id, record_id),
+        )
 
     async def list(self, user_id: str, workspace_id: str) -> list[PlanProposal]:
         await self.ctx.workspace(user_id, workspace_id)

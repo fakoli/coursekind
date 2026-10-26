@@ -34,7 +34,7 @@ function fixture(): WorkspaceRevision {
 }
 it('records creation without destructive restore and reloads editorial history', async () => {
   const state = installWorkspaceBuildApi();
-  vi.spyOn(workspacesApi, 'history').mockResolvedValue([
+  vi.spyOn(workspacesApi, 'discoverHistory').mockResolvedValue({ unavailable_count: 0, items: [
     {
       ...fixture(),
       id: 'created',
@@ -43,7 +43,7 @@ it('records creation without destructive restore and reloads editorial history',
       restorable: false,
     },
     fixture(),
-  ]);
+  ] });
   const restore = vi.spyOn(workspacesApi, 'restore').mockResolvedValue(state.change);
   renderJourney(
     <WorkspaceHistory workspaceId="w1" onChanged={async () => {}} />,
@@ -62,7 +62,7 @@ it('records creation without destructive restore and reloads editorial history',
 });
 it('keeps history on conflict and uses the captured fingerprint on retry', async () => {
   installWorkspaceBuildApi();
-  vi.spyOn(workspacesApi, 'history').mockResolvedValue([fixture()]);
+  vi.spyOn(workspacesApi, 'discoverHistory').mockResolvedValue({ unavailable_count: 0, items: [fixture()] });
   const restore = vi
     .spyOn(workspacesApi, 'restore')
     .mockRejectedValue(new Error('Content changed'));
@@ -90,7 +90,7 @@ it.each([
   revision.before[0].fields = { flashcards: [{ ...card, visual: 'visuals/original-card.png' }] };
   revision.after[0].fields = { flashcards: [{ ...card, visual }] };
   revision.touched_fields = [['flashcards']];
-  vi.spyOn(workspacesApi, 'history').mockResolvedValue([revision]);
+  vi.spyOn(workspacesApi, 'discoverHistory').mockResolvedValue({ unavailable_count: 0, items: [revision] });
   renderJourney(
     <WorkspaceHistory workspaceId="w1" onChanged={async () => {}} />,
     '/workspaces/w1',

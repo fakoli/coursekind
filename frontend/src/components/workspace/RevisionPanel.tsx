@@ -47,7 +47,7 @@ export function RevisionPanel({
   });
   const manualDrafts = useQuery({
     queryKey: ['workspace-changes', user?.id, workspace.id],
-    queryFn: () => workspacesApi.changes(workspace.id),
+    queryFn: () => workspacesApi.discoverChanges(workspace.id),
   });
   const [scope, setScope] = useState<RevisionScope>('lesson');
   const [targetId, setTargetId] = useState('');
@@ -262,7 +262,10 @@ export function RevisionPanel({
         />
       )}
       {manualDrafts.error && <p role="alert">Saved manual drafts unavailable. Historical source access may have changed.</p>}
-      {(manualDrafts.error ? [] : manualDrafts.data || [])
+      {!!manualDrafts.data?.unavailable_count && (
+        <p role="status">{manualDrafts.data.unavailable_count} earlier draft(s) unavailable because source access changed.</p>
+      )}
+      {(manualDrafts.error ? [] : manualDrafts.data?.items || [])
         .filter((change) => !change.origin_job_id && change.status === 'ready')
         .map((change) => (
           <Button key={change.id} variant="secondary" onClick={() => openReview(change.id)}>

@@ -285,7 +285,7 @@ it('offers baseline path repair and recovers current work while historical jobs 
   let currentUnavailable = true;
   const original = fetch;
   vi.stubGlobal('fetch', (input: string, init?: RequestInit) => {
-    if (input.endsWith('/jobs') || input.endsWith('/plans') || (currentUnavailable && input.endsWith('/snapshots'))) {
+    if (input.includes('/jobs?') || input.includes('/plans?') || (currentUnavailable && input.endsWith('/snapshots'))) {
       return Promise.resolve(new Response(JSON.stringify({ detail: 'Source unavailable' }), { status: 404 }));
     }
     return original(input, init);
