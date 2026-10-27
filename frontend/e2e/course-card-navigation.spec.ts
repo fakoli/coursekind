@@ -1,0 +1,97 @@
+import { test, expect, login } from './fixtures';
+import type { Locator, Page } from '@playwright/test';
+
+test.use({ hasTouch: true, viewport: { width: 390, height: 844 } });
+
+test('SUPPORT-03 — mobile browsing leads directly into study with reachable activities', async ({ page, world }) => {
+  await login(page, world.author);
+  await page.goto('/courses');
+  const create = page.getByRole('button', { name: 'Create Course', exact: true });
+  expect((await create.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+  await page.getByRole('link', { name: world.course.title, exact: true }).tap();
+  await page.getByRole('link', { name: 'Start learning', exact: true }).tap();
+  await expect(page).toHaveURL(`/courses/${world.course.id}/modules/${world.lessons[0].id}`);
+  const activities = page.getByRole('navigation', { name: 'Module study activities' });
+  for (const button of await activities.getByRole('button').all()) {
+    const bounds = await button.boundingBox();
+    expect(bounds!.height).toBeGreaterThanOrEqual(44);
+    expect(bounds!.x).toBeGreaterThanOrEqual(0);
+    expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(390);
+    await button.tap();
+    await expect(button).toHaveAttribute('aria-pressed', 'true');
+  }
+  await page.goto(`/paths/${world.path.id}`);
+  const move = page.getByRole('button', { name: `Move ${world.otherCourse.title} up`, exact: true });
+  await move.tap();
+  await expect(move).toBeDisabled();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBeTruthy();
+});
+
+test('SHARE-06 — mobile course and path sharing opens on demand and keeps drafts', async ({ page, world }) => {
+  await login(page, world.author);
+  for (const route of [`/courses/${world.course.id}`, `/paths/${world.path.id}`]) {
+    await page.goto(route);
+    const toggle = page.getByRole('button', { name: 'Sharing', exact: true });
+    const recipient = page.getByLabel('Recipient email');
+    await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    await expect(recipient).toBeHidden();
+    await toggle.tap();
+    await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    await recipient.fill('unsaved@example.test');
+    for (const field of [recipient, page.getByLabel('Share link'), page.getByLabel('Visibility')]) {
+      const box = await field.boundingBox();
+      expect(box).not.toBeNull();
+      expect(box!.x).toBeGreaterThanOrEqual(0);
+      expect(box!.x + box!.width).toBeLessThanOrEqual(390);
+    }
+    await toggle.tap();
+    await expect(recipient).toBeHidden();
+    await toggle.tap();
+    await expect(recipient).toHaveValue('unsaved@example.test');
+    await page.reload();
+    await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+  }
+});
+
+// Use physical touch coordinates: clicking only the title link misses dead card areas.
+async function tapSurface(page: Page, target: Locator, padding = false) {
+  await target.scrollIntoViewIfNeeded();
+  const box = await target.boundingBox();
+  expect(box).not.toBeNull();
+  await page.touchscreen.tap(box!.x + (padding ? 8 : box!.width / 2),
+    box!.y + (padding ? box!.height - 8 : box!.height / 2));
+}
+
+test('COURSE-06 — touch opens the whole course card and preserves separate actions', async ({ page, world }) => {
+  await login(page, world.author);
+  for (const surface of ['title', 'image', 'description', 'padding']) {
+    await page.goto('/courses');
+    const card = page.getByRole('article', { name: world.course.title, exact: true });
+    await expect(card).toBeVisible();
+    const target = surface === 'title' ? card.getByRole('heading')
+      : surface === 'image' ? card.locator('img')
+      : surface === 'description' ? card.getByText('Synthetic acceptance course', { exact: true })
+      : card;
+    await tapSurface(page, target, surface === 'padding');
+    await expect(page).toHaveURL(`/courses/${world.course.id}`);
+    await expect(page.getByRole('heading', { name: world.course.title, exact: true })).toBeVisible();
+    await page.goBack();
+    await expect(page).toHaveURL('/courses');
+  }
+
+  await page.goto('/courses?tab=discover');
+  const searched = page.waitForResponse(response => {
+    const url = new URL(response.url());
+    return url.pathname.endsWith('/courses/discover') && url.searchParams.get('q') === world.otherCourse.title;
+  });
+  await page.getByLabel('Search courses').fill(world.otherCourse.title);
+  expect((await searched).ok()).toBeTruthy();
+  const publicCard = page.getByRole('article', { name: world.otherCourse.title, exact: true });
+  await tapSurface(page, publicCard.getByRole('button', { name: 'Add to Path' }));
+  await expect(page.getByRole('dialog', { name: 'Add to Learning Path' })).toBeVisible();
+  await expect(page).toHaveURL('/courses?tab=discover');
+  await page.getByRole('button', { name: 'Close modal' }).click();
+  await tapSurface(page, publicCard.getByText('A second author', { exact: true }));
+  await expect(page).toHaveURL(`/courses/${world.otherCourse.id}`);
+  await expect(page.getByRole('heading', { name: world.otherCourse.title, exact: true })).toBeVisible();
+});

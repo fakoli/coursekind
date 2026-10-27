@@ -69,7 +69,7 @@ export function CourseInfoStep({
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Difficulty
           </label>
-          <select
+          <select aria-label="Difficulty"
             value={difficulty}
             onChange={(e) => onDifficultyChange(e.target.value as CourseDifficulty)}
             className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -90,8 +90,9 @@ export function CourseInfoStep({
               value={tagInput}
               onChange={(e) => onTagInputChange(e.target.value)}
               onKeyDown={handleTagKeyDown}
+              aria-label="Tags"
               placeholder="Add tag..."
-              className="flex-1 rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="min-w-0 flex-1 rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
             <Button type="button" variant="secondary" onClick={onAddTag}>
               Add
@@ -119,10 +120,10 @@ export function CourseInfoStep({
       </div>
 
       {/* Course Type Selection */}
-      <div className="border rounded-lg p-4 space-y-4">
+      <div className="border border-gray-200 rounded-xl p-4 space-y-4">
         <p className="font-medium text-gray-900">Course Type</p>
         <div className="space-y-3">
-          <label className="flex items-start gap-3 p-3 rounded-lg border cursor-pointer hover:bg-gray-50 transition-colors">
+          <label className="flex items-start gap-3 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors">
             <input
               type="radio"
               name="courseType"
@@ -137,7 +138,7 @@ export function CourseInfoStep({
               </p>
             </div>
           </label>
-          <label className="flex items-start gap-3 p-3 rounded-lg border cursor-pointer hover:bg-gray-50 transition-colors">
+          <label className="flex items-start gap-3 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors">
             <input
               type="radio"
               name="courseType"

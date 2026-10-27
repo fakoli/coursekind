@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import { CourseImage } from '../common/CourseImage';
 import { Link } from 'react-router-dom';
 import { Users, Sparkles, MoreVertical, Plus } from 'lucide-react';
@@ -25,10 +26,16 @@ const defaultThumbnails: Record<CourseDifficulty, string> = {
 
 export function CourseCard({ course, onOptions, onAddToPath, showAuthor = true }: CourseCardProps) {
   const colors = difficultyColors[course.difficulty];
+  const titleId = useId();
 
   return (
     <div className="group min-w-0">
-      <Card className="card-interactive h-full hover:shadow-md transition-shadow">
+      <Card role="article" aria-labelledby={titleId} className="relative isolate card-interactive h-full hover:shadow-md transition-shadow">
+        <Link
+          to={`/courses/${course.id}`}
+          aria-labelledby={titleId}
+          className="absolute inset-0 z-10 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
+        />
         <CardContent className="flex flex-col h-full">
           <div className="flex items-start justify-between">
             <div className="flex min-w-0 items-center gap-3">
@@ -38,9 +45,9 @@ export function CourseCard({ course, onOptions, onAddToPath, showAuthor = true }
                 className="w-10 h-10 shrink-0 rounded-lg object-cover"
               />
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <h3 className="text-lg font-semibold text-gray-900 truncate group-hover:text-indigo-600 transition-colors">
-                    <Link to={`/courses/${course.id}`} className="focus:underline">{course.title}</Link>
+                <div className="flex items-start gap-2">
+                  <h3 id={titleId} className="text-lg leading-snug font-semibold text-gray-900 break-words group-hover:text-indigo-600 transition-colors">
+                    {course.title}
                   </h3>
                   {course.ai_enabled && (
                     <span title="AI-Assisted Course">
@@ -55,7 +62,7 @@ export function CourseCard({ course, onOptions, onAddToPath, showAuthor = true }
             </div>
             {onOptions && (
               <button
-                className="p-1.5 hover:bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors"
+                className="relative z-20 p-1.5 hover:bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors"
                 aria-label="Course options"
                 onClick={(e) => {
                   e.preventDefault();
@@ -68,7 +75,7 @@ export function CourseCard({ course, onOptions, onAddToPath, showAuthor = true }
           </div>
 
           {course.description && (
-            <p className="mt-2 text-sm text-gray-600 line-clamp-2">
+            <p className="mt-3 text-sm leading-relaxed text-gray-600 line-clamp-2">
               {course.description}
             </p>
           )}
@@ -93,7 +100,7 @@ export function CourseCard({ course, onOptions, onAddToPath, showAuthor = true }
               {(
                 <div className="flex min-w-0 items-start gap-1">
                   <Users className="w-4 h-4 shrink-0" aria-hidden="true" />
-                  <span>{course.times_added} path references · {course.own_path_count ?? 0} by author · {course.other_path_count ?? 0} by others</span>
+                  <span title={`${course.own_path_count ?? 0} by author · ${course.other_path_count ?? 0} by others`}>{course.times_added} {course.times_added === 1 ? 'path' : 'paths'}</span>
                 </div>
               )}
             </div>
@@ -108,7 +115,7 @@ export function CourseCard({ course, onOptions, onAddToPath, showAuthor = true }
                 e.preventDefault();
                 onAddToPath();
               }}
-              className="mt-3 w-full py-2.5 px-3 text-sm font-medium text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 flex items-center justify-center gap-1.5"
+              className="relative z-20 mt-3 w-full py-2.5 px-3 text-sm font-medium text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 flex items-center justify-center gap-1.5"
             >
               <Plus className="w-4 h-4" />
               Add to Path

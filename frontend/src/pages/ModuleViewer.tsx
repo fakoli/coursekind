@@ -410,7 +410,7 @@ function StudyModule() {
       {personal?.quiz_history?.length ? <details><summary>Quiz history</summary><ul>{personal.quiz_history.map((attempt, i) => <li key={i}>{new Date(attempt.created_at).toLocaleString()}: {attempt.score}%</li>)}</ul></details> : null}
       {/* Tabs */}
       <div className="border-b border-gray-200">
-        <nav aria-label="Module study activities" className="-mb-px flex flex-wrap gap-x-4 sm:gap-x-8">
+        <nav aria-label="Module study activities" className="collection-tabs activity-tabs">
           {module.content_markdown.trim() && <button
             aria-pressed={activeTab === 'content'}
             onClick={() => setActiveTab('content')}
@@ -571,7 +571,7 @@ function StudyModule() {
                 </Button>
               </div>
 
-              <p className="text-sm text-gray-500">Click or press Enter/Space to flip · Reviewed {module.flashcards.filter(c => c.id && personal?.reviewed_card_ids?.includes(c.id)).length} of {module.flashcards.length} cards</p>
+              <p className="text-sm text-gray-500">Tap or press Enter/Space to flip · Reviewed {module.flashcards.filter(c => c.id && personal?.reviewed_card_ids?.includes(c.id)).length} of {module.flashcards.length} cards</p>
             </>
           )}
         </div>
@@ -590,7 +590,7 @@ function StudyModule() {
                   <p className="text-gray-600 mt-1">
                     {calculateQuizScore() >= 70 ? 'Great job!' : 'Keep practicing!'}
                   </p>
-                  <div className="flex justify-center gap-3 mt-4">
+                  <div className="flex flex-wrap justify-center gap-3 mt-4">
                     <Button
                       variant="secondary"
                       onClick={() => {

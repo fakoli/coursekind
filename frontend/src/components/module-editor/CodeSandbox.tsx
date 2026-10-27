@@ -79,16 +79,16 @@ export function CodeSandbox({
       {/* Code Editor Section */}
       <div className="border border-gray-300 rounded-lg overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between bg-gray-100 px-4 py-2 border-b border-gray-300">
+        <div className="flex flex-wrap items-center justify-between gap-2 bg-gray-100 px-3 py-2 border-b border-gray-300">
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-gray-700">{languageLabel}</span>
-            <span className="text-xs text-gray-500">Code Editor</span>
+            <span className="hidden text-xs text-gray-500 sm:inline">Code Editor</span>
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={handleReset}
               disabled={isRunning}
-              className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors"
+              className="flex min-h-11 shrink-0 items-center gap-1 whitespace-nowrap px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded transition-colors"
               title="Reset to starter code"
             >
               <RotateCcw className="w-3 h-3" />
@@ -97,7 +97,7 @@ export function CodeSandbox({
             <button
               onClick={handleRun}
               disabled={isRunning}
-              className="flex items-center gap-1 px-3 py-1 text-xs font-medium text-white bg-green-600 hover:bg-green-700 disabled:bg-gray-400 rounded transition-colors"
+              className="flex min-h-11 shrink-0 items-center gap-1 whitespace-nowrap px-3 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 disabled:bg-gray-400 rounded transition-colors"
             >
               {isRunning ? (
                 <Loader2 className="w-3 h-3 animate-spin" />

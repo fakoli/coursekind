@@ -1,4 +1,4 @@
-import { test, expect, login, api, share, visibility, readLesson, type Path } from './fixtures';
+import { openSharing, test, expect, login, api, share, visibility, readLesson, type Path } from './fixtures';
 
 async function addCourse(page: import('@playwright/test').Page, title: string) {
   await page.getByRole('button', { name: 'Add Course', exact: true }).click();
@@ -134,7 +134,7 @@ test('SHARE-01 — publish, discover and study, unlist then restore private acce
   await login(page, world.outsider);
   await page.goto('/courses?tab=discover');
   await page.getByLabel('Search courses').fill(world.course.title);
-  await page.getByRole('heading', { name: world.course.title }).click();
+  await page.getByRole('link', { name: world.course.title, exact: true }).click();
   await readLesson(page, world.course, world.lessons[0]);
   await login(page, world.author);
   await page.goto(`/courses/${world.course.id}`);
@@ -157,6 +157,7 @@ test('SHARE-02 — grant a named learner, deny outsider, revoke and deny bookmar
   await page.goto(`/courses/${world.course.id}`);
   await share(page, world.learner.email);
   await page.reload();
+  await openSharing(page);
   await expect(page.getByRole('button', { name: `Revoke access for ${world.learner.email}` })).toBeVisible();
   await login(page, world.learner);
   await readLesson(page, world.course, world.lessons[0]);
@@ -165,6 +166,7 @@ test('SHARE-02 — grant a named learner, deny outsider, revoke and deny bookmar
   await expect(page.getByText('Course not found')).toBeVisible();
   await login(page, world.author);
   await page.goto(`/courses/${world.course.id}`);
+  await openSharing(page);
   await page.getByRole('button', { name: `Revoke access for ${world.learner.email}` }).click();
   await expect(page.getByRole('button', { name: `Revoke access for ${world.learner.email}` })).toHaveCount(0);
   await login(page, world.learner);
@@ -188,6 +190,7 @@ test('SHARE-03 — share a path without implicitly granting its private course',
   await expect(page.getByText('Learning path not found')).toBeVisible();
   await login(page, world.author);
   await page.goto(`/paths/${world.path.id}`);
+  await openSharing(page);
   await page.getByRole('button', { name: `Revoke access for ${world.learner.email}` }).click();
   await expect(page.getByRole('button', { name: `Revoke access for ${world.learner.email}` })).toHaveCount(0);
   await login(page, world.learner);
@@ -229,7 +232,9 @@ test('SHARE-05 — reuse counters reflect distinct active references and deletio
   await api(request, world.learner, `/paths/${world.learnerPath.id}/courses`, 'POST', { course_id: world.course.id });
   await login(page, world.author);
   await page.goto('/courses');
-  await expect(page.getByText('2 path references · 1 by author · 1 by others')).toBeVisible();
+  await expect(page.getByRole('article', { name: world.course.title, exact: true }).getByText('2 paths', { exact: true })).toBeVisible();
+  await page.goto(`/courses/${world.course.id}`);
+  await expect(page.getByText('Used in 2 paths: 1 by the author, 1 by other owners.')).toBeVisible();
   await login(page, world.learner);
   await page.goto(`/paths/${world.learnerPath.id}`);
   await page.getByRole('button', { name: 'Delete', exact: true }).click();
@@ -238,5 +243,7 @@ test('SHARE-05 — reuse counters reflect distinct active references and deletio
   await login(page, world.author);
   await page.goto('/courses');
   await page.reload();
-  await expect(page.getByText('1 path references · 1 by author · 0 by others')).toBeVisible();
+  await expect(page.getByRole('article', { name: world.course.title, exact: true }).getByText('1 path', { exact: true })).toBeVisible();
+  await page.goto(`/courses/${world.course.id}`);
+  await expect(page.getByText('Used in 1 paths: 1 by the author, 0 by other owners.')).toBeVisible();
 });

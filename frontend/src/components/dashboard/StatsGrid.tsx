@@ -24,8 +24,8 @@ interface StatCardProps {
 
 function StatCard({ icon, value, label, color }: StatCardProps) {
   return (
-    <div className="bg-white rounded-xl shadow-sm p-4">
-      <div className="flex items-center gap-3">
+    <div className="min-w-0 bg-white rounded-2xl border border-gray-200/80 p-4">
+      <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
         <div className={`p-2 rounded-lg ${color}`}>{icon}</div>
         <div>
           <div className="text-2xl font-bold text-gray-900">{value}</div>

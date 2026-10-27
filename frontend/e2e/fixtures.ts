@@ -39,12 +39,18 @@ export async function saveModule(page: Page) {
   await page.getByRole('button', { name: 'Save', exact: true }).click();
   await expect(page.getByText('Module updated successfully')).toBeVisible();
 }
+export async function openSharing(page: Page) {
+  const toggle = page.getByRole('button', { name: 'Sharing', exact: true });
+  if (await toggle.getAttribute('aria-expanded') === 'false') await toggle.click();
+}
 export async function share(page: Page, email: string) {
+  await openSharing(page);
   await page.getByLabel('Recipient email').fill(email);
   await page.getByRole('button', { name: 'Grant access', exact: true }).click();
   await expect(page.getByRole('button', { name: `Revoke access for ${email}` })).toBeVisible();
 }
 export async function visibility(page: Page, value: string) {
+  await openSharing(page);
   await page.getByRole('combobox', { name: 'Visibility', exact: true }).selectOption(value);
   const saved = page.waitForResponse(r => /\/api\/v1\/(courses|paths)\/[^/]+$/.test(r.url()) && r.request().method() === 'PUT');
   await page.getByRole('button', { name: 'Save visibility' }).click();

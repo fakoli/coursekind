@@ -25,13 +25,35 @@ function setup(pending?: { outcome: 'success' | 'error' }) {
 
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 
+it('starts collapsed, preserves drafts across toggles and resets when the resource changes', () => {
+  const { panel, writes } = setup();
+  const view = render(panel('courses', 'first', 'private'));
+  const toggle = screen.getByRole('button', { name: 'Sharing' });
+  expect(toggle).toHaveAttribute('aria-expanded', 'false');
+  expect(screen.queryByRole('combobox', { name: 'Visibility' })).not.toBeInTheDocument();
+  fireEvent.click(toggle);
+  expect(toggle).toHaveAttribute('aria-expanded', 'true');
+  fireEvent.change(screen.getByLabelText('Recipient email'), { target: { value: 'draft@example.test' } });
+  fireEvent.change(screen.getByLabelText('Visibility'), { target: { value: 'unlisted' } });
+  fireEvent.click(toggle);
+  expect(screen.queryByRole('button', { name: 'Grant access' })).not.toBeInTheDocument();
+  fireEvent.click(toggle);
+  expect(screen.getByLabelText('Recipient email')).toHaveValue('draft@example.test');
+  expect(screen.getByLabelText('Visibility')).toHaveValue('unlisted');
+  expect(writes).toEqual([]);
+  view.rerender(panel('courses', 'second', 'public'));
+  expect(screen.getByRole('button', { name: 'Sharing' })).toHaveAttribute('aria-expanded', 'false');
+});
+
 it('resets visibility, email and feedback when the resource changes, including course to path', async () => {
   const { panel, writes } = setup();
   const view = render(panel('courses', 'first', 'public'));
+  fireEvent.click(screen.getByRole('button', { name: 'Sharing' }));
   fireEvent.change(screen.getByLabelText('Recipient email'), { target: { value: 'first@example.test' } });
   fireEvent.click(screen.getByRole('button', { name: 'Save visibility' }));
   await screen.findByText('Sharing saved');
   view.rerender(panel('courses', 'second', 'private'));
+  fireEvent.click(screen.getByRole('button', { name: 'Sharing' }));
   expect(screen.getByLabelText('Visibility')).toHaveValue('private');
   expect(screen.getByLabelText('Recipient email')).toHaveValue('');
   expect(screen.getByRole('status')).toBeEmptyDOMElement();
@@ -39,6 +61,7 @@ it('resets visibility, email and feedback when the resource changes, including c
   await waitFor(() => expect(writes).toContainEqual({ url: '/api/v1/courses/second', body: { visibility: 'private' } }));
   fireEvent.change(screen.getByLabelText('Recipient email'), { target: { value: 'second@example.test' } });
   view.rerender(panel('paths', 'second', 'unlisted'));
+  fireEvent.click(screen.getByRole('button', { name: 'Sharing' }));
   expect(screen.getByLabelText('Visibility')).toHaveValue('unlisted');
   expect(screen.getByLabelText('Recipient email')).toHaveValue('');
   expect(screen.getByRole('status')).toBeEmptyDOMElement();
@@ -47,6 +70,7 @@ it('resets visibility, email and feedback when the resource changes, including c
 it('reconciles changed authoritative visibility instead of preserving a stale draft', async () => {
   const { panel, writes } = setup();
   const view = render(panel('courses', 'first', 'public'));
+  fireEvent.click(screen.getByRole('button', { name: 'Sharing' }));
   fireEvent.change(screen.getByLabelText('Visibility'), { target: { value: 'unlisted' } });
   view.rerender(panel('courses', 'first', 'private'));
   expect(screen.getByLabelText('Visibility')).toHaveValue('private');
@@ -60,10 +84,12 @@ it('reconciles changed authoritative visibility instead of preserving a stale dr
 it.each(['success', 'error'] as const)('isolates a pending old-resource %s from the new form', async outcome => {
   const { panel, writes, finish } = setup({ outcome });
   const view = render(panel('courses', 'first', 'public'));
+  fireEvent.click(screen.getByRole('button', { name: 'Sharing' }));
   fireEvent.change(screen.getByLabelText('Recipient email'), { target: { value: 'old@example.test' } });
   fireEvent.click(screen.getByRole('button', { name: 'Grant access' }));
   await waitFor(() => expect(writes).toHaveLength(1));
   view.rerender(panel('courses', 'second', 'private'));
+  fireEvent.click(screen.getByRole('button', { name: 'Sharing' }));
   fireEvent.change(screen.getByLabelText('Recipient email'), { target: { value: 'new@example.test' } });
   expect(screen.getByRole('button', { name: 'Grant access' })).not.toBeDisabled();
   await act(async () => { finish(); });

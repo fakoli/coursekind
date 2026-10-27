@@ -36,18 +36,18 @@ export function PathCard({ path, onOptions, progress }: PathCardProps) {
   const isComplete = savedProgress ? savedProgress.completion_percentage === 100 : progress && progress.completedCourses === progress.totalCourses && progress.totalCourses > 0;
 
   return (
-    <Link to={`/paths/${path.id}`}>
+    <Link className="min-w-0 rounded-2xl focus-ring" to={`/paths/${path.id}`}>
       <Card className="card-interactive h-full group">
         <CardContent className="flex flex-col h-full">
           <div className="flex items-start justify-between">
-            <div className="flex items-center gap-3">
+            <div className="flex min-w-0 items-center gap-3">
               <CourseImage
                 src={path.thumbnail_url || defaultThumbnails[path.difficulty]}
                 alt=""
-                className="w-10 h-10 rounded-lg object-cover"
+                className="w-10 h-10 shrink-0 rounded-lg object-cover"
               />
               <div className="flex-1 min-w-0">
-                <h3 className="text-lg font-semibold text-gray-900 truncate group-hover:text-indigo-600 transition-colors">
+                <h3 className="text-lg leading-snug font-semibold text-gray-900 break-words group-hover:text-indigo-600 transition-colors">
                   {path.title}
                 </h3>
               </div>
@@ -82,7 +82,7 @@ export function PathCard({ path, onOptions, progress }: PathCardProps) {
           </div>
 
           {path.description && (
-            <p className="mt-2 text-sm text-gray-600 line-clamp-2">
+            <p className="mt-3 text-sm leading-relaxed text-gray-600 line-clamp-2">
               {path.description}
             </p>
           )}
@@ -109,7 +109,7 @@ export function PathCard({ path, onOptions, progress }: PathCardProps) {
             </div>
           )}
 
-          <div className="mt-auto pt-4 flex items-center gap-4 text-sm text-gray-500">
+          <div className="mt-auto pt-4 flex flex-wrap items-center gap-3 text-sm text-gray-500">
             <div className="flex items-center gap-1.5">
               <BookOpen className="w-4 h-4" aria-hidden="true" />
               <span>{path.course_count} {path.course_count === 1 ? 'course' : 'courses'}</span>

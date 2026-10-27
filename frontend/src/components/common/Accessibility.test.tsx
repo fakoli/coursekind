@@ -10,9 +10,11 @@ import type { CourseResponse } from '../../types';
 afterEach(cleanup);
 it('keeps course card actions outside links', async () => {
   installJourneyApi();
-  renderJourney(<CourseCard course={{ id:'c',title:'Course',difficulty:'beginner',tags:[],source:'database' } as unknown as CourseResponse} onAddToPath={() => {}} />, "/courses", "/courses");
+  renderJourney(<CourseCard course={{ id:'c',title:'Course',difficulty:'beginner',tags:[],source:'database' } as unknown as CourseResponse} onAddToPath={() => {}} onOptions={() => {}} />, "/courses", "/courses");
   const action = await screen.findByRole('button', { name: /Add to path/i });
   expect(action.closest('a')).toBeNull();
+  expect(screen.getByRole('button', { name: 'Course options' }).closest('a')).toBeNull();
+  expect(screen.getByRole('article', { name: 'Course' })).toContainElement(action);
   expect(screen.getByRole('link', { name: 'Course' })).toHaveAttribute('href', '/courses/c');
 });
 it('traps keyboard focus around enabled actions and restores the trigger on Escape', async () => {

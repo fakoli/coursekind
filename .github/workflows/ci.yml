@@ -74,9 +74,9 @@ jobs:
       - name: Install browser test dependencies
         working-directory: frontend
         run: npm ci
-      - name: Install Chromium
+      - name: Install Chromium and WebKit
         working-directory: frontend
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install --with-deps chromium webkit
       - name: Typecheck browser fixtures and tests
         working-directory: frontend
         run: npm run test:e2e:types

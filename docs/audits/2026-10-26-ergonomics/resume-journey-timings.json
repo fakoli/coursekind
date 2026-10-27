@@ -1,0 +1,16 @@
+{
+  "measured_at": "2026-10-27T00:29:54.320Z",
+  "environment": "Playwright Chromium and mobile WebKit; isolated synthetic storage; mocked provider HTTP and delivery transports",
+  "interpretation": "Automated wall time, includes setup/assertions; not human usability time.",
+  "journeys": [
+    {
+      "project": "chromium",
+      "journey": "STUDY-06",
+      "scenario": "STUDY-06 — complete first module, resume, finish and reload 100% course",
+      "result": "passed",
+      "elapsed_seconds": 5.543,
+      "retry": 0,
+      "file": "modules-study.spec.ts"
+    }
+  ]
+}

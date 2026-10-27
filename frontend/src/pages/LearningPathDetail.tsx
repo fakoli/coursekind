@@ -221,10 +221,7 @@ export function LearningPathDetail() {
             <Edit className="w-4 h-4 mr-2" />
             Edit
           </Button>
-          <Button variant="danger" onClick={() => setDeleteModalOpen(true)}>
-            <Trash2 className="w-4 h-4 mr-2" />
-            Delete
-          </Button>
+
         </div>}
         {user && <Button disabled={follow.isPending} onClick={async () => {
           try { await follow.mutateAsync({ pathId: path.id, following: !data.is_following }); }
@@ -234,7 +231,6 @@ export function LearningPathDetail() {
 
       {progress && <Card><CardContent><p className="font-medium">Your progress: {progress.completion_percentage}% · {progress.completed_courses} of {progress.total_courses} courses completed</p>
         <p className="text-sm text-gray-600">Each course has equal weight. Empty and unavailable courses contribute 0%.</p></CardContent></Card>}
-      {isOwner && <SharingPanel resource="paths" id={path.id} visibility={path.visibility} />}
       {/* Path Info */}
       <Card>
         <CardContent>
@@ -266,13 +262,13 @@ export function LearningPathDetail() {
               const course = courses.find(c => c.id === id);
               return <li key={`${id}-${index}`} className="flex flex-wrap items-center gap-4 p-4">
                 <span>{index + 1}.</span>
-                {course ? <Link to={`/courses/${id}`} className="flex-1 min-w-0">
+                {course ? <Link to={`/courses/${id}`} className="flex-1 min-w-0 break-words">
                   <h3 className="font-medium">{course.title}</h3>
                   {progress?.courses.find(c => c.course_id === id) && <p className="text-sm text-indigo-600">{progress.courses.find(c => c.course_id === id)!.completion_percentage}% complete</p>}
                   <p className="text-sm text-gray-500">{course.module_count} {course.module_count === 1 ? 'module' : 'modules'} · by {course.author_name}</p>
                 </Link> : <div className="flex-1"><h3 className="font-medium">Unavailable course</h3>
                   <p className="text-sm text-gray-600">This course was removed or you no longer have access.</p></div>}
-                {isOwner && <div className="flex gap-2">
+                {isOwner && <div className="flex w-full justify-end gap-2 sm:w-auto">
                   <Button variant="secondary" disabled={index === 0 || reorder.isPending} onClick={() => move(index, -1)}
                     aria-label={`Move ${course?.title ?? 'unavailable course'} up`}>Move up</Button>
                   <Button variant="secondary" disabled={index === path.course_ids.length - 1 || reorder.isPending} onClick={() => move(index, 1)}
@@ -286,6 +282,12 @@ export function LearningPathDetail() {
 
         </CardContent>
       </Card>
+
+      {isOwner && <SharingPanel resource="paths" id={path.id} visibility={path.visibility} />}
+      {isOwner && <div className="border-t border-gray-200 pt-4"><Button variant="ghost" className="text-red-700" onClick={() => setDeleteModalOpen(true)}>
+            <Trash2 className="w-4 h-4 mr-2" />
+            Delete
+          </Button></div>}
 
       {/* Delete Path Modal */}
       <Modal

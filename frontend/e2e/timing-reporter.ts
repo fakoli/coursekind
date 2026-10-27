@@ -6,6 +6,7 @@ export default class JourneyTimingReporter implements Reporter {
   private rows = new Map<string, Record<string, unknown>>();
   onBegin(_config: unknown, suite: Suite) {
     for (const test of suite.allTests()) this.rows.set(test.id, {
+      project: test.parent.project()?.name,
       journey: test.title.match(/^[A-Z]+-\d+/)?.[0], scenario: test.title,
       result: 'Not run', elapsed_seconds: null,
     });
@@ -19,7 +20,7 @@ export default class JourneyTimingReporter implements Reporter {
     mkdirSync('test-results', { recursive: true });
     writeFileSync('test-results/journey-timings.json', JSON.stringify({
       measured_at: new Date().toISOString(),
-      environment: 'Playwright Chromium; isolated synthetic storage; mocked provider HTTP and delivery transports',
+      environment: 'Playwright Chromium and mobile WebKit; isolated synthetic storage; mocked provider HTTP and delivery transports',
       interpretation: 'Automated wall time, includes setup/assertions; not human usability time.',
       journeys: [...this.rows.values()],
     }, null, 2));

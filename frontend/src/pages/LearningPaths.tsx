@@ -72,11 +72,11 @@ export function LearningPaths() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Learning Paths</h1>
-          <p className="text-gray-500 mt-1">Organize courses into structured learning journeys</p>
+          <p className="text-gray-500 mt-1">A clear route from your goal to your next lesson.</p>
         </div>
       </div>
 
-      <nav aria-label="Path collections" className="flex flex-wrap gap-3">
+      <nav aria-label="Path collections" className="collection-tabs">
         <Button aria-pressed={tab === 'mine'} variant={tab === 'mine' ? 'primary' : 'secondary'} onClick={() => setTab('mine')}>My Paths</Button>
         <Button aria-pressed={tab === 'following'} variant={tab === 'following' ? 'primary' : 'secondary'} onClick={() => setTab('following')}>Following</Button>
         <Button aria-pressed={tab === 'discover'} variant={tab === 'discover' ? 'primary' : 'secondary'} onClick={() => setTab('discover')}>Public & shared paths</Button>
