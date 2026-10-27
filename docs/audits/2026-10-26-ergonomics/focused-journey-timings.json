@@ -1,0 +1,79 @@
+{
+  "measured_at": "2026-10-27T00:27:17.724Z",
+  "environment": "Playwright Chromium and mobile WebKit; isolated synthetic storage; mocked provider HTTP and delivery transports",
+  "interpretation": "Automated wall time, includes setup/assertions; not human usability time.",
+  "journeys": [
+    {
+      "project": "chromium",
+      "journey": "COURSE-01",
+      "scenario": "COURSE-01 — create metadata and two manual outlines then reopen each",
+      "result": "passed",
+      "elapsed_seconds": 3.415,
+      "retry": 0,
+      "file": "accounts-courses.spec.ts"
+    },
+    {
+      "project": "chromium",
+      "journey": "SUPPORT-03",
+      "scenario": "SUPPORT-03 — mobile browsing leads directly into study with reachable activities",
+      "result": "passed",
+      "elapsed_seconds": 3.893,
+      "retry": 0,
+      "file": "course-card-navigation.spec.ts"
+    },
+    {
+      "project": "chromium",
+      "journey": "MODULE-04",
+      "scenario": "MODULE-04 — configure practice, execute, reload and explicitly remove it",
+      "result": "passed",
+      "elapsed_seconds": 3.359,
+      "retry": 0,
+      "file": "modules-study.spec.ts"
+    },
+    {
+      "project": "chromium",
+      "journey": "STUDY-01",
+      "scenario": "STUDY-01 — read content, run embedded code and rerun changed code",
+      "result": "passed",
+      "elapsed_seconds": 2.852,
+      "retry": 0,
+      "file": "modules-study.spec.ts"
+    },
+    {
+      "project": "chromium",
+      "journey": "SHARE-05",
+      "scenario": "SHARE-05 — reuse counters reflect distinct active references and deletion decrements",
+      "result": "passed",
+      "elapsed_seconds": 6.891,
+      "retry": 0,
+      "file": "paths-sharing.spec.ts"
+    },
+    {
+      "project": "chromium",
+      "journey": "WORKSPACE-06",
+      "scenario": "WORKSPACE-06 — mobile keyboard sections preserve drafts and account switch removes private material",
+      "result": "passed",
+      "elapsed_seconds": 5.198,
+      "retry": 0,
+      "file": "workspace-recovery.spec.ts"
+    },
+    {
+      "project": "chromium",
+      "journey": "WORKSPACE-06",
+      "scenario": "WORKSPACE-06 — disabled workspace writes preserve baseline navigation and typed goal",
+      "result": "passed",
+      "elapsed_seconds": 3.09,
+      "retry": 0,
+      "file": "workspace-recovery.spec.ts"
+    },
+    {
+      "project": "mobile-webkit",
+      "journey": "SUPPORT-03",
+      "scenario": "SUPPORT-03 — mobile browsing leads directly into study with reachable activities",
+      "result": "passed",
+      "elapsed_seconds": 4.494,
+      "retry": 0,
+      "file": "course-card-navigation.spec.ts"
+    }
+  ]
+}

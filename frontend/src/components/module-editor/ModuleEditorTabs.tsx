@@ -40,7 +40,7 @@ export function ModuleEditorTabs({
 
   return (
     <div className="border-b border-gray-200">
-      <nav aria-label="Module editor activities" className="-mb-px flex flex-wrap gap-x-4 sm:gap-x-8">
+      <nav aria-label="Module editor activities" className="collection-tabs activity-tabs">
         {tabs.map((tab) => (
           <button
             key={tab.key}

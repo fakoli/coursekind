@@ -58,14 +58,14 @@ export function RunnableCodeBlock({ code, language, onExecuted }: RunnableCodeBl
   return (
     <div className="my-4 rounded-lg overflow-hidden border border-gray-700">
       {/* Header with language label and action buttons */}
-      <div className="flex items-center justify-between bg-gray-800 px-3 py-1.5 border-b border-gray-700">
+      <div className="flex flex-wrap items-center justify-between gap-2 bg-gray-800 px-3 py-1.5 border-b border-gray-700">
         <span className="text-xs font-medium text-gray-400">{languageLabel}</span>
-        <div className="flex items-center gap-1">
-          <button className="px-2 py-1 text-xs text-white" disabled={isRunning} onClick={() => setEditing(!editing)}>{editing ? 'Hide editor' : 'Edit code'}</button>
-          <button className="px-2 py-1 text-xs text-white" disabled={isRunning} onClick={() => { setDraft(code); setResult(null); }}>Reset code</button>
+        <div className="flex flex-wrap items-center gap-1">
+          <button className="min-h-11 whitespace-nowrap px-3 py-2 text-sm text-white" disabled={isRunning} onClick={() => setEditing(!editing)}>{editing ? 'Hide editor' : 'Edit code'}</button>
+          <button className="min-h-11 whitespace-nowrap px-3 py-2 text-sm text-white" disabled={isRunning} onClick={() => { setDraft(code); setResult(null); }}>Reset code</button>
           <button
             onClick={handleCopy}
-            className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors"
+            className="flex h-11 w-11 items-center justify-center text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors"
             title="Copy code"
           >
             {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
@@ -73,7 +73,7 @@ export function RunnableCodeBlock({ code, language, onExecuted }: RunnableCodeBl
           <button
             onClick={handleRun}
             disabled={isRunning}
-            className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-white bg-green-600 hover:bg-green-700 disabled:bg-gray-600 rounded transition-colors"
+            className="flex items-center gap-1 min-h-11 whitespace-nowrap px-3 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 disabled:bg-gray-600 rounded transition-colors"
             title="Run code"
             aria-label="Run code"
           >

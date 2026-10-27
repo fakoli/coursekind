@@ -15,8 +15,8 @@ export function CourseStepper({
   onStepClick,
 }: CourseStepperProps) {
   return (
-    <nav aria-label="Progress" className="px-4 py-6 bg-white rounded-xl shadow-sm">
-      <ol className="flex items-center justify-between">
+    <nav aria-label="Progress" className="px-4 py-4 bg-white rounded-2xl border border-gray-200">
+      <ol className="flex items-start justify-between gap-3">
         {steps.map((step, index) => {
           const isCompleted = index < currentStepIndex;
           const isCurrent = step.key === currentStep;
@@ -37,7 +37,9 @@ export function CourseStepper({
                   }
                 }}
                 disabled={!isClickable}
-                className={`group flex items-center ${isClickable ? 'cursor-pointer' : 'cursor-default'}`}
+                aria-current={isCurrent ? 'step' : undefined}
+                aria-label={step.label}
+                className={`group flex min-h-11 flex-col gap-2 items-center sm:flex-row ${isClickable ? 'cursor-pointer' : 'cursor-default'}`}
               >
                 <span
                   className={`flex items-center justify-center w-10 h-10 rounded-full transition-all ${
@@ -61,7 +63,7 @@ export function CourseStepper({
                   )}
                 </span>
                 <span
-                  className={`ml-3 text-sm font-medium hidden sm:block ${
+                  className={`text-xs text-center font-medium sm:ml-3 sm:text-sm ${
                     isCurrent
                       ? 'text-indigo-700'
                       : isCompleted

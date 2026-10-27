@@ -1,0 +1,61 @@
+{
+  "measured_at": "2026-10-27T00:27:58.273Z",
+  "environment": "Playwright Chromium and mobile WebKit; isolated synthetic storage; mocked provider HTTP and delivery transports",
+  "interpretation": "Automated wall time, includes setup/assertions; not human usability time.",
+  "journeys": [
+    {
+      "project": "chromium",
+      "journey": "SUPPORT-03",
+      "scenario": "SUPPORT-03 — mobile browsing leads directly into study with reachable activities",
+      "result": "passed",
+      "elapsed_seconds": 4.159,
+      "retry": 0,
+      "file": "course-card-navigation.spec.ts"
+    },
+    {
+      "project": "chromium",
+      "journey": "SHARE-06",
+      "scenario": "SHARE-06 — mobile course and path sharing opens on demand and keeps drafts",
+      "result": "passed",
+      "elapsed_seconds": 3.838,
+      "retry": 0,
+      "file": "course-card-navigation.spec.ts"
+    },
+    {
+      "project": "chromium",
+      "journey": "COURSE-06",
+      "scenario": "COURSE-06 — touch opens the whole course card and preserves separate actions",
+      "result": "passed",
+      "elapsed_seconds": 4.76,
+      "retry": 0,
+      "file": "course-card-navigation.spec.ts"
+    },
+    {
+      "project": "mobile-webkit",
+      "journey": "SUPPORT-03",
+      "scenario": "SUPPORT-03 — mobile browsing leads directly into study with reachable activities",
+      "result": "passed",
+      "elapsed_seconds": 5.196,
+      "retry": 0,
+      "file": "course-card-navigation.spec.ts"
+    },
+    {
+      "project": "mobile-webkit",
+      "journey": "SHARE-06",
+      "scenario": "SHARE-06 — mobile course and path sharing opens on demand and keeps drafts",
+      "result": "passed",
+      "elapsed_seconds": 3.919,
+      "retry": 0,
+      "file": "course-card-navigation.spec.ts"
+    },
+    {
+      "project": "mobile-webkit",
+      "journey": "COURSE-06",
+      "scenario": "COURSE-06 — touch opens the whole course card and preserves separate actions",
+      "result": "passed",
+      "elapsed_seconds": 5.417,
+      "retry": 0,
+      "file": "course-card-navigation.spec.ts"
+    }
+  ]
+}

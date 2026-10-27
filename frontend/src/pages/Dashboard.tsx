@@ -29,27 +29,21 @@ export function Dashboard() {
     <div className="space-y-6">
       {/* Header with greeting and streak */}
       <div
-        className="relative rounded-2xl overflow-hidden bg-gradient-to-r from-indigo-600 to-purple-600 p-6 lg:p-8"
+        className="rounded-2xl border border-indigo-100 bg-indigo-50/60 p-5 sm:p-8"
       >
-        <img
-          src="/images/dashboard-banner.png"
-          alt=""
-          className="absolute inset-0 w-full h-full object-cover mix-blend-overlay opacity-30"
-          aria-hidden="true"
-        />
         <div className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-          <div className="text-white">
+          <div className="text-gray-900">
             <h1 className="text-2xl font-bold">
               Welcome back, {user?.name}!
             </h1>
-            <p className="text-indigo-100">Turn a goal into a course you can keep improving.</p>
-            <div className="flex flex-wrap gap-3 mt-4"><Link className="bg-white text-indigo-700 px-4 py-2 rounded-lg font-medium" to="/workspaces">Start with a goal</Link><Link className="border border-white px-4 py-2 rounded-lg font-medium" to="/courses">Continue studying</Link></div>
+            <p className="mt-2 max-w-lg leading-relaxed text-gray-600">Turn a goal into a course you can keep improving.</p>
+            <div className="flex flex-wrap gap-3 mt-4"><Link className="study-action" to="/workspaces">Start with a goal</Link><Link className="inline-flex min-h-11 items-center rounded-xl border border-gray-300 bg-white px-4 py-2 font-medium text-gray-700" to="/courses">Continue studying</Link></div>
           </div>
           <div className="lg:w-80">
             <StreakDisplay
               currentStreak={stats?.current_streak ?? 0}
               longestStreak={stats?.longest_streak ?? 0}
-              variant="dark"
+              variant="light"
             />
           </div>
         </div>

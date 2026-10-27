@@ -45,8 +45,8 @@ export function CourseCard({ course, onOptions, onAddToPath, showAuthor = true }
                 className="w-10 h-10 shrink-0 rounded-lg object-cover"
               />
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <h3 id={titleId} className="text-lg font-semibold text-gray-900 truncate group-hover:text-indigo-600 transition-colors">
+                <div className="flex items-start gap-2">
+                  <h3 id={titleId} className="text-lg leading-snug font-semibold text-gray-900 break-words group-hover:text-indigo-600 transition-colors">
                     {course.title}
                   </h3>
                   {course.ai_enabled && (
@@ -75,7 +75,7 @@ export function CourseCard({ course, onOptions, onAddToPath, showAuthor = true }
           </div>
 
           {course.description && (
-            <p className="mt-2 text-sm text-gray-600 line-clamp-2">
+            <p className="mt-3 text-sm leading-relaxed text-gray-600 line-clamp-2">
               {course.description}
             </p>
           )}
@@ -100,7 +100,7 @@ export function CourseCard({ course, onOptions, onAddToPath, showAuthor = true }
               {(
                 <div className="flex min-w-0 items-start gap-1">
                   <Users className="w-4 h-4 shrink-0" aria-hidden="true" />
-                  <span>{course.times_added} path references · {course.own_path_count ?? 0} by author · {course.other_path_count ?? 0} by others</span>
+                  <span title={`${course.own_path_count ?? 0} by author · ${course.other_path_count ?? 0} by others`}>{course.times_added} {course.times_added === 1 ? 'path' : 'paths'}</span>
                 </div>
               )}
             </div>

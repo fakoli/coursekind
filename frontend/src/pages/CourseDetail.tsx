@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   ArrowLeft,
+  ArrowRight,
   ChevronUp,
   ChevronDown,
   Edit,
@@ -40,7 +41,7 @@ export function CourseDetail() {
   const { success, error: showError } = useToast();
 
   const { data, isLoading, error } = useCourse(courseId || '');
-  const { data: progressData } = useCourseProgress(courseId || '');
+  const { data: progressData, isLoading: progressLoading } = useCourseProgress(courseId || '');
   const deleteCourse = useDeleteCourse();
   const deleteModule = useDeleteModule();
   const reorderModules = useReorderModules();
@@ -110,6 +111,8 @@ export function CourseDetail() {
 
   const { course, modules } = data;
   const colors = difficultyColors[course.difficulty];
+  const nextModule = modules.find(module => moduleProgressMap.get(module.id)?.status !== 'completed') ?? modules[0];
+  const studyLabel = progressData?.completion_percentage === 100 ? 'Review course' : progressData?.modules?.some(module => module.status !== 'not_started') ? 'Continue learning' : 'Start learning';
   const isEditable = course.source === 'database' && course.author_id === user?.id;
 
   return (
@@ -120,7 +123,7 @@ export function CourseDetail() {
           <button
             aria-label="Back"
             onClick={() => navigate(-1)}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
+            className="flex h-11 w-11 items-center justify-center hover:bg-gray-100 rounded-xl transition-colors flex-shrink-0"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
@@ -142,23 +145,21 @@ export function CourseDetail() {
             </p>
           </div>
         </div>
+        <div className="flex w-full flex-wrap items-center gap-2">
+          {nextModule && !progressLoading && <Link className="study-action" to={`/courses/${course.id}/modules/${nextModule.id}`}>{studyLabel}<ArrowRight className="h-4 w-4" aria-hidden="true" /></Link>}
         {isEditable && (
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <OpenInWorkspace kind="course" id={course.id} title={course.title} />
             <Button variant="secondary" onClick={() => navigate(`/courses/${courseId}/edit`)}>
               <Edit className="w-4 h-4 mr-2" />
               Edit
             </Button>
-            <Button variant="danger" onClick={() => setDeleteModalOpen(true)}>
-              <Trash2 className="w-4 h-4 mr-2" />
-              Delete
-            </Button>
+
           </div>
         )}
+        </div>
       </div>
 
-      {isEditable && <SharingPanel resource="courses" id={course.id} visibility={course.visibility} />}
-      <p className="text-sm text-gray-600">Used in {course.times_added} paths: {course.own_path_count ?? 0} by the author, {course.other_path_count ?? 0} by other owners.</p>
       {/* Course Info */}
       <Card>
         <CardContent>
@@ -202,7 +203,7 @@ export function CourseDetail() {
                   style={{ width: `${progressData.completion_percentage}%` }}
                 />
               </div>
-              <div className="flex items-center gap-6 text-sm text-gray-500">
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-gray-500">
                 {progressData.average_quiz_score !== null && (
                   <span>Avg Quiz Score: {progressData.average_quiz_score}%</span>
                 )}
@@ -214,42 +215,6 @@ export function CourseDetail() {
                 )}
               </div>
             </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* AI Instructions (if applicable) */}
-      {course.ai_enabled && course.instructions && (
-        <Card>
-          <CardHeader>
-            <h2 className="text-lg font-semibold flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-amber-500" />
-              AI Instructions
-            </h2>
-          </CardHeader>
-          <CardContent>
-            <dl className="space-y-4">
-              <div>
-                <dt className="text-sm font-medium text-gray-500">Purpose</dt>
-                <dd className="text-gray-900">{course.instructions.purpose}</dd>
-              </div>
-              <div>
-                <dt className="text-sm font-medium text-gray-500">Target Audience</dt>
-                <dd className="text-gray-900">{course.instructions.target_audience}</dd>
-              </div>
-              {course.instructions.learning_objectives.length > 0 && (
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">Learning Objectives</dt>
-                  <dd className="text-gray-900">
-                    <ul className="list-disc list-inside mt-1">
-                      {course.instructions.learning_objectives.map((obj, i) => (
-                        <li key={i}>{obj}</li>
-                      ))}
-                    </ul>
-                  </dd>
-                </div>
-              )}
-            </dl>
           </CardContent>
         </Card>
       )}
@@ -293,11 +258,11 @@ export function CourseDetail() {
                   >
                     <div className="shrink-0 text-gray-400">
                       {isEditable && <div className="flex flex-col gap-1">
-                      <button className="rounded p-2 hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-indigo-500 disabled:opacity-30" aria-label={`Move ${module.title} up`} disabled={index === 0 || reorderModules.isPending} onClick={async () => {
+                      <button className="flex h-11 w-11 items-center justify-center rounded-lg hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-indigo-500 disabled:opacity-30" aria-label={`Move ${module.title} up`} disabled={index === 0 || reorderModules.isPending} onClick={async () => {
                         const ids = modules.map(m => m.id); [ids[index], ids[index - 1]] = [ids[index - 1], ids[index]];
                         try { await reorderModules.mutateAsync({ courseId: course.id, moduleIds: ids }); } catch { showError('Could not reorder modules'); }
                       }}><ChevronUp className="h-4 w-4" aria-hidden="true" /></button>
-                      <button className="rounded p-2 hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-indigo-500 disabled:opacity-30" aria-label={`Move ${module.title} down`} disabled={index === modules.length - 1 || reorderModules.isPending} onClick={async () => {
+                      <button className="flex h-11 w-11 items-center justify-center rounded-lg hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-indigo-500 disabled:opacity-30" aria-label={`Move ${module.title} down`} disabled={index === modules.length - 1 || reorderModules.isPending} onClick={async () => {
                         const ids = modules.map(m => m.id); [ids[index], ids[index + 1]] = [ids[index + 1], ids[index]];
                         try { await reorderModules.mutateAsync({ courseId: course.id, moduleIds: ids }); } catch { showError('Could not reorder modules'); }
                       }}><ChevronDown className="h-4 w-4" aria-hidden="true" /></button>
@@ -345,7 +310,7 @@ export function CourseDetail() {
                             navigate(`/courses/${courseId}/modules/${module.id}/edit`);
                           }}
                           aria-label={`Edit ${module.title}`}
-                          className="p-2 hover:bg-gray-100 rounded"
+                          className="flex h-11 w-11 items-center justify-center hover:bg-gray-100 rounded-lg"
                         >
                           <Edit className="w-4 h-4 text-gray-400" />
                         </button>
@@ -355,7 +320,7 @@ export function CourseDetail() {
                             setModuleToDelete(module);
                           }}
                           aria-label={`Delete ${module.title}`}
-                          className="p-2 hover:bg-red-50 rounded"
+                          className="flex h-11 w-11 items-center justify-center hover:bg-red-50 rounded-lg"
                         >
                           <Trash2 className="w-4 h-4 text-gray-400 hover:text-red-500" />
                         </button>
@@ -368,6 +333,50 @@ export function CourseDetail() {
           )}
         </CardContent>
       </Card>
+
+      {/* AI Instructions (if applicable) */}
+      {course.ai_enabled && course.instructions && (
+        <Card>
+          <CardHeader>
+            <h2 className="text-lg font-semibold flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-amber-500" />
+              AI Instructions
+            </h2>
+          </CardHeader>
+          <CardContent>
+            <dl className="space-y-4">
+              <div>
+                <dt className="text-sm font-medium text-gray-500">Purpose</dt>
+                <dd className="text-gray-900">{course.instructions.purpose}</dd>
+              </div>
+              <div>
+                <dt className="text-sm font-medium text-gray-500">Target Audience</dt>
+                <dd className="text-gray-900">{course.instructions.target_audience}</dd>
+              </div>
+              {course.instructions.learning_objectives.length > 0 && (
+                <div>
+                  <dt className="text-sm font-medium text-gray-500">Learning Objectives</dt>
+                  <dd className="text-gray-900">
+                    <ul className="list-disc list-inside mt-1">
+                      {course.instructions.learning_objectives.map((obj, i) => (
+                        <li key={i}>{obj}</li>
+                      ))}
+                    </ul>
+                  </dd>
+                </div>
+              )}
+            </dl>
+          </CardContent>
+        </Card>
+      )}
+
+      {isEditable && <SharingPanel resource="courses" id={course.id} visibility={course.visibility} />}
+      <p className="text-sm text-gray-600">Used in {course.times_added} paths: {course.own_path_count ?? 0} by the author, {course.other_path_count ?? 0} by other owners.</p>
+
+      {isEditable && <div className="border-t border-gray-200 pt-4"><Button variant="ghost" className="text-red-700" onClick={() => setDeleteModalOpen(true)}>
+              <Trash2 className="w-4 h-4 mr-2" />
+              Delete
+            </Button></div>}
 
       {/* Delete Course Modal */}
       <Modal

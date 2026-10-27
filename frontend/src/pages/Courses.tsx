@@ -80,22 +80,22 @@ export function Courses() {
 
   return (
     <div className="space-y-6 page-enter">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Courses</h1>
-          <p className="text-gray-500 mt-1">Create and discover learning content</p>
+          <p className="text-gray-500 mt-1">Your next lesson starts here.</p>
         </div>
-        <Button onClick={() => navigate('/courses/new')}>
+        <Button className="self-start whitespace-nowrap" onClick={() => navigate('/courses/new')}>
           <Plus className="w-4 h-4 mr-2" />
           Create Course
         </Button>
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-gray-200">
-        <nav className="-mb-px flex space-x-8">
+      <div>
+        <nav aria-label="Course collections" className="collection-tabs">
           <button
-            onClick={() => handleTabChange('mine')}
+            aria-pressed={activeTab === 'mine'} onClick={() => handleTabChange('mine')}
             className={`py-2 px-1 border-b-2 font-medium text-sm ${
               activeTab === 'mine'
                 ? 'border-indigo-500 text-indigo-600'
@@ -105,7 +105,7 @@ export function Courses() {
             My Courses
           </button>
           <button
-            onClick={() => handleTabChange('discover')}
+            aria-pressed={activeTab === 'discover'} onClick={() => handleTabChange('discover')}
             className={`py-2 px-1 border-b-2 font-medium text-sm ${
               activeTab === 'discover'
                 ? 'border-indigo-500 text-indigo-600'
@@ -114,7 +114,7 @@ export function Courses() {
           >
             Discover
           </button>
-          <button onClick={() => handleTabChange('shared')} className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === 'shared' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500'}`}>Shared with me</button>
+          <button aria-pressed={activeTab === 'shared'} onClick={() => handleTabChange('shared')} className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === 'shared' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500'}`}>Shared with me</button>
         </nav>
       </div>
 
@@ -137,12 +137,12 @@ export function Courses() {
                   <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 animate-spin" />
                 )}
               </div>
-              <div className="flex gap-2">
+              <div className="grid grid-cols-2 gap-2 sm:flex">
                 <select
                   aria-label="Difficulty"
                   value={difficultyFilter}
                   onChange={(e) => setDifficultyFilter(e.target.value as CourseDifficulty | '')}
-                  className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="min-w-0 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 >
                   <option value="">All Levels</option>
                   <option value="beginner">Beginner</option>
@@ -153,7 +153,7 @@ export function Courses() {
                   aria-label="Sort courses"
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="min-w-0 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 >
                   <option value="popular">Most Popular</option>
                   <option value="newest">Newest</option>

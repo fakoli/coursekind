@@ -306,6 +306,8 @@ test('STUDY-06 — complete first module, resume, finish and reload 100% course'
   await expect(page.getByRole('heading', { name: 'Functions', exact: true })).toBeVisible();
   await page.goto(`/courses/${world.course.id}`);
   await expect(page.getByText(/50%/).first()).toBeVisible();
+  await page.getByRole('link', { name: 'Continue learning', exact: true }).click();
+  await expect(page).toHaveURL(`/courses/${world.course.id}/modules/${world.lessons[1].id}`);
   await page.goto('/');
   await page.getByRole('link', { name: /Functions/ }).first().click();
   await expect(page.getByRole('heading', { name: 'Functions', exact: true })).toBeVisible();
@@ -313,4 +315,6 @@ test('STUDY-06 — complete first module, resume, finish and reload 100% course'
   await expect(page).toHaveURL(`/courses/${world.course.id}`);
   await page.reload();
   await expect(page.getByText(/100%/).first()).toBeVisible();
+  await page.getByRole('link', { name: 'Review course', exact: true }).click();
+  await expect(page).toHaveURL(`/courses/${world.course.id}/modules/${world.lessons[0].id}`);
 });

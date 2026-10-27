@@ -3,6 +3,30 @@ import type { Locator, Page } from '@playwright/test';
 
 test.use({ hasTouch: true, viewport: { width: 390, height: 844 } });
 
+test('SUPPORT-03 — mobile browsing leads directly into study with reachable activities', async ({ page, world }) => {
+  await login(page, world.author);
+  await page.goto('/courses');
+  const create = page.getByRole('button', { name: 'Create Course', exact: true });
+  expect((await create.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+  await page.getByRole('link', { name: world.course.title, exact: true }).tap();
+  await page.getByRole('link', { name: 'Start learning', exact: true }).tap();
+  await expect(page).toHaveURL(`/courses/${world.course.id}/modules/${world.lessons[0].id}`);
+  const activities = page.getByRole('navigation', { name: 'Module study activities' });
+  for (const button of await activities.getByRole('button').all()) {
+    const bounds = await button.boundingBox();
+    expect(bounds!.height).toBeGreaterThanOrEqual(44);
+    expect(bounds!.x).toBeGreaterThanOrEqual(0);
+    expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(390);
+    await button.tap();
+    await expect(button).toHaveAttribute('aria-pressed', 'true');
+  }
+  await page.goto(`/paths/${world.path.id}`);
+  const move = page.getByRole('button', { name: `Move ${world.otherCourse.title} up`, exact: true });
+  await move.tap();
+  await expect(move).toBeDisabled();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBeTruthy();
+});
+
 test('SHARE-06 — mobile course and path sharing opens on demand and keeps drafts', async ({ page, world }) => {
   await login(page, world.author);
   for (const route of [`/courses/${world.course.id}`, `/paths/${world.path.id}`]) {
@@ -56,7 +80,12 @@ test('COURSE-06 — touch opens the whole course card and preserves separate act
   }
 
   await page.goto('/courses?tab=discover');
+  const searched = page.waitForResponse(response => {
+    const url = new URL(response.url());
+    return url.pathname.endsWith('/courses/discover') && url.searchParams.get('q') === world.otherCourse.title;
+  });
   await page.getByLabel('Search courses').fill(world.otherCourse.title);
+  expect((await searched).ok()).toBeTruthy();
   const publicCard = page.getByRole('article', { name: world.otherCourse.title, exact: true });
   await tapSurface(page, publicCard.getByRole('button', { name: 'Add to Path' }));
   await expect(page.getByRole('dialog', { name: 'Add to Learning Path' })).toBeVisible();

@@ -1,6 +1,59 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
+/* A quieter, consistent accent across browsing, studying and authoring. */
+@theme {
+  --color-indigo-50: #eef2ff;
+  --color-indigo-100: #e0e7ff;
+  --color-indigo-500: #6366f1;
+  --color-indigo-600: #4f46e5;
+  --color-indigo-700: #4338ca;
+}
+
+.study-action {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 10px 18px;
+  border-radius: 12px;
+  background: #4f46e5;
+  color: white;
+  font-weight: 600;
+}
+.study-action:hover { background: #4338ca; }
+.study-action:focus-visible { outline: 2px solid #4f46e5; outline-offset: 3px; }
+.collection-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 14px;
+  background: #e9edf3;
+  overflow-x: auto;
+}
+.collection-tabs button {
+  flex: 1 0 auto;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 10px;
+  color: #475569;
+  background: transparent;
+  white-space: nowrap;
+  font-size: 14px;
+}
+.collection-tabs button[aria-pressed="true"] {
+  color: #312e81;
+  background: white;
+  box-shadow: 0 1px 3px #0f172a15;
+}
+.safe-area-pb { padding-bottom: env(safe-area-inset-bottom, 0px); }
+@media (max-width: 639px) {
+  input:not([type="checkbox"]):not([type="radio"]), select, textarea { font-size: 16px; }
+  #main-content { padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px)); }
+}
+
 body {
   font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -185,4 +238,10 @@ body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* Four activity choices stay visible together on a phone. */
+@media (max-width: 639px) {
+  .activity-tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .activity-tabs button { justify-content: center; }
 }

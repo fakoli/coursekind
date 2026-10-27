@@ -13,11 +13,11 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         className={clsx(
-          'inline-flex items-center justify-center font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2',
+          'inline-flex items-center justify-center min-h-11 min-w-0 max-w-full font-medium rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2',
           {
             'bg-indigo-600 text-white hover:bg-indigo-700 focus:ring-indigo-500':
               variant === 'primary',
-            'bg-gray-200 text-gray-900 hover:bg-gray-300 focus:ring-gray-500':
+            'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-gray-500':
               variant === 'secondary',
             'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500':
               variant === 'danger',

@@ -589,3 +589,9 @@ The original 40 IDs and D1–D8 above remain unchanged. These are six additional
 | WORKSPACE-06 | Account switch/sign-out privacy, compact mobile sections, keyboard/zoom/focus recovery, write-gate-off baseline navigation. |
 
 The Task 5 scenario package lists 49 browser cases (40 original plus 9 workspace), not 49 distinct journey groups. The operating guide and audit separate authored scenarios, deterministic passing tests, root CUA evidence, live inference and exact-commit remote CI.
+
+## Ergonomics acceptance follow-up (26 October 2026)
+
+[Journey ergonomics review](audits/2026-10-26-ergonomics/README.md) records observed friction, changes, coverage limits and [measured scenario results](audits/2026-10-26-ergonomics/journey-results.md).
+
+SUPPORT-03 adds phone touch coverage for course browsing → Start learning → each available study activity → path reordering. Primary shared buttons and activity controls have at least 44px targets, study choices remain visible in a two-column phone layout, and controls must fit without page-level horizontal scrolling. STUDY-06 now verifies the course's Continue learning and Review course destinations. COURSE-01 includes visible step names on phones; sharing remains closed until requested. Native-device comfort and human task times require separate observation and are not inferred from automation.
